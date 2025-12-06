@@ -1,0 +1,621 @@
+/* Login.css - Import the CSS from your HTML file */
+
+:root {
+  --primary: #4361ee;
+  --primary-dark: #3a56d4;
+  --secondary: #06d6a0;
+  --dark: #1e293b;
+  --gray: #64748b;
+  --light-gray: #e2e8f0;
+  --white: #ffffff;
+  --admin: #7209b7;
+  --trainer: #f8961e;
+  --student: #2d936c;
+  --shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+  --transition: all 0.3s ease;
+}
+
+.login-container {
+  display: flex;
+  width: 100%;
+  max-width: 1000px;
+  min-height: 600px;
+  max-height: 700px;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+  background-color: var(--white);
+  position: relative;
+  margin: 2rem auto;
+}
+
+/* Left Panel - Branding */
+.brand-section {
+  width: 45%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: var(--white);
+  padding: 50px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  z-index: 1;
+}
+
+.brand-section::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  z-index: -1;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.logo-icon {
+  width: 50px;
+  height: 50px;
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 15px;
+  font-size: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--white);
+}
+
+.logo-text {
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  color: var(--white);
+}
+
+.brand-title {
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 20px;
+  line-height: 1.2;
+  color: var(--white);
+}
+
+.brand-description {
+  font-size: 15px;
+  line-height: 1.6;
+  opacity: 0.85;
+  margin-bottom: 30px;
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.features {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.feature {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  padding: 12px 15px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  transition: var(--transition);
+}
+
+.feature:hover {
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(5px);
+}
+
+.feature i {
+  font-size: 16px;
+  color: var(--white);
+  width: 20px;
+}
+
+.feature span {
+  color: var(--white);
+}
+
+/* Right Panel - Login Form */
+.login-section {
+  width: 55%;
+  padding: 50px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.login-header {
+  margin-bottom: 30px;
+}
+
+.login-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.login-subtitle {
+  font-size: 15px;
+  color: var(--gray);
+  line-height: 1.5;
+}
+
+/* Role Selection */
+.role-selection {
+  margin-bottom: 30px;
+}
+
+.role-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.role-label i {
+  color: var(--primary);
+}
+
+.role-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.role-btn {
+  flex: 1;
+  padding: 14px 10px;
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  background-color: var(--white);
+  color: var(--gray);
+  font-weight: 500;
+  font-size: 14px;
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.role-btn i {
+  font-size: 20px;
+}
+
+.role-btn.active {
+  border-color: var(--primary);
+  background: linear-gradient(135deg, rgba(67, 97, 238, 0.08), rgba(67, 97, 238, 0.04));
+  color: var(--primary);
+  font-weight: 600;
+  box-shadow: 0 8px 20px rgba(67, 97, 238, 0.12);
+  transform: translateY(-2px);
+}
+
+.role-btn.admin.active {
+  border-color: var(--admin);
+  background: linear-gradient(135deg, rgba(114, 9, 183, 0.08), rgba(114, 9, 183, 0.04));
+  color: var(--admin);
+  box-shadow: 0 8px 20px rgba(114, 9, 183, 0.12);
+}
+
+.role-btn.trainer.active {
+  border-color: var(--trainer);
+  background: linear-gradient(135deg, rgba(248, 150, 30, 0.08), rgba(248, 150, 30, 0.04));
+  color: var(--trainer);
+  box-shadow: 0 8px 20px rgba(248, 150, 30, 0.12);
+}
+
+.role-btn.student.active {
+  border-color: var(--student);
+  background: linear-gradient(135deg, rgba(45, 147, 108, 0.08), rgba(45, 147, 108, 0.04));
+  color: var(--student);
+  box-shadow: 0 8px 20px rgba(45, 147, 108, 0.12);
+}
+
+.role-btn:hover:not(.active) {
+  border-color: #d0d7de;
+  background-color: #f8f9fa;
+  transform: translateY(-1px);
+}
+
+/* Login Form - FIXED SECTION */
+.login-form {
+  flex: 1;
+}
+
+.form-group {
+  margin-bottom: 22px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--dark);
+  font-size: 14px;
+}
+
+/* FIXED INPUT CONTAINER WITH ICONS */
+.input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+/* Left icon - positioned absolutely */
+.input-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--gray);
+  font-size: 16px;
+  z-index: 2;
+  pointer-events: none;
+  width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Input field with proper padding for icons */
+.form-input {
+  width: 100%;
+  padding: 14px 50px 14px 50px; /* Equal padding on both sides for symmetry */
+  border: 2px solid #e9ecef;
+  border-radius: 10px;
+  font-size: 15px;
+  background-color: #f8f9fa;
+  color: var(--dark);
+  box-sizing: border-box;
+  transition: var(--transition);
+  line-height: 1.5;
+}
+
+/* Specific padding for email input - more on left for icon */
+.form-input[type="email"] {
+  padding-left: 48px; /* Space for email icon */
+}
+
+/* Specific padding for password input - space for both icons */
+.form-input[type="password"],
+.form-input[type="text"] {
+  padding-left: 48px; /* Space for lock icon */
+  padding-right: 48px; /* Space for eye icon */
+}
+
+/* Focus states */
+.form-input:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--white);
+  box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
+}
+
+.form-input:focus + .input-icon {
+  color: var(--primary);
+}
+
+/* Password toggle button */
+.password-toggle {
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--gray);
+  cursor: pointer;
+  font-size: 16px;
+  z-index: 3;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  transition: var(--transition);
+}
+
+.password-toggle:hover {
+  color: var(--primary);
+  background-color: rgba(67, 97, 238, 0.08);
+}
+
+.password-toggle:active {
+  background-color: rgba(67, 97, 238, 0.12);
+}
+
+/* Form options - keep me signed in and forgot password */
+.form-options {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.checkbox-container {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--gray);
+  user-select: none;
+}
+
+.checkbox-container input[type="checkbox"] {
+  margin-right: 8px;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
+
+.forgot-link {
+  color: var(--primary);
+  font-size: 14px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.forgot-link:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Login button */
+.login-button {
+  width: 100%;
+  padding: 16px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 10px;
+  color: var(--white);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: 'Poppins', sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 25px;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: 0.5s;
+}
+
+.login-button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px rgba(67, 97, 238, 0.25);
+}
+
+.login-button:hover::before {
+  left: 100%;
+}
+
+.login-button:disabled {
+  background: #cccccc;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Spinner for loading state */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--white);
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.signup-link {
+  text-align: center;
+  color: var(--gray);
+  font-size: 14px;
+}
+
+.signup-link a {
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+  transition: var(--transition);
+}
+
+.signup-link a:hover {
+  color: var(--primary-dark);
+  text-decoration: underline;
+}
+
+/* Role Indicator */
+.role-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  background: rgba(67, 97, 238, 0.08);
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--primary);
+  margin-top: 8px;
+}
+
+/* Demo Buttons */
+.demo-buttons {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.demo-buttons p {
+  font-size: 14px;
+  color: var(--gray);
+  margin-bottom: 10px;
+}
+
+.demo-buttons-group {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.demo-btn {
+  padding: 8px 15px;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition);
+  color: white;
+}
+
+.demo-btn.admin {
+  background-color: var(--admin);
+}
+
+.demo-btn.trainer {
+  background-color: var(--trainer);
+}
+
+.demo-btn.student {
+  background-color: var(--student);
+}
+
+.demo-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+/* Error Message */
+.error-message {
+  background-color: #fee2e2;
+  color: #991b1b;
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  border-left: 4px solid #ef4444;
+}
+
+.error-message i {
+  font-size: 16px;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .login-container {
+    flex-direction: column;
+    max-height: none;
+    min-height: auto;
+  }
+  
+  .brand-section, .login-section {
+    width: 100%;
+    padding: 40px;
+  }
+  
+  .brand-section {
+    padding-bottom: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .brand-section, .login-section {
+    padding: 30px;
+  }
+  
+  .role-buttons {
+    flex-direction: column;
+  }
+  
+  .form-options {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .demo-buttons-group {
+    flex-direction: column;
+  }
+  
+  /* Adjust input padding for mobile */
+  .form-input {
+    padding: 12px 40px 12px 40px;
+  }
+  
+  .form-input[type="email"] {
+    padding-left: 40px;
+  }
+  
+  .form-input[type="password"],
+  .form-input[type="text"] {
+    padding-left: 40px;
+    padding-right: 40px;
+  }
+  
+  .input-icon {
+    left: 12px;
+    font-size: 14px;
+  }
+  
+  .password-toggle {
+    right: 12px;
+    font-size: 14px;
+    padding: 6px;
+  }
+}
+
+/* Make LMS label and logo icon white on the login page */
+.login-container .logo-text {
+  color: var(--white);
+}
+
+.login-container .logo-icon,
+.login-container .logo-icon i {
+  color: var(--white);
+}
