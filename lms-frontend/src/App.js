@@ -4,9 +4,9 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
-import AdminDashboard from './pages/AdminDashboard';
-import TrainerDashboard from './pages/TrainerDashboard';
-import StudentDashboard from './pages/StudentDashboard';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import TrainerDashboard from './pages/trainer/TrainerDashboard';
+import StudentDashboard from './pages/student/StudentDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 

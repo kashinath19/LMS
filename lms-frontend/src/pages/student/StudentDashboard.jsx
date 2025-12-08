@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, LayoutGrid, LogOut, Box, Menu } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 import './StudentDashboard.css';
 
 const StudentDashboard = () => {

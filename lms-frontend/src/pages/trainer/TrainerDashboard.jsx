@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { GraduationCap, LayoutGrid, LogOut, Box, Menu } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { API_BASE_URL } from '../utils/constants';
+import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../utils/constants';
 import './TrainerDashboard.css';
 
 const TrainerDashboard = () => {
