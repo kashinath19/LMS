@@ -5,6 +5,7 @@ import PrivateRoute from './components/common/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import StudentDashboard from './pages/StudentDashboard'; // Import New Dashboard
 import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
@@ -21,6 +22,7 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} /> {/* New Route */}
               <Route path="/" element={<NavigateToDashboard />} />
             </Route>
             
@@ -39,7 +41,13 @@ function NavigateToDashboard() {
   
   if (userRole === 'admin') {
     return <Navigate to="/admin-dashboard" replace />;
-  } else if (userRole === 'trainer' || userRole === 'student') {
+  } else if (userRole === 'student') {
+    // Note: If you want strict checking on page refresh, you might redirect to 
+    // profile first or handle logic here. For now, sending to dashboard is standard.
+    // If the profile is missing, the dashboard API calls might fail, or you can 
+    // add a check here similar to Login.jsx if needed.
+    return <Navigate to="/student-dashboard" replace />;
+  } else if (userRole === 'trainer') {
     return <Navigate to="/profile" replace />;
   } else {
     return <Navigate to="/login" replace />;

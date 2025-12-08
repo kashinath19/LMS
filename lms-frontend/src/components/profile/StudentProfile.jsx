@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
@@ -8,20 +9,21 @@ const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfileExists }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
-  const [skills, setSkills] = useState([]);
-  const [skillInput, setSkillInput] = useState('');
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
     phone_number: '',
     date_of_birth: '',
-    current_education: '',
-    institution: '',
-    year_of_study: '',
+    qualification: '',
     bio: '',
-    profile_image_url: ''
+    profile_image_url: '',
+    enrollment_number: '',
+    github_url: '',
+    linkedin_url: '',
+    gender: ''
   });
   const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -67,15 +69,18 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       setLoading(true);
       const token = localStorage.getItem('access_token');
 
+      console.log('Fetching student profile...');
+
       const response = await axios.get(`${API_BASE_URL}/profiles/student`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       const data = response.data;
+      console.log('Student profile fetched:', data);
+      
       setProfileData(data);
       setProfileExists(true);
-      setSkills(data.skills || []);
-      setIsEditing(false); // Set to view mode when profile exists
+      setIsEditing(false);
 
       const imageUrl = extractImageUrl(data);
 
@@ -84,19 +89,22 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         last_name: data.last_name || '',
         phone_number: data.phone_number || '',
         date_of_birth: data.date_of_birth || '',
-        current_education: data.current_education || '',
-        institution: data.institution || '',
-        year_of_study: data.year_of_study || '',
+        qualification: data.qualification || '',
         bio: data.bio || '',
-        profile_image_url: imageUrl || ''
+        profile_image_url: imageUrl || '',
+        enrollment_number: data.enrollment_number || '',
+        github_url: data.github_url || '',
+        linkedin_url: data.linkedin_url || '',
+        gender: data.gender || ''
       });
 
       showMessage('success', 'Student profile loaded successfully');
     } catch (error) {
       if (error.response?.status === 404) {
+        console.log('No student profile found - showing create form');
         setProfileExists(false);
         setIsCreatingNew(true);
-        setIsEditing(true); // Set to edit mode for new profile
+        setIsEditing(true);
         showMessage('info', 'Please create your student profile');
       } else if (error.response?.status === 401) {
         showMessage('error', 'Session expired. Please login again.');
@@ -115,27 +123,10 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const addSkill = (skill) => {
-    const trimmedSkill = skill.trim();
-    if (trimmedSkill && !skills.includes(trimmedSkill)) {
-      setSkills(prev => [...prev, trimmedSkill]);
-      setSkillInput('');
-    }
-  };
-
-  const removeSkill = (index) => setSkills(prev => prev.filter((_, i) => i !== index));
-
-  const handleSkillKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      addSkill(skillInput);
-    }
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!formData.first_name || !formData.last_name || !formData.current_education) {
+    if (!formData.first_name || !formData.last_name || !formData.qualification) {
       showMessage('error', 'Please fill in all required fields');
       return;
     }
@@ -147,14 +138,18 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const method = profileExists ? 'PATCH' : 'POST';
 
       const dataToSubmit = { 
-        ...formData, 
-        skills,
-        // Convert date format if needed
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
+        phone_number: formData.phone_number?.trim() || null,
         date_of_birth: formData.date_of_birth || null,
-        year_of_study: formData.year_of_study ? parseInt(formData.year_of_study) : null
+        qualification: formData.qualification,
+        bio: formData.bio?.trim() || null,
+        profile_image_url: formData.profile_image_url || null,
+        enrollment_number: formData.enrollment_number?.trim() || null,
+        github_url: formData.github_url?.trim() || null,
+        linkedin_url: formData.linkedin_url?.trim() || null,
+        gender: formData.gender || null
       };
-
-      console.log('Submitting student data:', dataToSubmit); // Debug log
 
       const response = await axios({
         method,
@@ -169,41 +164,60 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const updatedData = response.data;
       const imageUrl = extractImageUrl(updatedData);
 
-      // Update ALL states with the new data
       setProfileData(updatedData);
       setProfileExists(true);
       setIsCreatingNew(false);
-      setIsEditing(false); // Switch to view mode after save
+      setIsEditing(false);
 
-      // CRITICAL: Update formData with the response data
       setFormData({
         first_name: updatedData.first_name || '',
         last_name: updatedData.last_name || '',
         phone_number: updatedData.phone_number || '',
         date_of_birth: updatedData.date_of_birth || '',
-        current_education: updatedData.current_education || '',
-        institution: updatedData.institution || '',
-        year_of_study: updatedData.year_of_study || '',
+        qualification: updatedData.qualification || '',
         bio: updatedData.bio || '',
-        profile_image_url: imageUrl || ''
+        profile_image_url: imageUrl || '',
+        enrollment_number: updatedData.enrollment_number || '',
+        github_url: updatedData.github_url || '',
+        linkedin_url: updatedData.linkedin_url || '',
+        gender: updatedData.gender || ''
       });
-      
-      // Update skills from response
-      setSkills(updatedData.skills || []);
 
-      onProfileCreated();
+      if (onProfileCreated) {
+        onProfileCreated();
+      }
+
       showMessage('success', 'Student profile saved successfully!');
+
+      // Redirect to student dashboard after a short delay
+      setTimeout(() => {
+        navigate('/student-dashboard', { replace: true });
+      }, 300);
+
     } catch (error) {
       console.error('Error saving student profile:', error);
-      if (error.response?.status === 400) {
-        showMessage('error', 'Invalid data. Please check your inputs.');
-      } else if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
-      } else if (error.response?.status === 422) {
-        showMessage('error', 'Validation error. Please check all fields.');
-      } else {
-        showMessage('error', error.response?.data?.detail || 'Failed to save profile');
+      console.error('Error response data:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      
+      let errorMessage = 'Failed to save profile';
+      
+      if (error.response) {
+        if (error.response.status === 400) {
+          errorMessage = 'Bad request. Please check your input data.';
+          if (error.response.data?.detail) {
+            errorMessage += ` Details: ${JSON.stringify(error.response.data.detail)}`;
+          }
+        } else if (error.response.status === 401) {
+          errorMessage = 'Session expired. Please login again.';
+        } else if (error.response.status === 422) {
+          errorMessage = 'Validation error. Please check all fields.';
+          if (error.response.data?.detail) {
+            errorMessage += ` Details: ${JSON.stringify(error.response.data.detail)}`;
+          }
+        }
       }
+      
+      showMessage('error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -214,7 +228,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
   };
 
   const handleCancelEdit = () => {
-    // Reset form to current profile data
     if (profileData) {
       const imageUrl = extractImageUrl(profileData);
       setFormData({
@@ -222,13 +235,14 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         last_name: profileData.last_name || '',
         phone_number: profileData.phone_number || '',
         date_of_birth: profileData.date_of_birth || '',
-        current_education: profileData.current_education || '',
-        institution: profileData.institution || '',
-        year_of_study: profileData.year_of_study || '',
+        qualification: profileData.qualification || '',
         bio: profileData.bio || '',
-        profile_image_url: imageUrl || ''
+        profile_image_url: imageUrl || '',
+        enrollment_number: profileData.enrollment_number || '',
+        github_url: profileData.github_url || '',
+        linkedin_url: profileData.linkedin_url || '',
+        gender: profileData.gender || ''
       });
-      setSkills(profileData.skills || []);
     }
     setIsEditing(false);
     showMessage('info', 'Edit cancelled');
@@ -242,26 +256,28 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         last_name: profileData.last_name || '',
         phone_number: profileData.phone_number || '',
         date_of_birth: profileData.date_of_birth || '',
-        current_education: profileData.current_education || '',
-        institution: profileData.institution || '',
-        year_of_study: profileData.year_of_study || '',
+        qualification: profileData.qualification || '',
         bio: profileData.bio || '',
-        profile_image_url: imageUrl || ''
+        profile_image_url: imageUrl || '',
+        enrollment_number: profileData.enrollment_number || '',
+        github_url: profileData.github_url || '',
+        linkedin_url: profileData.linkedin_url || '',
+        gender: profileData.gender || ''
       });
-      setSkills(profileData.skills || []);
     } else {
       setFormData({
         first_name: '',
         last_name: '',
         phone_number: '',
         date_of_birth: '',
-        current_education: '',
-        institution: '',
-        year_of_study: '',
+        qualification: '',
         bio: '',
-        profile_image_url: ''
+        profile_image_url: '',
+        enrollment_number: '',
+        github_url: '',
+        linkedin_url: '',
+        gender: ''
       });
-      setSkills([]);
     }
     showMessage('info', 'Form reset');
   };
@@ -304,11 +320,11 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         showMessage('error', 'Upload succeeded but no image URL returned.');
         console.warn('Upload response:', resp.data);
       } else {
-        // Update both profileData and formData with the new image URL
-        setProfileData(prev => ({ 
-          ...(prev || {}), 
+        const updatedProfileData = { 
+          ...(profileData || {}), 
           profile_image_url: imageUrl 
-        }));
+        };
+        setProfileData(updatedProfileData);
         setFormData(prev => ({ 
           ...prev, 
           profile_image_url: imageUrl 
@@ -327,7 +343,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     }
   };
 
-  // Format date for display
   const formatDate = (dateString) => {
     if (!dateString) return 'Not specified';
     try {
@@ -359,6 +374,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             {!profileImageUrl && getAvatarInitials()}
           </div>
 
+          {/* File input for image upload */}
           <input
             ref={fileInputRef}
             type="file"
@@ -367,14 +383,17 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             onChange={onFileSelected}
           />
 
-          <button
-            type="button"
-            className="upload-btn"
-            onClick={handleUploadClick}
-            disabled={uploading}
-          >
-            {uploading ? 'Uploading...' : 'Upload Photo'}
-          </button>
+          {/* Upload button - only shown in edit mode */}
+          {(isCreatingNew || isEditing) && (
+            <button
+              type="button"
+              className="upload-btn"
+              onClick={handleUploadClick}
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload Photo'}
+            </button>
+          )}
         </div>
 
         <div className="user-summary">
@@ -383,16 +402,14 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           </h2>
           <span id="userInfo">
             {profileExists
-              ? (formData.current_education 
-                  ? `${formData.current_education} student` 
+              ? (formData.qualification 
+                  ? `${formData.qualification}` 
                   : 'Student')
               : 'Complete the form below to get started'
             }
-            {profileExists && formData.institution && ` | ${formData.institution}`}
           </span>
         </div>
         
-        {/* Edit Button at Top Right (only in view mode) */}
         {profileExists && !isEditing && (
           <button 
             type="button" 
@@ -412,7 +429,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           </div>
         )}
 
-        {/* VIEW MODE - Show profile details in list format */}
         {profileExists && !isEditing && (
           <div className="profile-details-list">
             <div className="profile-detail-item">
@@ -436,36 +452,39 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             </div>
             
             <div className="profile-detail-item">
-              <div className="detail-label">Current Education</div>
-              <div className="detail-value">{formData.current_education}</div>
+              <div className="detail-label">Qualification</div>
+              <div className="detail-value">{formData.qualification}</div>
             </div>
             
             <div className="profile-detail-item">
-              <div className="detail-label">Institution</div>
-              <div className="detail-value">{formData.institution || 'Not specified'}</div>
+              <div className="detail-label">Gender</div>
+              <div className="detail-value">{formData.gender || 'Not specified'}</div>
             </div>
             
             <div className="profile-detail-item">
-              <div className="detail-label">Year of Study</div>
-              <div className="detail-value">{formData.year_of_study || 'Not specified'}</div>
+              <div className="detail-label">Enrollment Number</div>
+              <div className="detail-value">{formData.enrollment_number || 'Not specified'}</div>
             </div>
             
             <div className="profile-detail-item">
-              <div className="detail-label">Skills</div>
+              <div className="detail-label">GitHub URL</div>
               <div className="detail-value">
-                {skills.length > 0 ? (
-                  <div className="skills-list">
-                    {skills.map((skill, index) => (
-                      <span key={index} className="skill-badge">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{ color: '#6b7280', fontStyle: 'italic' }}>
-                    No skills added yet
-                  </span>
-                )}
+                {formData.github_url ? (
+                  <a href={formData.github_url} target="_blank" rel="noopener noreferrer">
+                    {formData.github_url}
+                  </a>
+                ) : 'Not specified'}
+              </div>
+            </div>
+            
+            <div className="profile-detail-item">
+              <div className="detail-label">LinkedIn URL</div>
+              <div className="detail-value">
+                {formData.linkedin_url ? (
+                  <a href={formData.linkedin_url} target="_blank" rel="noopener noreferrer">
+                    {formData.linkedin_url}
+                  </a>
+                ) : 'Not specified'}
               </div>
             </div>
             
@@ -478,7 +497,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           </div>
         )}
 
-        {/* EDIT/CREATE MODE - Show form */}
         {(isCreatingNew || isEditing) && (
           <form id="studentForm" onSubmit={handleSubmit}>
             <h3 className="section-label">Personal Information</h3>
@@ -492,6 +510,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   value={formData.first_name}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -504,6 +523,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   value={formData.last_name}
                   onChange={handleChange}
                   required
+                  disabled={loading}
                 />
               </div>
 
@@ -516,6 +536,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   value={formData.phone_number}
                   onChange={handleChange}
                   placeholder="+1 (555) 123-4567"
+                  disabled={loading}
                 />
               </div>
 
@@ -528,81 +549,89 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   value={formData.date_of_birth}
                   onChange={handleChange}
                   max={new Date().toISOString().split('T')[0]}
+                  disabled={loading}
                 />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="studentGender">Gender</label>
+                <select
+                  id="studentGender"
+                  name="gender"
+                  value={formData.gender}
+                  onChange={handleChange}
+                  disabled={loading}
+                >
+                  <option value="">Select gender</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Other">Other</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
               </div>
             </div>
 
             <h3 className="section-label">Educational Information</h3>
             <div className="fields-grid">
               <div className="form-group">
-                <label htmlFor="studentEducation" className="required">Current Education</label>
-                <select
-                  id="studentEducation"
-                  name="current_education"
-                  value={formData.current_education}
-                  onChange={handleChange}
-                  required
-                >
-                  <option value="">Select education level</option>
-                  <option value="High School">High School</option>
-                  <option value="Undergraduate">Undergraduate</option>
-                  <option value="Graduate">Graduate</option>
-                  <option value="Postgraduate">Postgraduate</option>
-                  <option value="Doctorate">Doctorate</option>
-                  <option value="Professional">Professional</option>
-                  <option value="Other">Other</option>
-                </select>
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentInstitution">Institution</label>
+                <label htmlFor="studentQualification" className="required">Qualification</label>
                 <input
                   type="text"
-                  id="studentInstitution"
-                  name="institution"
-                  value={formData.institution}
+                  id="studentQualification"
+                  name="qualification"
+                  value={formData.qualification}
                   onChange={handleChange}
-                  placeholder="University or School Name"
+                  required
+                  placeholder="e.g., B.Tech, B.Sc, M.Sc, etc."
+                  disabled={loading}
                 />
               </div>
 
               <div className="form-group">
-                <label htmlFor="studentYear">Year of Study</label>
+                <label htmlFor="studentEnrollment">Enrollment Number</label>
                 <input
-                  type="number"
-                  id="studentYear"
-                  name="year_of_study"
-                  value={formData.year_of_study}
+                  type="text"
+                  id="studentEnrollment"
+                  name="enrollment_number"
+                  value={formData.enrollment_number}
                   onChange={handleChange}
-                  min="1"
-                  max="10"
-                  placeholder="e.g., 3"
+                  placeholder="University enrollment number"
+                  disabled={loading}
                 />
               </div>
             </div>
 
-            <h3 className="section-label">Skills & Bio</h3>
+            <h3 className="section-label">Social Links</h3>
             <div className="fields-grid">
-              <div className="form-group full-width">
-                <label htmlFor="studentSkills">Skills</label>
-                <div className="skills-container" id="skillsContainer">
-                  {skills.map((skill, index) => (
-                    <div key={index} className="skill-tag">
-                      {skill}
-                      <span className="remove-skill" onClick={() => removeSkill(index)}>×</span>
-                    </div>
-                  ))}
-                </div>
+              <div className="form-group">
+                <label htmlFor="studentGithub">GitHub URL</label>
                 <input
-                  type="text"
-                  id="studentSkillInput"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={handleSkillKeyPress}
-                  placeholder="Add a skill and press Enter"
+                  type="url"
+                  id="studentGithub"
+                  name="github_url"
+                  value={formData.github_url}
+                  onChange={handleChange}
+                  placeholder="https://github.com/username"
+                  disabled={loading}
                 />
               </div>
 
+              <div className="form-group">
+                <label htmlFor="studentLinkedin">LinkedIn URL</label>
+                <input
+                  type="url"
+                  id="studentLinkedin"
+                  name="linkedin_url"
+                  value={formData.linkedin_url}
+                  onChange={handleChange}
+                  placeholder="https://linkedin.com/in/username"
+                  disabled={loading}
+                />
+              </div>
+            </div>
+
+            <h3 className="section-label">Bio</h3>
+            <div className="fields-grid">
               <div className="form-group full-width">
                 <label htmlFor="studentBio">Bio / About Me</label>
                 <textarea
@@ -612,6 +641,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   onChange={handleChange}
                   placeholder="Tell us about your educational background, interests, and goals..."
                   rows="4"
+                  disabled={loading}
                 />
               </div>
             </div>

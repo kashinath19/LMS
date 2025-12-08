@@ -1,4 +1,35 @@
+/* Breadcrumb / Back button */
+.profile-breadcrumbs {
+  padding: 1rem 2rem;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border-bottom: 1px solid rgba(16,24,40,0.04);
+}
+
+.back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #ffffff;
+  color: #1f2937;
+  border: 1px solid #e5e7eb;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.12s ease, transform 0.12s ease;
+}
+
+.back-btn:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+}
+
+/* Small responsive container adjustment for profile page */
 .profile-page-container {
-  min-height: 100vh;
-  background-color: #f3f4f6;
+  display: block;
+  min-height: calc(100vh - 0px);
+  background: #f9fafb;
 }

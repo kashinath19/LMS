@@ -5,6 +5,8 @@ import PrivateRoute from './components/common/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import TrainerDashboard from './pages/TrainerDashboard';
+import StudentDashboard from './pages/StudentDashboard';
 import NotFoundPage from './pages/NotFoundPage';
 import './App.css';
 
@@ -21,6 +23,8 @@ function App() {
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
+              <Route path="/student-dashboard" element={<StudentDashboard />} />
               <Route path="/" element={<NavigateToDashboard />} />
             </Route>
             
@@ -39,8 +43,10 @@ function NavigateToDashboard() {
   
   if (userRole === 'admin') {
     return <Navigate to="/admin-dashboard" replace />;
-  } else if (userRole === 'trainer' || userRole === 'student') {
-    return <Navigate to="/profile" replace />;
+  } else if (userRole === 'trainer') {
+    return <Navigate to="/trainer-dashboard" replace />;
+  } else if (userRole === 'student') {
+    return <Navigate to="/student-dashboard" replace />;
   } else {
     return <Navigate to="/login" replace />;
   }

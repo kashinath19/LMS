@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { API_BASE_URL } from '../../utils/constants';
 import './Login.css';
 
 const Login = () => {
@@ -11,11 +12,10 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  
+
   const { login } = useAuth();
   const navigate = useNavigate();
 
-  // Placeholder email based on selected role
   const getPlaceholderEmail = (selectedRole) => {
     const placeholders = {
       admin: 'admin@institution.edu',
@@ -25,7 +25,6 @@ const Login = () => {
     return placeholders[selectedRole] || '';
   };
 
-  // Placeholder text for role indicator
   const getRoleLabel = (selectedRole) => {
     const labels = {
       admin: 'Administrator Access',
@@ -35,7 +34,6 @@ const Login = () => {
     return labels[selectedRole] || '';
   };
 
-  // Icon for role indicator
   const getRoleIcon = (selectedRole) => {
     const icons = {
       admin: 'fa-user-shield',
@@ -48,26 +46,46 @@ const Login = () => {
   const handleRoleChange = (newRole) => {
     console.log('Login - Role changed to:', newRole);
     setRole(newRole);
-    // Clear email and password when changing role
     setEmail('');
     setPassword('');
     setError('');
   };
 
+  const checkProfileExists = async (role, userId, token) => {
+    if (!userId) return false;
+    const endpointRole = role === 'trainer' ? 'trainer' : 'student';
+    const url = `${API_BASE_URL}/profiles/${endpointRole}/${userId}`;
+    try {
+      const res = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      if (res.ok) {
+        return true;
+      } else if (res.status === 404) {
+        return false;
+      } else {
+        // other error - treat as missing profile to allow profile setup
+        return false;
+      }
+    } catch (err) {
+      console.error('Error checking profile existence:', err);
+      return false;
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Login - Form submitted');
-    
-    // Clear any previous errors
     setError('');
-    
-    // Basic validation
+
     if (!email || !password) {
       setError('Please enter both email and password');
       return;
     }
-    
-    // Email validation
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       setError('Please enter a valid email address');
@@ -79,22 +97,31 @@ const Login = () => {
 
     try {
       const result = await login(email, password, role);
-      
+
       if (result.success) {
         console.log('Login - Login successful, result:', result);
-        console.log('Login - Stored token:', localStorage.getItem('access_token'));
-        console.log('Login - Stored role:', localStorage.getItem('user_role'));
-        console.log('Login - Stored email:', localStorage.getItem('user_email'));
-        
-        // Determine redirect path based on role
+
+        // Attempt to obtain user_id (AuthContext stores it in localStorage when available)
+        const storedUserId = localStorage.getItem('user_id');
+        const token = localStorage.getItem('access_token');
+        console.log('Login - storedUserId:', storedUserId, 'token present:', !!token);
+
         let redirectPath = '/profile';
+
         if (role === 'admin') {
           redirectPath = '/admin-dashboard';
+        } else if (role === 'trainer' || role === 'student') {
+          const profileExists = await checkProfileExists(role, storedUserId, token);
+          console.log('Login - profileExists for', role, storedUserId, ':', profileExists);
+          if (profileExists) {
+            redirectPath = role === 'trainer' ? '/trainer-dashboard' : '/student-dashboard';
+          } else {
+            redirectPath = '/profile';
+          }
         }
-        
+
         console.log('Login - Redirecting to:', redirectPath);
-        
-        // Use a small delay to ensure state is updated
+        // small timeout to ensure state is set, then navigate
         setTimeout(() => {
           navigate(redirectPath, { replace: true });
         }, 50);
@@ -120,12 +147,12 @@ const Login = () => {
           </div>
           <div className="logo-text">LMS Portal</div>
         </div>
-        
+
         <h1 className="brand-title">Learning Management System</h1>
         <p className="brand-description">
           A comprehensive platform designed for educational institutions to manage courses, track progress, and facilitate learning.
         </p>
-        
+
         <div className="features">
           <div className="feature">
             <i className="fas fa-shield-alt"></i>
@@ -141,7 +168,7 @@ const Login = () => {
           </div>
         </div>
       </div>
-      
+
       {/* Right: Login Section */}
       <div className="login-section">
         <div className="login-header">
@@ -152,7 +179,7 @@ const Login = () => {
             <span>{getRoleLabel(role)}</span>
           </div>
         </div>
-        
+
         {/* Role Selection */}
         <div className="role-selection">
           <div className="role-label">
@@ -160,7 +187,7 @@ const Login = () => {
             Select Access Level
           </div>
           <div className="role-buttons">
-            <button 
+            <button
               className={`role-btn admin ${role === 'admin' ? 'active' : ''}`}
               onClick={() => handleRoleChange('admin')}
               type="button"
@@ -169,7 +196,7 @@ const Login = () => {
               <i className="fas fa-user-shield"></i>
               <span>Administrator</span>
             </button>
-            <button 
+            <button
               className={`role-btn trainer ${role === 'trainer' ? 'active' : ''}`}
               onClick={() => handleRoleChange('trainer')}
               type="button"
@@ -178,7 +205,7 @@ const Login = () => {
               <i className="fas fa-chalkboard-teacher"></i>
               <span>Trainer</span>
             </button>
-            <button 
+            <button
               className={`role-btn student ${role === 'student' ? 'active' : ''}`}
               onClick={() => handleRoleChange('student')}
               type="button"
@@ -189,7 +216,7 @@ const Login = () => {
             </button>
           </div>
         </div>
-        
+
         {/* Error Message */}
         {error && (
           <div className="error-message">
@@ -197,17 +224,17 @@ const Login = () => {
             <span>{error}</span>
           </div>
         )}
-        
+
         {/* Login Form */}
         <form className="login-form" onSubmit={handleSubmit}>
           <div className="form-group">
             <label className="form-label" htmlFor="email">Email Address</label>
             <div className="input-container">
               <i className="input-icon fas fa-envelope"></i>
-              <input 
-                type="email" 
-                id="email" 
-                className="form-input" 
+              <input
+                type="email"
+                id="email"
+                className="form-input"
                 placeholder={getPlaceholderEmail(role)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -217,15 +244,15 @@ const Login = () => {
               />
             </div>
           </div>
-          
+
           <div className="form-group">
             <label className="form-label" htmlFor="password">Password</label>
             <div className="input-container">
               <i className="input-icon fas fa-lock"></i>
-              <input 
-                type={showPassword ? "text" : "password"} 
-                id="password" 
-                className="form-input" 
+              <input
+                type={showPassword ? "text" : "password"}
+                id="password"
+                className="form-input"
                 placeholder="Enter your secure password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -233,23 +260,22 @@ const Login = () => {
                 required
                 disabled={loading}
               />
-              <button 
-                type="button" 
-                className="password-toggle" 
+              <button
+                type="button"
+                className="password-toggle"
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
-                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
               </button>
             </div>
           </div>
-          
+
           <div className="form-options">
             <label className="checkbox-container">
-              <input 
-                type="checkbox" 
-                id="remember" 
+              <input
+                type="checkbox"
+                id="remember"
                 checked={rememberMe}
                 onChange={(e) => setRememberMe(e.target.checked)}
                 autoComplete="off"
@@ -259,10 +285,10 @@ const Login = () => {
             </label>
             <a href="#" className="forgot-link">Forgot Password?</a>
           </div>
-          
-          <button 
-            type="submit" 
-            className="login-button" 
+
+          <button
+            type="submit"
+            className="login-button"
             disabled={loading}
           >
             {loading ? (
@@ -273,11 +299,11 @@ const Login = () => {
             ) : (
               <>
                 <i className="fas fa-sign-in-alt"></i>
-                <span>Sign In to Dashboard</span>
+                <span>Sign In</span>
               </>
             )}
           </button>
-          
+
           <div className="signup-link">
             Need platform access? <a href="#">Contact system administrator</a>
           </div>

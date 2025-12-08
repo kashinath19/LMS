@@ -81,6 +81,7 @@ export const authAPI = {
 export const profileAPI = {
   // Student endpoints
   getStudentProfile: () => api.get('/profiles/student'),
+  getStudentProfileById: (id) => api.get(`/profiles/student/${id}`),
   createStudentProfile: (data) => api.post('/profiles/student', data),
   updateStudentProfile: (data) => api.patch('/profiles/student', data),
 

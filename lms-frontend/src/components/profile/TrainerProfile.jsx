@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import './Profile.css';
 
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
@@ -8,6 +9,7 @@ const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfileExists }) => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
   const [skills, setSkills] = useState([]);
@@ -65,11 +67,15 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       setLoading(true);
       const token = localStorage.getItem('access_token');
 
+      console.log('Fetching trainer profile...'); // Debug
+
       const response = await axios.get(`${API_BASE_URL}/profiles/trainer`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       const data = response.data;
+      console.log('Profile fetched:', data); // Debug
+      
       setProfileData(data);
       setProfileExists(true);
       setSkills(data.skills || []);
@@ -90,6 +96,7 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       showMessage('success', 'Profile loaded successfully');
     } catch (error) {
       if (error.response?.status === 404) {
+        console.log('No profile found - showing create form'); // Debug
         setProfileExists(false);
         setIsCreatingNew(true);
         setIsEditing(true); // Set to edit mode for new profile
@@ -151,8 +158,6 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         experience_years: parseInt(formData.experience_years) || 0
       };
 
-      console.log('Submitting data:', dataToSubmit); // Debug log
-
       const response = await axios({
         method,
         url: endpoint,
@@ -166,13 +171,11 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const updatedData = response.data;
       const imageUrl = extractImageUrl(updatedData);
 
-      // Update ALL states with the new data
+      // Update local state with response
       setProfileData(updatedData);
       setProfileExists(true);
       setIsCreatingNew(false);
-      setIsEditing(false); // Switch to view mode after save
-      
-      // CRITICAL: Update formData with the response data
+      setIsEditing(false);
       setFormData({
         first_name: updatedData.first_name || '',
         last_name: updatedData.last_name || '',
@@ -182,14 +185,24 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         bio: updatedData.bio || '',
         profile_image_url: imageUrl || ''
       });
-      
-      // Update skills from response
       setSkills(updatedData.skills || []);
-      
+
+      // small re-render trick (keeps loading logic consistent)
+      setLoading(prev => !prev);
+      setLoading(false);
+
       onProfileCreated();
       showMessage('success', 'Profile saved successfully!');
+
+      // Redirect to trainer dashboard after a short delay (do not log out)
+      setTimeout(() => {
+        navigate('/trainer-dashboard', { replace: true });
+      }, 300);
+
     } catch (error) {
       console.error('Error saving profile:', error);
+      console.error('Error response:', error.response);
+
       if (error.response?.status === 400) {
         showMessage('error', 'Invalid data. Please check your inputs.');
       } else if (error.response?.status === 401) {
@@ -294,10 +307,11 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         console.warn('Upload response:', resp.data);
       } else {
         // Update both profileData and formData with the new image URL
-        setProfileData(prev => ({ 
-          ...(prev || {}), 
+        const updatedProfileData = { 
+          ...(profileData || {}), 
           profile_image_url: imageUrl 
-        }));
+        };
+        setProfileData(updatedProfileData);
         setFormData(prev => ({ 
           ...prev, 
           profile_image_url: imageUrl 
@@ -342,14 +356,17 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             onChange={onFileSelected}
           />
 
-          <button
-            type="button"
-            className="upload-btn"
-            onClick={handleUploadClick}
-            disabled={uploading}
-          >
-            {uploading ? 'Uploading...' : 'Upload Photo'}
-          </button>
+          {/* Only show upload button when in edit mode */}
+          {(isCreatingNew || isEditing) && (
+            <button
+              type="button"
+              className="upload-btn"
+              onClick={handleUploadClick}
+              disabled={uploading}
+            >
+              {uploading ? 'Uploading...' : 'Upload Photo'}
+            </button>
+          )}
         </div>
 
         <div className="user-summary">
