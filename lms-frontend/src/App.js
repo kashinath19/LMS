@@ -1,10 +1,11 @@
 import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 import LoginPage from './pages/LoginPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
 import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import StudentDashboard from './pages/student/StudentDashboard';
 import NotFoundPage from './pages/NotFoundPage';
@@ -22,9 +23,16 @@ function App() {
             {/* Protected routes - Use PrivateRoute as layout */}
             <Route element={<PrivateRoute />}>
               <Route path="/profile" element={<ProfilePage />} />
+              
+              {/* Admin Routes */}
               <Route path="/admin-dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/users" element={<UserManagement />} />
+
+              {/* Trainer & Student Routes */}
               <Route path="/trainer-dashboard" element={<TrainerDashboard />} />
               <Route path="/student-dashboard" element={<StudentDashboard />} />
+              
+              {/* Default Redirect */}
               <Route path="/" element={<NavigateToDashboard />} />
             </Route>
             

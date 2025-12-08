@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import './AdminDashboard.css';
@@ -7,6 +8,7 @@ const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
+  const navigate = useNavigate(); // Hook for navigation
   const [trainerModalOpen, setTrainerModalOpen] = useState(false);
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -389,10 +391,17 @@ const AdminDashboard = () => {
         </div>
 
         <div className="nav-links">
-          <a href="#" className="nav-item active">
+          {/* Dashboard Link - Using Link component */}
+          <Link to="/admin-dashboard" className="nav-item active">
             <i className="fas fa-tachometer-alt"></i>
             <span className="nav-text">Dashboard</span>
-          </a>
+          </Link>
+          
+          {/* User Management Link - Added for easy access */}
+          <Link to="/admin/users" className="nav-item">
+            <i className="fas fa-users-cog"></i>
+            <span className="nav-text">User Management</span>
+          </Link>
         </div>
 
         <div className="sidebar-footer">
@@ -479,6 +488,20 @@ const AdminDashboard = () => {
               Use "Create Student" button to register new students
             </div>
           </div>
+
+          {/* NEW CARD: USER MANAGEMENT */}
+          <div className="card" onClick={() => navigate('/admin/users')} style={{cursor: 'pointer'}}>
+            <div className="card-header">
+              <h3 className="card-title">All Users</h3>
+              <div className="card-icon" style={{background: '#e8daff', color: '#6f42c1'}}>
+                <i className="fas fa-users-cog"></i>
+              </div>
+            </div>
+            <div className="card-value">View & Edit Users</div>
+            <div className="card-change">
+              Click here to manage, edit, or delete user accounts
+            </div>
+          </div>
         </div>
 
         {/* Information Section */}
@@ -489,7 +512,7 @@ const AdminDashboard = () => {
             <li>Register new trainers with domain assignments</li>
             <li>Register new students (domain assignment is optional)</li>
             <li>Register new admins (admin-only)</li>
-            <li>Manage user accounts and permissions</li>
+            <li>Manage user accounts and permissions via the User Management page</li>
             <li>Monitor system activity</li>
           </ul>
         </div>

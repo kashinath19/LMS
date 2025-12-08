@@ -429,74 +429,92 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           </div>
         )}
 
+        {/* NEW PROFILE DISPLAY LAYOUT - Matching the image */}
         {profileExists && !isEditing && (
-          <div className="profile-details-list">
-            <div className="profile-detail-item">
-              <div className="detail-label">First Name</div>
-              <div className="detail-value">{formData.first_name}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Last Name</div>
-              <div className="detail-value">{formData.last_name}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Phone Number</div>
-              <div className="detail-value">{formData.phone_number || 'Not specified'}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Date of Birth</div>
-              <div className="detail-value">{formatDate(formData.date_of_birth)}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Qualification</div>
-              <div className="detail-value">{formData.qualification}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Gender</div>
-              <div className="detail-value">{formData.gender || 'Not specified'}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Enrollment Number</div>
-              <div className="detail-value">{formData.enrollment_number || 'Not specified'}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">GitHub URL</div>
-              <div className="detail-value">
-                {formData.github_url ? (
-                  <a href={formData.github_url} target="_blank" rel="noopener noreferrer">
-                    {formData.github_url}
-                  </a>
-                ) : 'Not specified'}
+          <div className="profile-display-layout">
+            {/* Personal Information Section */}
+            <div className="profile-section">
+              <h3 className="section-title">Personal Information</h3>
+              <div className="info-grid">
+                <div className="info-row">
+                  <div className="info-label">Qualification</div>
+                  <div className="info-value">{formData.qualification || 'Not specified'}</div>
+                </div>
+                <div className="info-row">
+                  <div className="info-label">Date of Birth</div>
+                  <div className="info-value">{formatDate(formData.date_of_birth)}</div>
+                </div>
+              </div>
+              
+              <div className="info-row">
+                <div className="info-label">Gender</div>
+                <div className="info-value">{formData.gender || 'Not specified'}</div>
               </div>
             </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">LinkedIn URL</div>
-              <div className="detail-value">
-                {formData.linkedin_url ? (
-                  <a href={formData.linkedin_url} target="_blank" rel="noopener noreferrer">
-                    {formData.linkedin_url}
-                  </a>
-                ) : 'Not specified'}
+
+            {/* Bio Section */}
+            {formData.bio && (
+              <div className="profile-section">
+                <h3 className="section-title">Bio</h3>
+                <div className="bio-content">
+                  {formData.bio}
+                </div>
               </div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Bio / About Me</div>
-              <div className="detail-value bio">
-                {formData.bio || 'No bio provided'}
+            )}
+
+            {/* Social Links Section */}
+            {(formData.github_url || formData.linkedin_url) && (
+              <div className="profile-section">
+                <h3 className="section-title">Social Links</h3>
+                <div className="social-links">
+                  {formData.github_url && (
+                    <a 
+                      href={formData.github_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="social-link"
+                    >
+                      <i className="fab fa-github"></i> GitHub
+                    </a>
+                  )}
+                  {formData.linkedin_url && (
+                    <a 
+                      href={formData.linkedin_url} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="social-link"
+                    >
+                      <i className="fab fa-linkedin"></i> LinkedIn
+                    </a>
+                  )}
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Additional Information (Optional - shown in edit mode) */}
+            {(formData.phone_number || formData.enrollment_number) && (
+              <div className="profile-section">
+                <h3 className="section-title">Additional Information</h3>
+                <div className="info-grid">
+                  {formData.phone_number && (
+                    <div className="info-row">
+                      <div className="info-label">Phone Number</div>
+                      <div className="info-value">{formData.phone_number}</div>
+                    </div>
+                  )}
+                  {formData.enrollment_number && (
+                    <div className="info-row">
+                      <div className="info-label">Enrollment Number</div>
+                      <div className="info-value">{formData.enrollment_number}</div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         )}
 
+        {/* EDIT FORM (Keep existing form code) */}
         {(isCreatingNew || isEditing) && (
           <form id="studentForm" onSubmit={handleSubmit}>
             <h3 className="section-label">Personal Information</h3>
