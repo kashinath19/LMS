@@ -1,32 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, LayoutGrid, LogOut, Box, Menu } from 'lucide-react';
+import { GraduationCap, LayoutGrid, LogOut, Box, Menu, X } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import TrainerProfile from '../../components/profile/TrainerProfile';
 import { API_BASE_URL } from '../../utils/constants';
 import './TrainerDashboard.css';
 
 const TrainerDashboard = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
-  
-  const { user, logout } = useAuth(); 
+  const [message, setMessage] = useState({ type: '', text: '' });
+  const [profileExists, setProfileExists] = useState(false);
+
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // Fetch Trainer Profile Data on Mount
+  // Fetch Trainer Profile Data for header display
   const fetchProfile = useCallback(async () => {
-    // Need user ID to fetch profile
-    const userId = user?.id || localStorage.getItem('user_id');
-    
-    console.log('TrainerDashboard - Fetching profile for userId:', userId);
-    
-    if (!userId) {
-      console.log("No user ID found, skipping profile fetch");
-      return;
-    }
-
     try {
       const token = localStorage.getItem('access_token');
-      const response = await fetch(`${API_BASE_URL}/profiles/trainer/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/profiles/trainer`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -36,15 +30,21 @@ const TrainerDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log("Trainer profile fetched:", data);
+        console.log('Trainer profile fetched:', data);
         setProfileData(data);
+        setProfileExists(true);
+      } else if (response.status === 404) {
+        setProfileData(null);
+        setProfileExists(false);
       } else {
-        console.error("Failed to fetch trainer profile:", response.status);
+        console.warn('Failed to load trainer profile: ', response.status);
       }
     } catch (error) {
-      console.error("Error loading trainer profile:", error);
+      console.log('Profile not created yet or error loading:', error);
+      setProfileData(null);
+      setProfileExists(false);
     }
-  }, [user]);
+  }, []);
 
   useEffect(() => {
     fetchProfile();
@@ -62,12 +62,34 @@ const TrainerDashboard = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
+  const handleProfileClick = () => {
+    setShowProfile(true);
+    setIsSidebarOpen(false);
+  };
+
+  const handleBackToDashboard = () => {
+    setShowProfile(false);
+    // Refresh profile data
+    fetchProfile();
+  };
+
+  const showMessage = (type, text) => {
+    setMessage({ type, text });
+    setTimeout(() => {
+      setMessage({ type: '', text: '' });
+    }, 5000);
+  };
+
+  const handleProfileCreated = () => {
+    setProfileExists(true);
+    fetchProfile();
+  };
+
   // Helper to determine which image to show
   const getProfileImage = () => {
     if (profileData && profileData.profile_image_url) {
       return profileData.profile_image_url;
     }
-    // Fallback if no custom image exists
     const seed = profileData?.user_id || user?.email?.split('@')[0] || 'Trainer';
     return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
   };
@@ -75,7 +97,7 @@ const TrainerDashboard = () => {
   // Helper for name display
   const getDisplayName = () => {
     if (profileData && profileData.first_name) {
-      return `${profileData.first_name} ${profileData.last_name || ''}`;
+      return `${profileData.first_name} ${profileData.last_name || ''}`.trim();
     }
     return user?.email?.split('@')[0] || 'Trainer';
   };
@@ -91,10 +113,17 @@ const TrainerDashboard = () => {
           </div>
 
           <nav className="sidebar-nav">
-            <Link to="/trainer-dashboard" className="nav-item active">
+            <button
+              className={`nav-item ${!showProfile ? 'active' : ''}`}
+              onClick={() => {
+                setShowProfile(false);
+                setIsSidebarOpen(false);
+              }}
+              style={{ border: 'none', background: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
+            >
               <LayoutGrid size={20} />
               <span>Dashboard</span>
-            </Link>
+            </button>
           </nav>
         </div>
 
@@ -110,30 +139,64 @@ const TrainerDashboard = () => {
       <div className="main-content">
         <header className="top-header">
           <div className="page-title">
-            Dashboard
+            {showProfile ? 'Trainer Profile' : 'Dashboard'}
           </div>
 
-          {/* Profile Section - Clickable Link to Profile Page */}
-          <Link to="/profile" className="profile-section" style={{ textDecoration: 'none' }}>
-            <div className="profile-info">
-              <p className="profile-name">{getDisplayName()}</p>
-              <p className="profile-role">Trainer</p>
-            </div>
-            <div className="profile-avatar">
-              <img 
-                src={getProfileImage()} 
-                alt="Profile" 
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-              />
-            </div>
-          </Link>
+          {/* Profile Section - Clickable to show profile in dashboard */}
+          {!showProfile && (
+            <button
+              onClick={handleProfileClick}
+              className="profile-section"
+              style={{ border: 'none', background: 'none', cursor: 'pointer' }}
+            >
+              <div className="profile-info">
+                <p className="profile-name">{getDisplayName()}</p>
+                <p className="profile-role">Trainer</p>
+              </div>
+              <div className="profile-avatar">
+                <img
+                  src={getProfileImage()}
+                  alt="Profile"
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                />
+              </div>
+            </button>
+          )}
+
+          {showProfile && (
+            <button
+              onClick={handleBackToDashboard}
+              className="back-button"
+              style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0.5rem' }}
+            >
+              <X size={24} />
+            </button>
+          )}
         </header>
 
         <main className="content-area">
-          <div className="empty-state">
-            <Box size={48} className="empty-icon" />
-            <span className="empty-text">Empty Dashboard</span>
-          </div>
+          {!showProfile ? (
+            // Dashboard View
+            <div className="empty-state">
+              <Box size={48} className="empty-icon" />
+              <span className="empty-text">Empty Dashboard</span>
+            </div>
+          ) : (
+            // Profile View - Using TrainerProfile Component
+            <div className="profile-view-container">
+              {message.text && (
+                <div className={`message-banner ${message.type}`}>
+                  {message.text}
+                </div>
+              )}
+              <TrainerProfile
+                showMessage={showMessage}
+                onProfileCreated={handleProfileCreated}
+                profileExists={profileExists}
+                setProfileExists={setProfileExists}
+              />
+            </div>
+          )}
         </main>
       </div>
 

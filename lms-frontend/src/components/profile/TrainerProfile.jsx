@@ -1,15 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
-import { useNavigate } from 'react-router-dom';
-import './Profile.css';
+import './TrainerProfile.css';
 
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfileExists }) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
   const [skills, setSkills] = useState([]);
@@ -27,6 +25,22 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
   const [uploading, setUploading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const fileInputRef = useRef(null);
+
+  // local toast for inline "Changes saved" replication
+  const [toastMessage, setToastMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
+
+  useEffect(() => {
+    fetchProfile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (showToast) {
+      const t = setTimeout(() => setShowToast(false), 3500);
+      return () => clearTimeout(t);
+    }
+  }, [showToast]);
 
   const resolveUrl = (url) => {
     if (!url) return '';
@@ -58,28 +72,20 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     return '';
   };
 
-  useEffect(() => {
-    fetchProfile();
-  }, []);
-
   const fetchProfile = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
-
-      console.log('Fetching trainer profile...'); // Debug
 
       const response = await axios.get(`${API_BASE_URL}/profiles/trainer`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
 
       const data = response.data;
-      console.log('Profile fetched:', data); // Debug
-      
       setProfileData(data);
       setProfileExists(true);
       setSkills(data.skills || []);
-      setIsEditing(false); // Set to view mode when profile exists
+      setIsEditing(false);
 
       const imageUrl = extractImageUrl(data);
 
@@ -93,20 +99,18 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         profile_image_url: imageUrl || ''
       });
 
-      showMessage('success', 'Profile loaded successfully');
+      if (showMessage) showMessage('success', 'Profile loaded successfully');
     } catch (error) {
       if (error.response?.status === 404) {
-        console.log('No profile found - showing create form'); // Debug
         setProfileExists(false);
         setIsCreatingNew(true);
-        setIsEditing(true); // Set to edit mode for new profile
-        showMessage('info', 'Please create your trainer profile');
+        setIsEditing(true);
+        if (showMessage) showMessage('info', 'Please create your trainer profile');
       } else if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
+        if (showMessage) showMessage('error', 'Session expired. Please login again.');
         setTimeout(() => window.location.href = '/login', 1500);
       } else {
-        console.error('Error fetching profile:', error);
-        showMessage('error', 'Failed to load profile. Please try again.');
+        if (showMessage) showMessage('error', 'Failed to load profile. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -115,9 +119,9 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ 
-      ...prev, 
-      [name]: name === 'experience_years' ? parseInt(value) || 0 : value 
+    setFormData(prev => ({
+      ...prev,
+      [name]: name === 'experience_years' ? parseInt(value) || 0 : value
     }));
   };
 
@@ -142,7 +146,7 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     e.preventDefault();
 
     if (!formData.first_name || !formData.last_name || !formData.qualification) {
-      showMessage('error', 'Please fill in all required fields');
+      if (showMessage) showMessage('error', 'Please fill in all required fields');
       return;
     }
 
@@ -152,8 +156,8 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const endpoint = `${API_BASE_URL}/profiles/trainer`;
       const method = profileExists ? 'PATCH' : 'POST';
 
-      const dataToSubmit = { 
-        ...formData, 
+      const dataToSubmit = {
+        ...formData,
         skills,
         experience_years: parseInt(formData.experience_years) || 0
       };
@@ -171,7 +175,6 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const updatedData = response.data;
       const imageUrl = extractImageUrl(updatedData);
 
-      // Update local state with response
       setProfileData(updatedData);
       setProfileExists(true);
       setIsCreatingNew(false);
@@ -187,42 +190,29 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       });
       setSkills(updatedData.skills || []);
 
-      // small re-render trick (keeps loading logic consistent)
-      setLoading(prev => !prev);
-      setLoading(false);
-
-      onProfileCreated();
-      showMessage('success', 'Profile saved successfully!');
-
-      // Redirect to trainer dashboard after a short delay (do not log out)
-      setTimeout(() => {
-        navigate('/trainer-dashboard', { replace: true });
-      }, 300);
-
+      if (onProfileCreated) onProfileCreated();
+      if (showMessage) showMessage('success', 'Profile saved successfully!');
+      // local toast
+      setToastMessage('Changes saved successfully');
+      setShowToast(true);
     } catch (error) {
-      console.error('Error saving profile:', error);
-      console.error('Error response:', error.response);
-
       if (error.response?.status === 400) {
-        showMessage('error', 'Invalid data. Please check your inputs.');
+        if (showMessage) showMessage('error', 'Invalid data. Please check your inputs.');
       } else if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
+        if (showMessage) showMessage('error', 'Session expired. Please login again.');
       } else if (error.response?.status === 422) {
-        showMessage('error', 'Validation error. Please check all fields.');
+        if (showMessage) showMessage('error', 'Validation error. Please check all fields.');
       } else {
-        showMessage('error', error.response?.data?.detail || 'Failed to save profile');
+        if (showMessage) showMessage('error', error.response?.data?.detail || 'Failed to save profile');
       }
     } finally {
       setLoading(false);
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  const handleEdit = () => setIsEditing(true);
 
   const handleCancelEdit = () => {
-    // Reset form to current profile data
     if (profileData) {
       const imageUrl = extractImageUrl(profileData);
       setFormData({
@@ -237,7 +227,7 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       setSkills(profileData.skills || []);
     }
     setIsEditing(false);
-    showMessage('info', 'Edit cancelled');
+    if (showMessage) showMessage('info', 'Edit cancelled');
   };
 
   const resetForm = () => {
@@ -265,7 +255,7 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       });
       setSkills([]);
     }
-    showMessage('info', 'Form reset');
+    if (showMessage) showMessage('info', 'Form reset');
   };
 
   const getAvatarInitials = () => {
@@ -276,8 +266,8 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
   const profileImageUrl = formData.profile_image_url || profileData?.profile_image_url || '';
 
-  const handleUploadClick = () => { 
-    if (fileInputRef.current) fileInputRef.current.click(); 
+  const handleUploadClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const onFileSelected = async (e) => {
@@ -303,27 +293,26 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
       const imageUrl = extractImageUrl(resp.data);
       if (!imageUrl) {
-        showMessage('error', 'Upload succeeded but no image URL returned.');
-        console.warn('Upload response:', resp.data);
+        if (showMessage) showMessage('error', 'Upload succeeded but no image URL returned.');
       } else {
-        // Update both profileData and formData with the new image URL
-        const updatedProfileData = { 
-          ...(profileData || {}), 
-          profile_image_url: imageUrl 
+        const updatedProfileData = {
+          ...(profileData || {}),
+          profile_image_url: imageUrl
         };
         setProfileData(updatedProfileData);
-        setFormData(prev => ({ 
-          ...prev, 
-          profile_image_url: imageUrl 
+        setFormData(prev => ({
+          ...prev,
+          profile_image_url: imageUrl
         }));
-        showMessage('success', 'Profile photo uploaded');
+        if (showMessage) showMessage('success', 'Profile photo uploaded');
+        setToastMessage('Changes saved successfully');
+        setShowToast(true);
       }
     } catch (error) {
-      console.error('Error uploading image:', error);
       if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
+        if (showMessage) showMessage('error', 'Session expired. Please login again.');
       } else {
-        showMessage('error', error.response?.data?.detail || 'Failed to upload image');
+        if (showMessage) showMessage('error', error.response?.data?.detail || 'Failed to upload image');
       }
     } finally {
       setUploading(false);
@@ -333,268 +322,167 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
   if (loading) return <div className="loading">Loading trainer profile...</div>;
 
   return (
-    <div className="profile-card">
-      <div className="card-header">
-        <div className="avatar-container">
-          <div
-            className="avatar-circle"
-            id="avatarCircle"
-            style={
-              profileImageUrl
-                ? { backgroundImage: `url("${profileImageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : undefined
-            }
-          >
-            {!profileImageUrl && getAvatarInitials()}
+    <div className="trainer-page">
+      <div className="top-nav">
+        {showToast && (
+          <div className="toast" role="status" aria-live="polite">
+            <i className="fa-solid fa-check" />
+            {toastMessage}
           </div>
-
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={onFileSelected}
-          />
-
-          {/* Only show upload button when in edit mode */}
-          {(isCreatingNew || isEditing) && (
-            <button
-              type="button"
-              className="upload-btn"
-              onClick={handleUploadClick}
-              disabled={uploading}
-            >
-              {uploading ? 'Uploading...' : 'Upload Photo'}
-            </button>
-          )}
-        </div>
-
-        <div className="user-summary">
-          <h2 id="userName">
-            {profileExists ? `${formData.first_name} ${formData.last_name}`.trim() || 'Trainer' : 'Create Your Profile'}
-          </h2>
-          <span id="userInfo">
-            {profileExists
-              ? (formData.experience_years > 0 ? `${formData.experience_years} years experience` : 'Trainer')
-              : 'Complete the form below to get started'
-            }
-            {profileExists && formData.qualification && ` | ${formData.qualification}`}
-          </span>
-        </div>
-        
-        {/* Edit Button at Top Right (only in view mode) */}
-        {profileExists && !isEditing && (
-          <button 
-            type="button" 
-            className="edit-button-top-right"
-            onClick={handleEdit}
-          >
-            <i className="fas fa-edit"></i> Edit
-          </button>
         )}
       </div>
 
-      <div className="form-container">
-        {isCreatingNew && !profileExists && (
-          <div className="message info" style={{ marginBottom: '1.5rem' }}>
-            <i className="fas fa-info-circle"></i>
-            Welcome! This is your first time here. Please create your trainer profile.
+      <div className="profile-card">
+        <div className="left-column">
+          <div className="avatar-container">
+            {profileImageUrl ? (
+              <img src={profileImageUrl} alt="Profile Avatar" />
+            ) : (
+              <div className="avatar-placeholder">{getAvatarInitials()}</div>
+            )}
           </div>
-        )}
 
-        {/* VIEW MODE - Show profile details in list format */}
-        {profileExists && !isEditing && (
-          <div className="profile-details-list">
-            <div className="profile-detail-item">
-              <div className="detail-label">First Name</div>
-              <div className="detail-value">{formData.first_name}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Last Name</div>
-              <div className="detail-value">{formData.last_name}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Phone Number</div>
-              <div className="detail-value">{formData.phone_number || 'Not specified'}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Experience</div>
-              <div className="detail-value">{formData.experience_years} years</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Qualification</div>
-              <div className="detail-value">{formData.qualification}</div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Skills</div>
-              <div className="detail-value">
-                {skills.length > 0 ? (
-                  <div className="skills-list">
-                    {skills.map((skill, index) => (
-                      <span key={index} className="skill-badge">
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                ) : (
-                  <span style={{ color: '#6b7280', fontStyle: 'italic' }}>
-                    No skills added yet
-                  </span>
-                )}
-              </div>
-            </div>
-            
-            <div className="profile-detail-item">
-              <div className="detail-label">Bio / Professional Summary</div>
-              <div className="detail-value bio">
-                {formData.bio || 'No bio provided'}
-              </div>
-            </div>
+          <h2>{`${formData.first_name || 'Trainer'} ${formData.last_name || ''}`.trim()}</h2>
+          <p className="email">{user?.email || formData.email || ''}</p>
+          <p className="phone">{formData.phone_number || ''}</p>
+
+          <br />
+          <div className="student-id-badge">
+            {profileData?.id || user?.id || 'TR-XXXXX'}
           </div>
-        )}
 
-        {/* EDIT/CREATE MODE - Show form */}
-        {(isCreatingNew || isEditing) && (
-          <form id="trainerForm" onSubmit={handleSubmit}>
-            <h3 className="section-label">Personal Information</h3>
-            <div className="fields-grid">
-              <div className="form-group">
-                <label htmlFor="trainerFirstName" className="required">First Name</label>
-                <input
-                  type="text"
-                  id="trainerFirstName"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  required
-                />
+          {(isCreatingNew || isEditing) && (
+            <>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={onFileSelected}
+              />
+              <button
+                type="button"
+                className="btn-upload"
+                onClick={handleUploadClick}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : 'Upload Photo'}
+              </button>
+            </>
+          )}
+        </div>
+
+        <div className="right-column">
+          <div className="header-row">
+            <h1>Profile Details</h1>
+            {!isEditing && profileExists && (
+              <button className="btn-edit" onClick={handleEdit}>
+                <i className="fa-solid fa-pen" /> Edit Profile
+              </button>
+            )}
+          </div>
+
+          {!isEditing && profileExists && (
+            <>
+              <h3 className="section-title">Personal Information</h3>
+              <div className="divider" />
+              <div className="info-grid">
+                <div className="info-item">
+                  <label>Qualification</label>
+                  <p>{formData.qualification || 'Not specified'}</p>
+                </div>
+
+                <div className="info-item">
+                  <label>Experience</label>
+                  <p>{formData.experience_years ? `${formData.experience_years} years` : 'Not specified'}</p>
+                </div>
+
+                <div className="info-item">
+                  <label>Phone</label>
+                  <p>{formData.phone_number || 'Not specified'}</p>
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="trainerLastName" className="required">Last Name</label>
-                <input
-                  type="text"
-                  id="trainerLastName"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  required
-                />
+              <div className="bio-section">
+                <label>Bio</label>
+                <p>{formData.bio || 'No bio provided'}</p>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="trainerPhone" className="required">Phone Number</label>
-                <input
-                  type="tel"
-                  id="trainerPhone"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                  required
-                />
+              <h3 className="section-title">Social Links</h3>
+              <div className="divider" />
+              <div className="social-icons">
+                <a href={profileData?.github_url || '#'} target="_blank" rel="noreferrer"><i className="fa-brands fa-github" /></a>
+                <a href={profileData?.linkedin_url || '#'} target="_blank" rel="noreferrer"><i className="fa-brands fa-linkedin" /></a>
+              </div>
+            </>
+          )}
+
+          {(isCreatingNew || isEditing) && (
+            <form id="trainerForm" onSubmit={handleSubmit}>
+              <h3 className="section-title">Personal Information</h3>
+              <div className="divider" />
+
+              <div className="info-grid">
+                <div className="form-group">
+                  <label htmlFor="trainerFirstName" className="required">First Name</label>
+                  <input type="text" id="trainerFirstName" name="first_name" value={formData.first_name} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="trainerLastName" className="required">Last Name</label>
+                  <input type="text" id="trainerLastName" name="last_name" value={formData.last_name} onChange={handleChange} required />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="trainerPhone" className="required">Phone Number</label>
+                  <input type="tel" id="trainerPhone" name="phone_number" value={formData.phone_number} onChange={handleChange} required />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="trainerExperience" className="required">Experience (Years)</label>
+                  <input type="number" id="trainerExperience" name="experience_years" value={formData.experience_years} onChange={handleChange} min="0" max="50" required />
+                </div>
               </div>
 
-              <div className="form-group">
-                <label htmlFor="trainerExperience" className="required">Experience (Years)</label>
-                <input
-                  type="number"
-                  id="trainerExperience"
-                  name="experience_years"
-                  value={formData.experience_years}
-                  onChange={handleChange}
-                  min="0"
-                  max="50"
-                  required
-                />
-              </div>
-            </div>
+              <h3 className="section-title">Professional Information</h3>
+              <div className="divider" />
 
-            <h3 className="section-label">Professional Information</h3>
-            <div className="fields-grid">
               <div className="form-group">
                 <label htmlFor="trainerQualification" className="required">Qualification</label>
-                <input
-                  type="text"
-                  id="trainerQualification"
-                  name="qualification"
-                  value={formData.qualification}
-                  onChange={handleChange}
-                  required
-                />
+                <input type="text" id="trainerQualification" name="qualification" value={formData.qualification} onChange={handleChange} required />
               </div>
 
-              <div className="form-group full-width">
+              <div className="form-group">
                 <label htmlFor="trainerSkills">Skills</label>
-                <div className="skills-container" id="skillsContainer">
-                  {skills.map((skill, index) => (
-                    <div key={index} className="skill-tag">
+                <div className="skills-container">
+                  {skills.map((skill, idx) => (
+                    <div key={idx} className="skill-tag">
                       {skill}
-                      <span className="remove-skill" onClick={() => removeSkill(index)}>×</span>
+                      <span className="remove-skill" onClick={() => removeSkill(idx)}>×</span>
                     </div>
                   ))}
                 </div>
-                <input
-                  type="text"
-                  id="trainerSkillInput"
-                  value={skillInput}
-                  onChange={(e) => setSkillInput(e.target.value)}
-                  onKeyPress={handleSkillKeyPress}
-                  placeholder="Add a skill and press Enter"
-                />
+                <input type="text" id="trainerSkillInput" value={skillInput} onChange={(e) => setSkillInput(e.target.value)} onKeyPress={handleSkillKeyPress} placeholder="Add a skill and press Enter" />
               </div>
 
-              <div className="form-group full-width">
+              <div className="form-group">
                 <label htmlFor="trainerBio">Bio / Professional Summary</label>
-                <textarea
-                  id="trainerBio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  placeholder="Describe your professional background and expertise..."
-                />
+                <textarea id="trainerBio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Describe your professional background and expertise..." />
               </div>
-            </div>
 
-            <div className="form-actions">
-              {isEditing && profileExists && (
-                <button 
-                  type="button" 
-                  className="btn btn-secondary" 
-                  onClick={handleCancelEdit}
-                  disabled={loading}
-                >
-                  Cancel
+              <div className="form-actions">
+                {isEditing && profileExists && (
+                  <button type="button" className="btn btn-secondary" onClick={handleCancelEdit} disabled={loading}>Cancel</button>
+                )}
+                <button type="button" className="btn btn-secondary" onClick={resetForm} disabled={loading}>
+                  {profileExists ? 'Reset' : 'Clear'}
                 </button>
-              )}
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={resetForm}
-                disabled={loading}
-              >
-                {profileExists ? 'Reset' : 'Clear'}
-              </button>
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                id="trainerSubmitBtn"
-                disabled={loading}
-              >
-                {loading 
-                  ? 'Saving...' 
-                  : profileExists 
-                    ? 'Update Profile' 
-                    : 'Create Profile'
-                }
-              </button>
-            </div>
-          </form>
-        )}
+                <button type="submit" className="btn btn-primary" disabled={loading}>
+                  {loading ? 'Saving...' : profileExists ? 'Update Profile' : 'Create Profile'}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
     </div>
   );

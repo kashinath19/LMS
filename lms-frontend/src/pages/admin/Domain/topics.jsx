@@ -1,228 +1,286 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 import './Topics.css';
 
 const Topics = () => {
   const { domainId } = useParams();
   const navigate = useNavigate();
+  
+  // State variables
   const [domain, setDomain] = useState(null);
+  const [modules, setModules] = useState([]);
   const [expandedModules, setExpandedModules] = useState({});
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [showTopicForm, setShowTopicForm] = useState({});
-  const [newModule, setNewModule] = useState({ name: '', description: '' });
+  
+  // Form states
+  const [newModule, setNewModule] = useState({ 
+    title: '', 
+    description: '', 
+    order_index: 0 
+  });
+  
   const [newTopic, setNewTopic] = useState({ 
-    name: '', 
+    title: '', 
     type: 'video', 
     description: '', 
-    duration: '', 
-    order: '' 
+    duration: 0, 
+    order_index: 0 
   });
-
-  // Sample domains data
-  const domainsData = {
-    ds101: {
-      id: 'ds101',
-      name: 'Data Science Fundamentals',
-      code: 'DS101',
-      duration: '12 Weeks',
-      description: 'Master the basics of data science including Python programming, statistical analysis, machine learning concepts, and data visualization.',
-      modules: 4,
-      students: 245,
-      hours: 45,
-      status: 'Active',
-      trainer: 'Dr. Sarah Johnson',
-      modulesList: [
+  
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
+  
+  // Fetch domain details and modules
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // In real app, you would fetch domain details
+        // For now, use static domain data
+        setDomain({
+          id: domainId,
+          name: 'Data Science Fundamentals',
+          code: 'DS101',
+          description: 'Master the basics of data science including Python programming, statistical analysis, machine learning concepts, and data visualization.',
+          modules: 3,
+          students: 245,
+          hours: 45,
+          status: 'Active',
+          trainer: 'Dr. Sarah Johnson',
+          duration: '12 Weeks'
+        });
+        
+        // Fetch modules for this domain
+        const response = await axios.get(`${API_BASE_URL}/modules/`, {
+          params: { domain_id: domainId }
+        });
+        
+        setModules(response.data);
+      } catch (err) {
+        setError(err.response?.data?.detail || 'Failed to fetch data');
+        console.error('Error fetching data:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [domainId]);
+  
+  // Fetch topics for a specific module
+  const fetchTopics = async (moduleId) => {
+    try {
+      // Assuming you have a topics endpoint
+      // For now, return mock data since endpoint not specified
+      return [
         {
-          id: 'module1',
-          number: 1,
-          name: 'Python Programming',
-          description: 'Learn Python from basics to advanced concepts for data science',
-          topicsCount: 4,
-          topics: [
-            {
-              id: '1.1',
-              name: 'Python Installation',
-              type: 'Video',
-              description: 'Setting up Python environment',
-              duration: '45 min',
-              status: 'Published',
-              order: 1
-            },
-            {
-              id: '1.2',
-              name: 'Python Syntax Basics',
-              type: 'PDF',
-              description: 'Variables, data types, and operators',
-              duration: '60 min',
-              status: 'Published',
-              order: 2
-            },
-            {
-              id: '1.3',
-              name: 'Control Structures',
-              type: 'Video',
-              description: 'If statements and loops in Python',
-              duration: '75 min',
-              status: 'Published',
-              order: 3
-            }
-          ]
+          id: '1',
+          module_id: moduleId,
+          title: 'Python Installation',
+          type: 'video',
+          description: 'Setting up Python environment',
+          duration: 45,
+          order_index: 1,
+          status: 'Published'
         },
         {
-          id: 'module2',
-          number: 2,
-          name: 'Statistics Fundamentals',
-          description: 'Basic statistical concepts for data analysis',
-          topicsCount: 6,
-          topics: [
-            {
-              id: '2.1',
-              name: 'Descriptive Statistics',
-              type: 'Video',
-              description: 'Mean, median, mode, and variance',
-              duration: '50 min',
-              status: 'Published',
-              order: 1
-            },
-            {
-              id: '2.2',
-              name: 'Probability Distributions',
-              type: 'PDF',
-              description: 'Normal, binomial, and Poisson distributions',
-              duration: '65 min',
-              status: 'Published',
-              order: 2
-            }
-          ]
-        },
-        {
-          id: 'module3',
-          number: 3,
-          name: 'Machine Learning Basics',
-          description: 'Introduction to ML algorithms and concepts',
-          topicsCount: 8,
-          topics: [
-            {
-              id: '3.1',
-              name: 'Linear Regression',
-              type: 'Video',
-              description: 'Understanding linear regression models',
-              duration: '55 min',
-              status: 'Published',
-              order: 1
-            }
-          ]
+          id: '2',
+          module_id: moduleId,
+          title: 'Python Syntax Basics',
+          type: 'pdf',
+          description: 'Variables, data types, and operators',
+          duration: 60,
+          order_index: 2,
+          status: 'Published'
         }
-      ]
+      ];
+    } catch (err) {
+      console.error('Error fetching topics:', err);
+      return [];
     }
   };
-
-  useEffect(() => {
-    if (domainsData[domainId]) {
-      setDomain(domainsData[domainId]);
-    } else {
-      navigate('/admin/domains');
-    }
-  }, [domainId, navigate]);
-
-  const toggleModule = (moduleId) => {
+  
+  // Toggle module expansion and fetch topics if needed
+  const toggleModule = async (moduleId) => {
+    const isExpanded = !expandedModules[moduleId];
     setExpandedModules(prev => ({
       ...prev,
-      [moduleId]: !prev[moduleId]
+      [moduleId]: isExpanded
     }));
     setShowTopicForm({});
+    
+    // If expanding and module doesn't have topics loaded yet, fetch them
+    if (isExpanded) {
+      const module = modules.find(m => m.id === moduleId);
+      if (module && !module.topics) {
+        const topics = await fetchTopics(moduleId);
+        setModules(prev => prev.map(m => 
+          m.id === moduleId ? { ...m, topics } : m
+        ));
+      }
+    }
   };
-
-  const handleAddModule = () => {
-    if (newModule.name) {
-      const newModuleObj = {
-        id: `module${Date.now()}`,
-        number: domain.modulesList.length + 1,
-        name: newModule.name,
+  
+  // Add new module
+  const handleAddModule = async () => {
+    if (!newModule.title.trim()) {
+      alert('Please enter module title');
+      return;
+    }
+    
+    try {
+      const response = await axios.post(`${API_BASE_URL}/modules/`, {
+        domain_id: domainId,
+        title: newModule.title,
         description: newModule.description,
-        topicsCount: 0,
-        topics: []
+        order_index: parseInt(newModule.order_index) || 0
+      });
+      
+      // Add the new module to state
+      setModules(prev => [...prev, response.data]);
+      
+      // Reset form
+      setNewModule({ title: '', description: '', order_index: 0 });
+      setShowModuleForm(false);
+      
+      // Update domain module count
+      if (domain) {
+        setDomain(prev => ({ ...prev, modules: prev.modules + 1 }));
+      }
+      
+    } catch (err) {
+      console.error('Error adding module:', err);
+      alert(err.response?.data?.detail || 'Failed to add module');
+    }
+  };
+  
+  // Add new topic to a module
+  const handleAddTopic = async (moduleId) => {
+    if (!newTopic.title.trim()) {
+      alert('Please enter topic title');
+      return;
+    }
+    
+    try {
+      // Assuming you have a topics endpoint
+      // Since the endpoint wasn't provided, we'll simulate it
+      const newTopicObj = {
+        id: Date.now().toString(),
+        module_id: moduleId,
+        ...newTopic,
+        status: 'Published'
       };
       
-      setDomain(prev => ({
-        ...prev,
-        modulesList: [...prev.modulesList, newModuleObj],
-        modules: prev.modules + 1
+      // Update the module with new topic
+      setModules(prev => prev.map(module => {
+        if (module.id === moduleId) {
+          const updatedTopics = [...(module.topics || []), newTopicObj];
+          return {
+            ...module,
+            topics: updatedTopics,
+            topicsCount: updatedTopics.length
+          };
+        }
+        return module;
       }));
       
-      setNewModule({ name: '', description: '' });
-      setShowModuleForm(false);
-    }
-  };
-
-  const handleAddTopic = (moduleId) => {
-    if (newTopic.name) {
-      setDomain(prev => ({
-        ...prev,
-        modulesList: prev.modulesList.map(module => {
-          if (module.id === moduleId) {
-            const newTopicObj = {
-              id: `${module.number}.${module.topics.length + 1}`,
-              ...newTopic,
-              status: 'Published'
-            };
-            return {
-              ...module,
-              topics: [...module.topics, newTopicObj],
-              topicsCount: module.topics.length + 1
-            };
-          }
-          return module;
-        })
-      }));
-      
+      // Reset form
       setNewTopic({ 
-        name: '', 
+        title: '', 
         type: 'video', 
         description: '', 
-        duration: '', 
-        order: '' 
+        duration: 0, 
+        order_index: 0 
       });
       setShowTopicForm({});
+      
+    } catch (err) {
+      console.error('Error adding topic:', err);
+      alert('Failed to add topic');
     }
   };
-
+  
+  // Open topic form for a specific module
   const openTopicForm = (moduleId) => {
     setShowTopicForm({ [moduleId]: true });
   };
-
+  
+  // Delete a topic
   const deleteTopic = (moduleId, topicId) => {
     if (window.confirm('Are you sure you want to delete this topic?')) {
-      setDomain(prev => ({
-        ...prev,
-        modulesList: prev.modulesList.map(module => {
-          if (module.id === moduleId) {
-            const updatedTopics = module.topics.filter(topic => topic.id !== topicId);
-            return {
-              ...module,
-              topics: updatedTopics,
-              topicsCount: updatedTopics.length
-            };
-          }
-          return module;
-        })
+      setModules(prev => prev.map(module => {
+        if (module.id === moduleId) {
+          const updatedTopics = module.topics?.filter(topic => topic.id !== topicId) || [];
+          return {
+            ...module,
+            topics: updatedTopics,
+            topicsCount: updatedTopics.length
+          };
+        }
+        return module;
       }));
     }
   };
-
+  
+  // Update a module
+  const handleUpdateModule = async (moduleId, updatedData) => {
+    try {
+      const response = await axios.patch(
+        `${API_BASE_URL}/modules/${moduleId}`,
+        updatedData
+      );
+      
+      // Update the module in state
+      setModules(prev => prev.map(module => 
+        module.id === moduleId ? response.data : module
+      ));
+      
+    } catch (err) {
+      console.error('Error updating module:', err);
+      alert(err.response?.data?.detail || 'Failed to update module');
+    }
+  };
+  
   const handleBack = () => {
     navigate('/admin/domains');
   };
-
-  if (!domain) return <div className="loading">Loading...</div>;
-
+  
+  if (loading) return (
+    <div className="loading-container">
+      <div className="loading">Loading...</div>
+    </div>
+  );
+  
+  if (error) return (
+    <div className="error-container">
+      <div className="error-message">{error}</div>
+      <button className="btn btn-primary" onClick={() => window.location.reload()}>
+        Retry
+      </button>
+    </div>
+  );
+  
+  if (!domain) return (
+    <div className="error-container">
+      <div className="error-message">Domain not found</div>
+      <button className="btn btn-primary" onClick={handleBack}>
+        Back to Domains
+      </button>
+    </div>
+  );
+  
   return (
     <div className="topics-management">
       {/* Back Button */}
       <button className="back-btn" onClick={handleBack}>
         ← Back to Domains
       </button>
-
+      
       {/* Domain Header */}
       <div className="domain-header-detail">
         <div className="header-top">
@@ -235,7 +293,7 @@ const Topics = () => {
             <button className="btn btn-outline-light">Assign Trainer</button>
           </div>
         </div>
-
+        
         <div className="domain-meta-grid">
           <div className="meta-item">
             <div className="meta-label">Modules</div>
@@ -259,13 +317,13 @@ const Topics = () => {
           </div>
         </div>
       </div>
-
+      
       {/* Domain Description */}
       <div className="card description-card">
         <h3>Domain Description</h3>
         <p>{domain.description}</p>
       </div>
-
+      
       {/* Modules Section */}
       <div className="modules-section">
         <div className="section-header">
@@ -274,7 +332,7 @@ const Topics = () => {
             + Add New Module
           </button>
         </div>
-
+        
         {/* Add Module Form */}
         {showModuleForm && (
           <div className="card add-module-form">
@@ -284,13 +342,14 @@ const Topics = () => {
             </div>
             <div className="card-body">
               <div className="form-group">
-                <label>Module Name</label>
+                <label>Module Title *</label>
                 <input
                   type="text"
                   className="form-control"
-                  placeholder="Enter module name"
-                  value={newModule.name}
-                  onChange={(e) => setNewModule({...newModule, name: e.target.value})}
+                  placeholder="Enter module title"
+                  value={newModule.title}
+                  onChange={(e) => setNewModule({...newModule, title: e.target.value})}
+                  required
                 />
               </div>
               <div className="form-group">
@@ -301,6 +360,17 @@ const Topics = () => {
                   placeholder="Enter module description"
                   value={newModule.description}
                   onChange={(e) => setNewModule({...newModule, description: e.target.value})}
+                />
+              </div>
+              <div className="form-group">
+                <label>Order Index</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  placeholder="0"
+                  value={newModule.order_index}
+                  onChange={(e) => setNewModule({...newModule, order_index: parseInt(e.target.value) || 0})}
+                  min="0"
                 />
               </div>
               <div className="form-actions">
@@ -314,37 +384,37 @@ const Topics = () => {
             </div>
           </div>
         )}
-
+        
         {/* Modules List */}
         <div className="modules-list">
-          {domain.modulesList.map((module) => (
+          {modules.map((module) => (
             <div key={module.id} className="module-card">
               <div className="module-header" onClick={() => toggleModule(module.id)}>
                 <div className="module-title">
-                  <div className="module-number">{module.number}</div>
+                  <div className="module-number">{module.order_index}</div>
                   <div>
-                    <div className="module-name">{module.name}</div>
+                    <div className="module-name">{module.title}</div>
                     <div className="module-description">{module.description}</div>
                   </div>
                 </div>
                 <div className="module-toggle">
-                  <span>{module.topicsCount} Topics</span>
+                  <span>{(module.topics || []).length} Topics</span>
                   <span className="toggle-icon">
                     {expandedModules[module.id] ? '▲' : '▼'}
                   </span>
                 </div>
               </div>
-
+              
               {/* Topics List (Shown when expanded) */}
               {expandedModules[module.id] && (
                 <div className="topics-section">
                   <div className="topics-header">
-                    <h4>Topics in {module.name}</h4>
+                    <h4>Topics in {module.title}</h4>
                     <button className="btn btn-sm btn-primary" onClick={() => openTopicForm(module.id)}>
                       + Add Topic
                     </button>
                   </div>
-
+                  
                   {/* Add Topic Form */}
                   {showTopicForm[module.id] && (
                     <div className="card add-topic-form">
@@ -355,13 +425,14 @@ const Topics = () => {
                       <div className="card-body">
                         <div className="form-row">
                           <div className="form-group">
-                            <label>Topic Name</label>
+                            <label>Topic Title *</label>
                             <input
                               type="text"
                               className="form-control"
-                              placeholder="Enter topic name"
-                              value={newTopic.name}
-                              onChange={(e) => setNewTopic({...newTopic, name: e.target.value})}
+                              placeholder="Enter topic title"
+                              value={newTopic.title}
+                              onChange={(e) => setNewTopic({...newTopic, title: e.target.value})}
+                              required
                             />
                           </div>
                           <div className="form-group">
@@ -386,17 +457,19 @@ const Topics = () => {
                               className="form-control"
                               placeholder="45"
                               value={newTopic.duration}
-                              onChange={(e) => setNewTopic({...newTopic, duration: e.target.value})}
+                              onChange={(e) => setNewTopic({...newTopic, duration: parseInt(e.target.value) || 0})}
+                              min="0"
                             />
                           </div>
                           <div className="form-group">
-                            <label>Display Order</label>
+                            <label>Order Index</label>
                             <input
                               type="number"
                               className="form-control"
                               placeholder="1"
-                              value={newTopic.order}
-                              onChange={(e) => setNewTopic({...newTopic, order: e.target.value})}
+                              value={newTopic.order_index}
+                              onChange={(e) => setNewTopic({...newTopic, order_index: parseInt(e.target.value) || 0})}
+                              min="0"
                             />
                           </div>
                         </div>
@@ -421,23 +494,23 @@ const Topics = () => {
                       </div>
                     </div>
                   )}
-
+                  
                   {/* Topics List */}
                   <div className="topics-list">
-                    {module.topics.map((topic) => (
+                    {(module.topics || []).map((topic) => (
                       <div key={topic.id} className="topic-item">
                         <div className="topic-content">
                           <div className="topic-header">
-                            <h5>{topic.name}</h5>
+                            <h5>{topic.title}</h5>
                             <span className={`topic-type ${topic.type.toLowerCase()}`}>
                               {topic.type}
                             </span>
                           </div>
                           <p className="topic-description">{topic.description}</p>
                           <div className="topic-meta">
-                            <span>Duration: {topic.duration}</span>
+                            <span>Duration: {topic.duration} min</span>
                             <span>Status: {topic.status}</span>
-                            <span>Order: {topic.order}</span>
+                            <span>Order: {topic.order_index}</span>
                           </div>
                         </div>
                         <div className="topic-actions">
@@ -452,7 +525,7 @@ const Topics = () => {
                       </div>
                     ))}
                     
-                    {module.topics.length === 0 && !showTopicForm[module.id] && (
+                    {(module.topics || []).length === 0 && !showTopicForm[module.id] && (
                       <div className="no-topics">
                         <p>No topics added yet. Click "Add Topic" to get started.</p>
                       </div>
@@ -462,9 +535,15 @@ const Topics = () => {
               )}
             </div>
           ))}
+          
+          {modules.length === 0 && (
+            <div className="no-modules">
+              <p>No modules added yet. Click "Add New Module" to get started.</p>
+            </div>
+          )}
         </div>
       </div>
-
+      
       {/* Domain Actions */}
       <div className="card domain-actions">
         <div className="card-header">
