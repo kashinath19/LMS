@@ -15,7 +15,7 @@
   --warning-color: #f59e0b;
   --text-dark: #1e293b;
   --text-light: #64748b;
-  --sidebar-width: 250px;
+  --sidebar-width: 260px;
 }
 
 /* Sidebar styling */
@@ -26,67 +26,106 @@
   display: flex;
   flex-direction: column;
   position: fixed;
+  left: 0;
+  top: 0;
   height: 100vh;
   z-index: 100;
+  padding: 18px;
+  overflow-y: auto;
+  flex-shrink: 0;
 }
 
 .logo {
-  padding: 24px;
+  padding: 12px 6px;
   border-bottom: 1px solid var(--border-color);
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   color: var(--primary-color);
   display: flex;
   align-items: center;
   gap: 10px;
+  margin-bottom: 18px;
 }
 
 .logo i {
   color: var(--primary-color);
 }
 
+.logo-text {
+  color: var(--primary-color);
+}
+
+/* NAV - compact, pill-like items */
 .nav-links {
-  padding: 20px 0;
+  padding: 18px 0;
   flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .nav-item {
-  padding: 14px 24px;
+  padding: 10px 14px;
   display: flex;
   align-items: center;
   gap: 12px;
-  color: var(--text-light);
+  color: var(--text-dark);
+  background: #ffffff;
   text-decoration: none;
-  transition: all 0.3s;
-  border-left: 4px solid transparent;
-}
-
-.nav-item:hover, .nav-item.active {
-  background-color: var(--light-gray);
-  color: var(--primary-color);
-  border-left: 4px solid var(--primary-color);
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+  border-left: 6px solid transparent;
+  transition: transform 0.14s ease, box-shadow 0.14s ease, color 0.14s ease, border-color 0.14s;
+  cursor: pointer;
+  font-weight: 600;
+  border: none;
 }
 
 .nav-item i {
-  width: 20px;
+  width: 24px;
   text-align: center;
+  color: inherit;
+  font-size: 16px;
 }
 
+.nav-text {
+  display: inline;
+}
+
+/* Hover state */
+.nav-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.06);
+  color: var(--primary-color);
+  border-left-color: rgba(37, 99, 235, 0.18);
+}
+
+/* Active state */
+.nav-item.active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.06), #fff);
+  color: var(--primary-color);
+  border-left-color: var(--primary-color);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.06);
+}
+
+/* Footer area */
 .sidebar-footer {
-  padding: 20px 24px;
+  padding-top: 12px;
   border-top: 1px solid var(--border-color);
+  margin-top: auto;
+  flex-shrink: 0;
 }
 
 .user-info {
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 20px;
+  margin-bottom: 12px;
 }
 
 .user-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   background-color: var(--primary-color);
   color: white;
@@ -94,22 +133,30 @@
   align-items: center;
   justify-content: center;
   font-weight: bold;
+  flex-shrink: 0;
 }
 
 .user-details {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .user-name {
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 0.9rem;
   color: var(--text-dark);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .user-role {
-  font-size: 0.75rem;
+  font-size: 0.78rem;
   color: var(--text-light);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .logout-btn {
@@ -127,26 +174,110 @@
   transition: all 0.3s;
 }
 
+.logout-text {
+  display: inline;
+}
+
 .logout-btn:hover {
   background-color: #fee2e2;
   color: var(--danger-color);
   border-color: var(--danger-color);
 }
 
-/* Main content area */
+/* Main content area - NOT fixed, just offset by sidebar width */
 .main-content {
   flex: 1;
   margin-left: var(--sidebar-width);
   padding: 30px;
   background-color: #f1f5f9;
   min-height: 100vh;
+  overflow-y: auto;
 }
 
+/* Ensure main content children are centered inside the area left of the sidebar.
+   This prevents the sidebar from visually covering page elements and keeps
+   cards/header aligned consistently. */
+.main-content > * {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* If the sidebar is tall or the page is long, allow independent scrolling
+   for main content while keeping sidebar fixed. */
+.sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Make sure main content has its own scroll area (prevents layout jumps). */
+.main-content {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Small safeguard: prevent horizontal overflow from layout changes */
+body, html {
+  overflow-x: hidden;
+}
+
+/* Make header/buttons wrap cleanly within the centered container */
+.header,
+.action-buttons,
+.dashboard-cards,
+.info-section,
+.success-message,
+.user-management-wrapper,
+.domain-wrapper {
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+  box-sizing: border-box;
+}
+
+/* Reduce visual overlap on small screens when sidebar is collapsed/expanded.
+   Keep the margin-left consistent with the sidebar width in media queries. */
+@media (max-width: 1024px) {
+  .main-content > * { max-width: 980px; }
+}
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 70px; /* matches collapsed sidebar width */
+  }
+  .main-content > * { max-width: 900px; }
+}
+
+@media (max-width: 480px) {
+  .main-content {
+    margin-left: 60px; /* matches collapsed sidebar width at very small sizes */
+  }
+  .main-content > * { max-width: 720px; padding: 0 8px; }
+}
+
+/* Responsive sidebar width tweaks for laptop screens */
+@media (max-width: 1366px) {
+  :root { --sidebar-width: 220px; }
+}
+
+@media (max-width: 1280px) {
+  :root { --sidebar-width: 200px; }
+}
+
+/* Header and controls */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 30px;
+  flex-wrap: wrap;
+  gap: 15px;
 }
 
 .page-title {
@@ -158,6 +289,7 @@
 .action-buttons {
   display: flex;
   gap: 15px;
+  flex-wrap: wrap;
 }
 
 .btn {
@@ -170,6 +302,7 @@
   align-items: center;
   gap: 8px;
   transition: all 0.3s;
+  white-space: nowrap;
 }
 
 .btn-primary {
@@ -255,6 +388,7 @@
   align-items: center;
   justify-content: center;
   font-size: 24px;
+  flex-shrink: 0;
 }
 
 .trainer-icon {
@@ -287,10 +421,9 @@
   padding: 16px 20px;
   border-radius: 8px;
   margin-bottom: 24px;
-  display: flex;
+  display: none;
   align-items: center;
   gap: 12px;
-  display: none;
 }
 
 .success-message.show {
@@ -375,6 +508,12 @@
   font-size: 24px;
   cursor: pointer;
   color: var(--text-light);
+  padding: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .close-modal:hover:not(:disabled) {
@@ -407,6 +546,7 @@
   border-radius: 8px;
   font-size: 16px;
   transition: border-color 0.3s;
+  font-family: inherit;
 }
 
 .form-input:focus {
@@ -438,13 +578,12 @@
   gap: 12px;
 }
 
-/* Ensure sidebar LMS label and icon use primary blue (override any global .logo-text) */
-.sidebar .logo-text {
-  color: var(--primary-color);
-}
-
-.sidebar .logo i {
-  color: var(--primary-color);
+.user-management-wrapper,
+.domain-wrapper {
+  background-color: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
 }
 
 /* Responsive */
@@ -457,46 +596,66 @@
 @media (max-width: 768px) {
   .sidebar {
     width: 70px;
+    padding: 12px 8px;
   }
-  
-  .sidebar .logo-text, 
-  .sidebar .nav-text, 
+
+  .sidebar .logo-text,
+  .sidebar .nav-text,
   .sidebar .user-details,
   .sidebar .logout-text {
     display: none;
   }
-  
+
   .main-content {
     margin-left: 70px;
   }
-  
+
   .dashboard-cards {
     grid-template-columns: 1fr;
   }
-  
+
   .header {
     flex-direction: column;
     gap: 15px;
     align-items: flex-start;
   }
-  
+
   .action-buttons {
     width: 100%;
     flex-direction: column;
   }
-  
+
   .btn {
     justify-content: center;
+    width: 100%;
+  }
+
+  .page-title {
+    font-size: 24px;
   }
 }
 
 @media (max-width: 480px) {
   .main-content {
     padding: 15px;
+    margin-left: 60px;
   }
-  
+
+  .sidebar {
+    width: 60px;
+  }
+
   .modal-content {
     width: 95%;
     margin: 10px;
+  }
+
+  .page-title {
+    font-size: 20px;
+  }
+
+  .dashboard-cards {
+    grid-template-columns: 1fr;
+    gap: 15px;
   }
 }

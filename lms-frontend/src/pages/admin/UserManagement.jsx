@@ -182,6 +182,7 @@ const UserManagement = () => {
     else if (newUser.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
     if (!newUser.password) newErrors.password = 'Password is required';
     else if (newUser.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    if (!newUser.domain_id) newErrors.domain_id = 'Domain is required for students';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -383,7 +384,7 @@ const UserManagement = () => {
               <th>Username</th>
               <th>Email</th>
               <th>Role</th>
-              <th>Domain ID</th>
+              <th>Domain Name</th>
               <th>Active</th>
               <th>Actions</th>
             </tr>
@@ -401,7 +402,20 @@ const UserManagement = () => {
                   <td>
                     <span className={`badge role-${user.role}`}>{user.role}</span>
                   </td>
-                  <td>{user.domain_id || '-'}</td>
+                  <td>
+                    {(() => {
+                      // Prefer nested domain object if backend provides it
+                      const domainFromUser = user?.domain?.name || user?.domain_name || user?.domain;
+                      if (domainFromUser) return domainFromUser;
+
+                      // Fallback: look up name from domainOptions using domain_id
+                      const matching = domainOptions.find(d => String(d.id) === String(user.domain_id));
+                      if (matching) return matching.name;
+
+                      // Last resort: show id or '-'
+                      return user.domain_id ?? '-';
+                    })()}
+                  </td>
                   <td>
                     <span className={user.is_active ? 'status-active' : 'status-inactive'}>
                       {user.is_active ? 'Active' : 'Inactive'}
@@ -487,17 +501,13 @@ const UserManagement = () => {
                       Do NOT show domain field for admin (as requested). */}
                   {(createRole === 'trainer' || createRole === 'student') && (
                     <div className="form-group">
-                      <label>
-                        Domain {createRole === 'trainer' ? '*' : '(Optional)'}
-                      </label>
+                      <label>Domain *</label>
                       <select
-                        required={createRole === 'trainer'}
+                        required={true}
                         value={newUser.domain_id}
                         onChange={e => setNewUser({ ...newUser, domain_id: e.target.value })}
                       >
-                        <option value=''>
-                          {createRole === 'trainer' ? 'Select a domain (required)' : 'Select a domain (optional)'}
-                        </option>
+                        <option value=''>Select a domain (required)</option>
                         {domainOptions.map(domain => (
                           <option key={domain.id} value={domain.id}>{domain.name}</option>
                         ))}

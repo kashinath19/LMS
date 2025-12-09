@@ -51,8 +51,12 @@ const Login = () => {
     setError('');
   };
 
+  // Returns { ok: boolean, exists?: boolean, status?: number, message?: string }
   const checkProfileExists = async (role, userId, token) => {
-    if (!userId) return false;
+    if (!userId) {
+      // No user id stored — treat as "profile not present" (redirect to /profile flow)
+      return { ok: true, exists: false };
+    }
     const endpointRole = role === 'trainer' ? 'trainer' : 'student';
     const url = `${API_BASE_URL}/profiles/${endpointRole}/${userId}`;
     try {
@@ -63,17 +67,30 @@ const Login = () => {
           'Content-Type': 'application/json'
         }
       });
+
       if (res.ok) {
-        return true;
-      } else if (res.status === 404) {
-        return false;
-      } else {
-        // other error - treat as missing profile to allow profile setup
-        return false;
+        return { ok: true, exists: true };
       }
+
+      // 404 => profile not found (ok, exists: false)
+      if (res.status === 404) {
+        return { ok: true, exists: false };
+      }
+
+      // For 401/403 and other non-OK statuses, try to get a message
+      let msg = `Request failed with status ${res.status}`;
+      try {
+        const body = await res.json();
+        if (body?.detail) msg = body.detail;
+        else if (body?.message) msg = body.message;
+        else if (typeof body === 'string') msg = body;
+      } catch (e) {
+        // ignore JSON parse error
+      }
+      return { ok: false, status: res.status, message: msg };
     } catch (err) {
       console.error('Error checking profile existence:', err);
-      return false;
+      return { ok: false, message: err.message || 'Network error while checking profile' };
     }
   };
 
@@ -98,41 +115,45 @@ const Login = () => {
     try {
       const result = await login(email, password, role);
 
-      if (result.success) {
-        console.log('Login - Login successful, result:', result);
+      if (!result || !result.success) {
+        console.log('Login - Login failed:', result?.error || 'Unknown error from login');
+        setError(result?.error || 'Login failed. Please check your credentials.');
+        setLoading(false);
+        return;
+      }
 
-        // Attempt to obtain user_id (AuthContext stores it in localStorage when available)
-        const storedUserId = localStorage.getItem('user_id');
-        const token = localStorage.getItem('access_token');
-        console.log('Login - storedUserId:', storedUserId, 'token present:', !!token);
+      // Login succeeded at auth level. Check for profile only for trainer/student.
+      const storedUserId = localStorage.getItem('user_id');
+      const token = localStorage.getItem('access_token');
+      console.log('Login - storedUserId:', storedUserId, 'token present:', !!token);
 
-        let redirectPath = '/profile';
+      let redirectPath = '/profile';
 
-        if (role === 'admin') {
-          redirectPath = '/admin-dashboard';
-        } else if (role === 'trainer' || role === 'student') {
-          const profileExists = await checkProfileExists(role, storedUserId, token);
-          console.log('Login - profileExists for', role, storedUserId, ':', profileExists);
-          if (profileExists) {
-            redirectPath = role === 'trainer' ? '/trainer-dashboard' : '/student-dashboard';
-          } else {
-            redirectPath = '/profile';
-          }
+      if (role === 'admin') {
+        redirectPath = '/admin-dashboard';
+      } else if (role === 'trainer' || role === 'student') {
+        const profileCheck = await checkProfileExists(role, storedUserId, token);
+        if (!profileCheck.ok) {
+          // Important: do NOT navigate; show the error card instead.
+          const message = profileCheck.message || (profileCheck.status ? `Error ${profileCheck.status}` : 'Unauthorized');
+          console.warn('Login - Profile check error:', message);
+          setError(typeof message === 'string' ? message : 'Unauthorized');
+          setLoading(false);
+          return;
         }
 
-        console.log('Login - Redirecting to:', redirectPath);
-        // small timeout to ensure state is set, then navigate
-        setTimeout(() => {
-          navigate(redirectPath, { replace: true });
-        }, 50);
-      } else {
-        console.log('Login - Login failed:', result.error);
-        setError(result.error);
-        setLoading(false);
+        // profileCheck.ok === true
+        redirectPath = profileCheck.exists ? (role === 'trainer' ? '/trainer-dashboard' : '/student-dashboard') : '/profile';
       }
+
+      console.log('Login - Redirecting to:', redirectPath);
+      // small timeout to ensure state is set, then navigate
+      setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 50);
     } catch (error) {
       console.error('Login - Unexpected error:', error);
-      setError('An unexpected error occurred');
+      setError(error?.message || 'An unexpected error occurred');
       setLoading(false);
     }
   };

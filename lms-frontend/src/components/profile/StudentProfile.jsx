@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import './Profile.css';
+import './StudentProfile.css';
 
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
@@ -12,6 +12,8 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState(null);
+  const [showToast, setShowToast] = useState(false);
+  const [toastMessage, setToastMessage] = useState('');
   const [formData, setFormData] = useState({
     first_name: '',
     last_name: '',
@@ -187,6 +189,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         onProfileCreated();
       }
 
+      displayToast('Changes saved successfully');
       showMessage('success', 'Student profile saved successfully!');
 
       // Redirect to student dashboard after a short delay
@@ -282,14 +285,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     showMessage('info', 'Form reset');
   };
 
-  const getAvatarInitials = () => {
-    const firstInitial = formData.first_name?.[0] || '';
-    const lastInitial = formData.last_name?.[0] || '';
-    return `${firstInitial}${lastInitial}`.toUpperCase() || 'S';
-  };
-
-  const profileImageUrl = formData.profile_image_url || profileData?.profile_image_url || '';
-
   const handleUploadClick = () => { 
     if (fileInputRef.current) fileInputRef.current.click(); 
   };
@@ -329,6 +324,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           ...prev, 
           profile_image_url: imageUrl 
         }));
+        displayToast('Changes saved successfully');
         showMessage('success', 'Profile photo uploaded');
       }
     } catch (error) {
@@ -356,304 +352,284 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     }
   };
 
-  if (loading) return <div className="loading">Loading student profile...</div>;
+  const displayToast = (message) => {
+    setToastMessage(message);
+    setShowToast(true);
+    setTimeout(() => setShowToast(false), 3000);
+  };
+
+  const profileImageUrl = formData.profile_image_url || profileData?.profile_image_url || '';
+  const userEmail = user?.email || '';
+
+  if (loading) {
+    return <div className="loading">Loading student profile...</div>;
+  }
 
   return (
-    <div className="profile-card">
-      <div className="card-header">
-        <div className="avatar-container">
-          <div
-            className="avatar-circle"
-            id="avatarCircle"
-            style={
-              profileImageUrl
-                ? { backgroundImage: `url("${profileImageUrl}")`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                : undefined
-            }
-          >
-            {!profileImageUrl && getAvatarInitials()}
+    <div className="student-profile-wrapper">
+      {/* Top Navigation */}
+      <div className="top-nav">
+        {showToast && (
+          <div className="toast">
+            <i className="fa-solid fa-check"></i>
+            {toastMessage}
           </div>
-
-          {/* File input for image upload */}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept="image/*"
-            style={{ display: 'none' }}
-            onChange={onFileSelected}
-          />
-
-          {/* Upload button - only shown in edit mode */}
-          {(isCreatingNew || isEditing) && (
-            <button
-              type="button"
-              className="upload-btn"
-              onClick={handleUploadClick}
-              disabled={uploading}
-            >
-              {uploading ? 'Uploading...' : 'Upload Photo'}
-            </button>
-          )}
-        </div>
-
-        <div className="user-summary">
-          <h2 id="userName">
-            {profileExists ? `${formData.first_name} ${formData.last_name}`.trim() || 'Student' : 'Create Your Profile'}
-          </h2>
-          <span id="userInfo">
-            {profileExists
-              ? (formData.qualification 
-                  ? `${formData.qualification}` 
-                  : 'Student')
-              : 'Complete the form below to get started'
-            }
-          </span>
-        </div>
-        
-        {profileExists && !isEditing && (
-          <button 
-            type="button" 
-            className="edit-button-top-right"
-            onClick={handleEdit}
-          >
-            <i className="fas fa-edit"></i> Edit
-          </button>
         )}
       </div>
 
-      <div className="form-container">
-        {isCreatingNew && !profileExists && (
-          <div className="message info" style={{ marginBottom: '1.5rem' }}>
-            <i className="fas fa-info-circle"></i>
-            Welcome! This is your first time here. Please create your student profile.
+      {/* Main Profile Card */}
+      <div className="profile-card">
+        
+        {/* Left Column */}
+        <div className="left-column">
+          <div className="avatar-container">
+            {profileImageUrl ? (
+              <img src={profileImageUrl} alt="Profile Avatar" />
+            ) : (
+              <div className="avatar-placeholder">
+                <span className="initials">
+                  {(formData.first_name?.[0] || '') + (formData.last_name?.[0] || '')}
+                </span>
+              </div>
+            )}
           </div>
-        )}
+          
+          <h2>{formData.first_name && formData.last_name ? `${formData.first_name} ${formData.last_name}` : 'Student'}</h2>
+          <p className="email">{userEmail}</p>
+          <p className="phone">{formData.phone_number || 'Not provided'}</p>
+          
+          <div style={{ marginBottom: '20px' }}></div>
+          <div className="student-id-badge">
+            {formData.enrollment_number || 'NO ENROLLMENT'}
+          </div>
 
-        {/* NEW PROFILE DISPLAY LAYOUT - Matching the image */}
-        {profileExists && !isEditing && (
-          <div className="profile-display-layout">
-            {/* Personal Information Section */}
-            <div className="profile-section">
+          {/* Upload Button in Edit Mode */}
+          {isEditing && (
+            <div style={{ marginTop: '20px' }}>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                style={{ display: 'none' }}
+                onChange={onFileSelected}
+              />
+              <button
+                type="button"
+                className="btn-upload"
+                onClick={handleUploadClick}
+                disabled={uploading}
+              >
+                {uploading ? 'Uploading...' : 'Change Photo'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Right Column */}
+        <div className="right-column">
+          
+          {/* Display Mode */}
+          {!isEditing && profileExists && (
+            <>
+              <div className="header-row">
+                <h1>Profile Details</h1>
+                <button className="btn-edit" onClick={handleEdit}>
+                  <i className="fa-solid fa-pen"></i> Edit Profile
+                </button>
+              </div>
+
               <h3 className="section-title">Personal Information</h3>
+              <div className="divider"></div>
+
               <div className="info-grid">
-                <div className="info-row">
-                  <div className="info-label">Qualification</div>
-                  <div className="info-value">{formData.qualification || 'Not specified'}</div>
+                <div className="info-item">
+                  <label>Qualification</label>
+                  <p>{formData.qualification || 'Not specified'}</p>
                 </div>
-                <div className="info-row">
-                  <div className="info-label">Date of Birth</div>
-                  <div className="info-value">{formatDate(formData.date_of_birth)}</div>
+                <div className="info-item">
+                  <label>Date of Birth</label>
+                  <p>{formatDate(formData.date_of_birth)}</p>
                 </div>
-              </div>
-              
-              <div className="info-row">
-                <div className="info-label">Gender</div>
-                <div className="info-value">{formData.gender || 'Not specified'}</div>
-              </div>
-            </div>
-
-            {/* Bio Section */}
-            {formData.bio && (
-              <div className="profile-section">
-                <h3 className="section-title">Bio</h3>
-                <div className="bio-content">
-                  {formData.bio}
+                <div className="info-item">
+                  <label>Gender</label>
+                  <p>{formData.gender || 'Not specified'}</p>
                 </div>
               </div>
-            )}
 
-            {/* Social Links Section */}
-            {(formData.github_url || formData.linkedin_url) && (
-              <div className="profile-section">
-                <h3 className="section-title">Social Links</h3>
-                <div className="social-links">
-                  {formData.github_url && (
-                    <a 
-                      href={formData.github_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="social-link"
-                    >
-                      <i className="fab fa-github"></i> GitHub
-                    </a>
-                  )}
-                  {formData.linkedin_url && (
-                    <a 
-                      href={formData.linkedin_url} 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="social-link"
-                    >
-                      <i className="fab fa-linkedin"></i> LinkedIn
-                    </a>
-                  )}
+              {formData.bio && (
+                <div className="bio-section">
+                  <label>Bio</label>
+                  <p>{formData.bio}</p>
+                </div>
+              )}
+
+              {(formData.github_url || formData.linkedin_url) && (
+                <>
+                  <h3 className="section-title">Social Links</h3>
+                  <div className="divider"></div>
+                  <div className="social-icons">
+                    {formData.github_url && (
+                      <a href={formData.github_url} target="_blank" rel="noopener noreferrer" title="GitHub">
+                        <i className="fa-brands fa-github"></i>
+                      </a>
+                    )}
+                    {formData.linkedin_url && (
+                      <a href={formData.linkedin_url} target="_blank" rel="noopener noreferrer" title="LinkedIn">
+                        <i className="fa-brands fa-linkedin"></i>
+                      </a>
+                    )}
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          {/* Edit Form Mode */}
+          {(isEditing || isCreatingNew) && (
+            <form onSubmit={handleSubmit} className="edit-form">
+              <div className="header-row">
+                <h1>{profileExists ? 'Edit Profile' : 'Create Profile'}</h1>
+              </div>
+
+              <h3 className="section-title">Personal Information</h3>
+              <div className="divider"></div>
+
+              <div className="fields-grid">
+                <div className="form-group">
+                  <label htmlFor="firstName">First Name *</label>
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="first_name"
+                    value={formData.first_name}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name *</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="last_name"
+                    value={formData.last_name}
+                    onChange={handleChange}
+                    required
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="phone">Phone Number</label>
+                  <input
+                    type="tel"
+                    id="phone"
+                    name="phone_number"
+                    value={formData.phone_number}
+                    onChange={handleChange}
+                    placeholder="+1 (555) 123-4567"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="dob">Date of Birth</label>
+                  <input
+                    type="date"
+                    id="dob"
+                    name="date_of_birth"
+                    value={formData.date_of_birth}
+                    onChange={handleChange}
+                    max={new Date().toISOString().split('T')[0]}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="gender">Gender</label>
+                  <select
+                    id="gender"
+                    name="gender"
+                    value={formData.gender}
+                    onChange={handleChange}
+                    disabled={loading}
+                  >
+                    <option value="">Select gender</option>
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                    <option value="Prefer not to say">Prefer not to say</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="qualification">Qualification *</label>
+                  <input
+                    type="text"
+                    id="qualification"
+                    name="qualification"
+                    value={formData.qualification}
+                    onChange={handleChange}
+                    required
+                    placeholder="e.g., B.Tech, B.Sc, M.Sc"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="enrollment">Enrollment Number</label>
+                  <input
+                    type="text"
+                    id="enrollment"
+                    name="enrollment_number"
+                    value={formData.enrollment_number}
+                    onChange={handleChange}
+                    placeholder="University enrollment number"
+                    disabled={loading}
+                  />
                 </div>
               </div>
-            )}
 
-            {/* Additional Information (Optional - shown in edit mode) */}
-            {(formData.phone_number || formData.enrollment_number) && (
-              <div className="profile-section">
-                <h3 className="section-title">Additional Information</h3>
-                <div className="info-grid">
-                  {formData.phone_number && (
-                    <div className="info-row">
-                      <div className="info-label">Phone Number</div>
-                      <div className="info-value">{formData.phone_number}</div>
-                    </div>
-                  )}
-                  {formData.enrollment_number && (
-                    <div className="info-row">
-                      <div className="info-label">Enrollment Number</div>
-                      <div className="info-value">{formData.enrollment_number}</div>
-                    </div>
-                  )}
+              <h3 className="section-title">Social Links</h3>
+              <div className="divider"></div>
+
+              <div className="fields-grid">
+                <div className="form-group">
+                  <label htmlFor="github">GitHub URL</label>
+                  <input
+                    type="url"
+                    id="github"
+                    name="github_url"
+                    value={formData.github_url}
+                    onChange={handleChange}
+                    placeholder="https://github.com/username"
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="linkedin">LinkedIn URL</label>
+                  <input
+                    type="url"
+                    id="linkedin"
+                    name="linkedin_url"
+                    value={formData.linkedin_url}
+                    onChange={handleChange}
+                    placeholder="https://linkedin.com/in/username"
+                    disabled={loading}
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        )}
 
-        {/* EDIT FORM (Keep existing form code) */}
-        {(isCreatingNew || isEditing) && (
-          <form id="studentForm" onSubmit={handleSubmit}>
-            <h3 className="section-label">Personal Information</h3>
-            <div className="fields-grid">
-              <div className="form-group">
-                <label htmlFor="studentFirstName" className="required">First Name</label>
-                <input
-                  type="text"
-                  id="studentFirstName"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
+              <h3 className="section-title">Bio</h3>
+              <div className="divider"></div>
 
-              <div className="form-group">
-                <label htmlFor="studentLastName" className="required">Last Name</label>
-                <input
-                  type="text"
-                  id="studentLastName"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  required
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentPhone">Phone Number</label>
-                <input
-                  type="tel"
-                  id="studentPhone"
-                  name="phone_number"
-                  value={formData.phone_number}
-                  onChange={handleChange}
-                  placeholder="+1 (555) 123-4567"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentDOB">Date of Birth</label>
-                <input
-                  type="date"
-                  id="studentDOB"
-                  name="date_of_birth"
-                  value={formData.date_of_birth}
-                  onChange={handleChange}
-                  max={new Date().toISOString().split('T')[0]}
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentGender">Gender</label>
-                <select
-                  id="studentGender"
-                  name="gender"
-                  value={formData.gender}
-                  onChange={handleChange}
-                  disabled={loading}
-                >
-                  <option value="">Select gender</option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                  <option value="Prefer not to say">Prefer not to say</option>
-                </select>
-              </div>
-            </div>
-
-            <h3 className="section-label">Educational Information</h3>
-            <div className="fields-grid">
-              <div className="form-group">
-                <label htmlFor="studentQualification" className="required">Qualification</label>
-                <input
-                  type="text"
-                  id="studentQualification"
-                  name="qualification"
-                  value={formData.qualification}
-                  onChange={handleChange}
-                  required
-                  placeholder="e.g., B.Tech, B.Sc, M.Sc, etc."
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentEnrollment">Enrollment Number</label>
-                <input
-                  type="text"
-                  id="studentEnrollment"
-                  name="enrollment_number"
-                  value={formData.enrollment_number}
-                  onChange={handleChange}
-                  placeholder="University enrollment number"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <h3 className="section-label">Social Links</h3>
-            <div className="fields-grid">
-              <div className="form-group">
-                <label htmlFor="studentGithub">GitHub URL</label>
-                <input
-                  type="url"
-                  id="studentGithub"
-                  name="github_url"
-                  value={formData.github_url}
-                  onChange={handleChange}
-                  placeholder="https://github.com/username"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="studentLinkedin">LinkedIn URL</label>
-                <input
-                  type="url"
-                  id="studentLinkedin"
-                  name="linkedin_url"
-                  value={formData.linkedin_url}
-                  onChange={handleChange}
-                  placeholder="https://linkedin.com/in/username"
-                  disabled={loading}
-                />
-              </div>
-            </div>
-
-            <h3 className="section-label">Bio</h3>
-            <div className="fields-grid">
               <div className="form-group full-width">
-                <label htmlFor="studentBio">Bio / About Me</label>
+                <label htmlFor="bio">Bio / About Me</label>
                 <textarea
-                  id="studentBio"
+                  id="bio"
                   name="bio"
                   value={formData.bio}
                   onChange={handleChange}
@@ -662,43 +638,50 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   disabled={loading}
                 />
               </div>
-            </div>
 
-            <div className="form-actions">
-              {isEditing && profileExists && (
+              <div className="form-actions">
+                {isEditing && profileExists && (
+                  <button 
+                    type="button" 
+                    className="btn-secondary" 
+                    onClick={handleCancelEdit}
+                    disabled={loading}
+                  >
+                    Cancel
+                  </button>
+                )}
                 <button 
                   type="button" 
-                  className="btn btn-secondary" 
-                  onClick={handleCancelEdit}
+                  className="btn-secondary" 
+                  onClick={resetForm}
                   disabled={loading}
                 >
-                  Cancel
+                  {profileExists ? 'Reset' : 'Clear'}
                 </button>
-              )}
-              <button 
-                type="button" 
-                className="btn btn-secondary" 
-                onClick={resetForm}
-                disabled={loading}
-              >
-                {profileExists ? 'Reset' : 'Clear'}
-              </button>
-              <button 
-                type="submit" 
-                className="btn btn-primary" 
-                id="studentSubmitBtn"
-                disabled={loading}
-              >
-                {loading 
-                  ? 'Saving...' 
-                  : profileExists 
-                    ? 'Update Profile' 
-                    : 'Create Profile'
-                }
-              </button>
+                <button 
+                  type="submit" 
+                  className="btn-primary" 
+                  disabled={loading}
+                >
+                  {loading 
+                    ? 'Saving...' 
+                    : profileExists 
+                      ? 'Save Changes' 
+                      : 'Create Profile'
+                  }
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* Create Profile Prompt */}
+          {isCreatingNew && !profileExists && (
+            <div className="create-prompt">
+              <i className="fas fa-info-circle"></i>
+              <p>Welcome! This is your first time here. Please create your student profile to get started.</p>
             </div>
-          </form>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

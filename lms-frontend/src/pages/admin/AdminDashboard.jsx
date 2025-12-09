@@ -1,20 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom'; // Import useNavigate
 import { useAuth } from '../../context/AuthContext';
 import axios from 'axios';
 import './AdminDashboard.css';
+import UserManagement from './UserManagement';
+import Domain from './Domain/Domain';
 
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 
 const AdminDashboard = () => {
   const { user, logout } = useAuth();
-  const navigate = useNavigate(); // Hook for navigation
   const [trainerModalOpen, setTrainerModalOpen] = useState(false);
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState({ show: false, text: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+
+  // Control which internal page is visible (no full-page redirect)
+  const [activePage, setActivePage] = useState('dashboard'); // 'dashboard' | 'users'
 
   // domain options loaded from API (fallback to static)
   const [domainOptions, setDomainOptions] = useState([
@@ -391,17 +394,35 @@ const AdminDashboard = () => {
         </div>
 
         <div className="nav-links">
-          {/* Dashboard Link - Using Link component */}
-          <Link to="/admin-dashboard" className="nav-item active">
+          {/* Dashboard (in-place) */}
+          <button
+            className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`}
+            onClick={() => setActivePage('dashboard')}
+            type="button"
+          >
             <i className="fas fa-tachometer-alt"></i>
             <span className="nav-text">Dashboard</span>
-          </Link>
-          
-          {/* User Management Link - Added for easy access */}
-          <Link to="/admin/users" className="nav-item">
+          </button>
+
+          {/* User Management (in-place) */}
+          <button
+            className={`nav-item ${activePage === 'users' ? 'active' : ''}`}
+            onClick={() => setActivePage('users')}
+            type="button"
+          >
             <i className="fas fa-users-cog"></i>
             <span className="nav-text">User Management</span>
-          </Link>
+          </button>
+
+          {/* Domains (new) */}
+          <button
+            className={`nav-item ${activePage === 'domains' ? 'active' : ''}`}
+            onClick={() => setActivePage('domains')}
+            type="button"
+          >
+            <i className="fas fa-layer-group"></i>
+            <span className="nav-text">Domains</span>
+          </button>
         </div>
 
         <div className="sidebar-footer">
@@ -422,35 +443,39 @@ const AdminDashboard = () => {
       {/* Main Content */}
       <div className="main-content">
         <div className="header">
-          <h1 className="page-title">Administrator Dashboard</h1>
-          <div className="action-buttons">
-            <button
-              className="btn btn-primary"
-              onClick={() => setTrainerModalOpen(true)}
-              disabled={loading}
-            >
-              <i className="fas fa-plus"></i>
-              Create Trainer
-            </button>
-            <button
-              className="btn btn-success"
-              onClick={() => setStudentModalOpen(true)}
-              disabled={loading}
-            >
-              <i className="fas fa-plus"></i>
-              Create Student
-            </button>
+          <h1 className="page-title">{activePage === 'dashboard' ? 'Administrator Dashboard' : activePage === 'users' ? 'User Management' : 'Domains'}</h1>
 
-            <button
-              className="btn btn-warning"
-              onClick={() => setAdminModalOpen(true)}
-              disabled={loading}
-              title="Create Admin"
-            >
-              <i className="fas fa-user-shield"></i>
-              Create Admin
-            </button>
-          </div>
+          {/* Action buttons only shown on Dashboard */}
+          {activePage === 'dashboard' && (
+            <div className="action-buttons">
+              <button
+                className="btn btn-primary"
+                onClick={() => setTrainerModalOpen(true)}
+                disabled={loading}
+              >
+                <i className="fas fa-plus"></i>
+                Create Trainer
+              </button>
+              <button
+                className="btn btn-success"
+                onClick={() => setStudentModalOpen(true)}
+                disabled={loading}
+              >
+                <i className="fas fa-plus"></i>
+                Create Student
+              </button>
+
+              <button
+                className="btn btn-warning"
+                onClick={() => setAdminModalOpen(true)}
+                disabled={loading}
+                title="Create Admin"
+              >
+                <i className="fas fa-user-shield"></i>
+                Create Admin
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Success Message */}
@@ -461,64 +486,83 @@ const AdminDashboard = () => {
           </div>
         )}
 
-        {/* Dashboard Cards */}
-        <div className="dashboard-cards">
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Trainers</h3>
-              <div className="card-icon trainer-icon">
-                <i className="fas fa-chalkboard-teacher"></i>
+        {/* If dashboard is active, show the dashboard cards; if users are active, show the UserManagement component */}
+        {activePage === 'dashboard' && (
+          <>
+            {/* Dashboard Cards */}
+            <div className="dashboard-cards">
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Trainers</h3>
+                  <div className="card-icon trainer-icon">
+                    <i className="fas fa-chalkboard-teacher"></i>
+                  </div>
+                </div>
+                <div className="card-value">Manage Trainers</div>
+                <div className="card-change">
+                  Use "Create Trainer" button to register new trainers
+                </div>
+              </div>
+
+              <div className="card">
+                <div className="card-header">
+                  <h3 className="card-title">Students</h3>
+                  <div className="card-icon student-icon">
+                    <i className="fas fa-users"></i>
+                  </div>
+                </div>
+                <div className="card-value">Manage Students</div>
+                <div className="card-change">
+                  Use "Create Student" button to register new students
+                </div>
+              </div>
+
+              {/* NEW CARD: USER MANAGEMENT */}
+              <div className="card" onClick={() => setActivePage('users')} style={{cursor: 'pointer'}}>
+                <div className="card-header">
+                  <h3 className="card-title">All Users</h3>
+                  <div className="card-icon" style={{background: '#e8daff', color: '#6f42c1'}}>
+                    <i className="fas fa-users-cog"></i>
+                  </div>
+                </div>
+                <div className="card-value">View & Edit Users</div>
+                <div className="card-change">
+                  Click here to manage, edit, or delete user accounts
+                </div>
               </div>
             </div>
-            <div className="card-value">Manage Trainers</div>
-            <div className="card-change">
-              Use "Create Trainer" button to register new trainers
-            </div>
-          </div>
 
-          <div className="card">
-            <div className="card-header">
-              <h3 className="card-title">Students</h3>
-              <div className="card-icon student-icon">
-                <i className="fas fa-users"></i>
-              </div>
+            {/* Information Section */}
+            <div className="info-section">
+              <h2>Admin Controls</h2>
+              <p>As an administrator, you can:</p>
+              <ul>
+                <li>Register new trainers with domain assignments</li>
+                <li>Register new students (domain assignment is optional)</li>
+                <li>Register new admins (admin-only)</li>
+                <li>Manage user accounts and permissions via the User Management page</li>
+                <li>Monitor system activity</li>
+              </ul>
             </div>
-            <div className="card-value">Manage Students</div>
-            <div className="card-change">
-              Use "Create Student" button to register new students
-            </div>
-          </div>
+          </>
+        )}
 
-          {/* NEW CARD: USER MANAGEMENT */}
-          <div className="card" onClick={() => navigate('/admin/users')} style={{cursor: 'pointer'}}>
-            <div className="card-header">
-              <h3 className="card-title">All Users</h3>
-              <div className="card-icon" style={{background: '#e8daff', color: '#6f42c1'}}>
-                <i className="fas fa-users-cog"></i>
-              </div>
-            </div>
-            <div className="card-value">View & Edit Users</div>
-            <div className="card-change">
-              Click here to manage, edit, or delete user accounts
-            </div>
+        {/* User management view (in-place) */}
+        {activePage === 'users' && (
+          <div className="user-management-wrapper">
+            <UserManagement />
           </div>
-        </div>
+        )}
 
-        {/* Information Section */}
-        <div className="info-section">
-          <h2>Admin Controls</h2>
-          <p>As an administrator, you can:</p>
-          <ul>
-            <li>Register new trainers with domain assignments</li>
-            <li>Register new students (domain assignment is optional)</li>
-            <li>Register new admins (admin-only)</li>
-            <li>Manage user accounts and permissions via the User Management page</li>
-            <li>Monitor system activity</li>
-          </ul>
-        </div>
+        {/* Domain management view (in-place) */}
+        {activePage === 'domains' && (
+          <div className="domain-wrapper">
+            <Domain />
+          </div>
+        )}
       </div>
 
-      {/* Create Trainer Modal */}
+      {/* Create Trainer Modal (unchanged) */}
       {trainerModalOpen && (
         <div className="modal active" onClick={(e) => e.target.className === 'modal active' && setTrainerModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -611,7 +655,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Create Student Modal */}
+      {/* Create Student Modal (unchanged) */}
       {studentModalOpen && (
         <div className="modal active" onClick={(e) => e.target.className === 'modal active' && setStudentModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
@@ -703,7 +747,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Create Admin Modal */}
+      {/* Create Admin Modal (unchanged) */}
       {adminModalOpen && (
         <div className="modal active" onClick={(e) => e.target.className === 'modal active' && setAdminModalOpen(false)}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
