@@ -1,64 +1,8 @@
-/* Profile Container */
-.profile-container {
+/* Profile.css - Layout styles removed, only profile-specific styles remain */
+
+/* Profile Content Container */
+.profile-content {
   width: 100%;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem;
-}
-
-/* Header Section */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  flex-wrap: wrap;
-  gap: 1rem;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-}
-
-.page-title h1 {
-  font-size: 1.75rem;
-  font-weight: 600;
-  color: #111827;
-}
-
-.page-title p {
-  font-size: 0.875rem;
-  color: #6b7280;
-  margin-top: 0.25rem;
-}
-
-.user-role-badge {
-  background-color: #3b82f6;
-  color: white;
-  padding: 0.5rem 1rem;
-  border-radius: 20px;
-  font-size: 0.875rem;
-  font-weight: 500;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 1rem;
-  background-color: #fff;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.logout-btn:hover {
-  background-color: #f9fafb;
 }
 
 /* Profile Card Design */
@@ -403,10 +347,6 @@ input:focus, textarea:focus, select:focus {
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .profile-container {
-    padding: 1rem;
-  }
-  
   .fields-grid {
     grid-template-columns: 1fr;
   }
@@ -432,49 +372,5 @@ input:focus, textarea:focus, select:focus {
   
   .btn {
     width: 100%;
-    min-width: auto;
-  }
-  
-  .header-right {
-    flex-direction: column;
-    width: 100%;
-    align-items: stretch;
-  }
-  
-  .logout-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .edit-button-top-right {
-    position: static;
-    margin-top: 1rem;
-    align-self: center;
-  }
-  
-  /* Profile details list responsive */
-  .profile-detail-item {
-    flex-direction: column;
-    gap: 0.5rem;
-  }
-  
-  .detail-label {
-    min-width: auto;
-    width: 100%;
-  }
-  
-  .detail-value {
-    width: 100%;
-  }
-}
-
-/* Tablet adjustments */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .profile-container {
-    padding: 1.5rem;
-  }
-  
-  .fields-grid {
-    gap: 1rem;
   }
 }

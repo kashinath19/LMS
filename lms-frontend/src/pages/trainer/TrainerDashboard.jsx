@@ -1,22 +1,19 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
-import { GraduationCap, LayoutGrid, LogOut, Box, Menu, X } from 'lucide-react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
+import { Box } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import TrainerProfile from '../../components/profile/TrainerProfile';
+import styles from './TrainerDashboard.module.css';
 import { API_BASE_URL } from '../../utils/constants';
-import './TrainerDashboard.css';
 
+/**
+ * TrainerDashboard - Main dashboard page for trainers
+ * Layout is provided by TrainerLayout via routing - this component renders content only
+ * Profile navigation is handled by the header avatar, not dashboard content
+ */
 const TrainerDashboard = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [showProfile, setShowProfile] = useState(false);
   const [profileData, setProfileData] = useState(null);
-  const [message, setMessage] = useState({ type: '', text: '' });
-  const [profileExists, setProfileExists] = useState(false);
+  const { user } = useAuth();
 
-  const { user, logout } = useAuth();
-  const navigate = useNavigate();
-
-  // Fetch Trainer Profile Data for header display
+  // Fetch Trainer Profile Data for display name
   const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
@@ -30,69 +27,19 @@ const TrainerDashboard = () => {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Trainer profile fetched:', data);
         setProfileData(data);
-        setProfileExists(true);
       } else if (response.status === 404) {
         setProfileData(null);
-        setProfileExists(false);
-      } else {
-        console.warn('Failed to load trainer profile: ', response.status);
       }
     } catch (error) {
-      console.log('Profile not created yet or error loading:', error);
+      console.log("Profile not created yet or error loading:", error);
       setProfileData(null);
-      setProfileExists(false);
     }
   }, []);
 
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
-
-  const handleLogout = () => {
-    const confirmLogout = window.confirm('Are you sure you want to log out?');
-    if (confirmLogout) {
-      logout();
-      navigate('/login');
-    }
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const handleProfileClick = () => {
-    setShowProfile(true);
-    setIsSidebarOpen(false);
-  };
-
-  const handleBackToDashboard = () => {
-    setShowProfile(false);
-    // Refresh profile data
-    fetchProfile();
-  };
-
-  const showMessage = (type, text) => {
-    setMessage({ type, text });
-    setTimeout(() => {
-      setMessage({ type: '', text: '' });
-    }, 5000);
-  };
-
-  const handleProfileCreated = () => {
-    setProfileExists(true);
-    fetchProfile();
-  };
-
-  // Helper to determine which image to show
-  const getProfileImage = () => {
-    if (profileData && profileData.profile_image_url) {
-      return profileData.profile_image_url;
-    }
-    const seed = profileData?.user_id || user?.email?.split('@')[0] || 'Trainer';
-    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${seed}`;
-  };
 
   // Helper for name display
   const getDisplayName = () => {
@@ -103,110 +50,15 @@ const TrainerDashboard = () => {
   };
 
   return (
-    <div className="dashboard-container">
-      {/* Sidebar */}
-      <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
-        <div className="sidebar-top">
-          <div className="logo-container">
-            <GraduationCap className="logo-icon" size={32} />
-            <span className="logo-text">Gigaversity</span>
-          </div>
-
-          <nav className="sidebar-nav">
-            <button
-              className={`nav-item ${!showProfile ? 'active' : ''}`}
-              onClick={() => {
-                setShowProfile(false);
-                setIsSidebarOpen(false);
-              }}
-              style={{ border: 'none', background: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '0.75rem' }}
-            >
-              <LayoutGrid size={20} />
-              <span>Dashboard</span>
-            </button>
-          </nav>
-        </div>
-
-        <div className="sidebar-footer">
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={20} />
-            <span>Log Out</span>
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Wrapper */}
-      <div className="main-content">
-        <header className="top-header">
-          <div className="page-title">
-            {showProfile ? 'Trainer Profile' : 'Dashboard'}
-          </div>
-
-          {/* Profile Section - Clickable to show profile in dashboard */}
-          {!showProfile && (
-            <button
-              onClick={handleProfileClick}
-              className="profile-section"
-              style={{ border: 'none', background: 'none', cursor: 'pointer' }}
-            >
-              <div className="profile-info">
-                <p className="profile-name">{getDisplayName()}</p>
-                <p className="profile-role">Trainer</p>
-              </div>
-              <div className="profile-avatar">
-                <img
-                  src={getProfileImage()}
-                  alt="Profile"
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                />
-              </div>
-            </button>
-          )}
-
-          {showProfile && (
-            <button
-              onClick={handleBackToDashboard}
-              className="back-button"
-              style={{ border: 'none', background: 'none', cursor: 'pointer', padding: '0.5rem' }}
-            >
-              <X size={24} />
-            </button>
-          )}
-        </header>
-
-        <main className="content-area">
-          {!showProfile ? (
-            // Dashboard View
-            <div className="empty-state">
-              <Box size={48} className="empty-icon" />
-              <span className="empty-text">Empty Dashboard</span>
-            </div>
-          ) : (
-            // Profile View - Using TrainerProfile Component
-            <div className="profile-view-container">
-              {message.text && (
-                <div className={`message-banner ${message.type}`}>
-                  {message.text}
-                </div>
-              )}
-              <TrainerProfile
-                showMessage={showMessage}
-                onProfileCreated={handleProfileCreated}
-                profileExists={profileExists}
-                setProfileExists={setProfileExists}
-              />
-            </div>
-          )}
-        </main>
+    <div className={styles.trainerDashboardContent}>
+      <div className={styles.dashboardHeader}>
+        <h1>Welcome, {getDisplayName()}!</h1>
       </div>
-
-      <button onClick={toggleSidebar} className="mobile-toggle">
-        <Menu size={24} />
-      </button>
-
-      {isSidebarOpen && (
-        <div className="sidebar-overlay" onClick={() => setIsSidebarOpen(false)}></div>
-      )}
+      <div className={styles.emptyState}>
+        <Box size={48} className={styles.emptyIcon} />
+        <span className={styles.emptyText}>Your dashboard is empty</span>
+        <p className={styles.emptyDescription}>Manage your courses and students here.</p>
+      </div>
     </div>
   );
 };

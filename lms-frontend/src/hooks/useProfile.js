@@ -8,27 +8,34 @@ export const useProfile = (userRole) => {
   const [profile, setProfile] = useState(null);
 
   const getEndpoint = useCallback(() => {
-    if (userRole === 'student') {
-      return `${API_BASE_URL}/profiles/student`;
-    } else {
-      return `${API_BASE_URL}/profiles/trainer`;
+    if (!userRole) {
+      console.warn('useProfile: no userRole provided — aborting endpoint selection');
+      return null;
     }
+    if (userRole === 'student') return `${API_BASE_URL}/profiles/student`;
+    if (userRole === 'trainer') return `${API_BASE_URL}/profiles/trainer`;
+    console.warn('useProfile: unknown userRole:', userRole, 'defaulting to student endpoint');
+    return `${API_BASE_URL}/profiles/student`;
   }, [userRole]);
 
   const fetchProfile = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem('access_token');
       const endpoint = getEndpoint();
-      
+      if (!endpoint) {
+        setError('Missing user role; cannot fetch profile');
+        throw new Error('Missing user role; cannot fetch profile');
+      }
+
       const response = await axios.get(endpoint, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       setProfile(response.data);
       return response.data;
     } catch (err) {
@@ -44,11 +51,11 @@ export const useProfile = (userRole) => {
     try {
       setLoading(true);
       setError(null);
-      
+
       const token = localStorage.getItem('access_token');
       const endpoint = getEndpoint();
       const method = profile ? 'PATCH' : 'POST';
-      
+
       const response = await axios({
         method,
         url: endpoint,
@@ -57,7 +64,7 @@ export const useProfile = (userRole) => {
           'Authorization': `Bearer ${token}`
         }
       });
-      
+
       setProfile(response.data);
       return response.data;
     } catch (err) {

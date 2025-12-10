@@ -1,0 +1,327 @@
+/* AdminDashboard.module.css - Scoped styles for Admin Dashboard */
+
+/* Buttons - scoped with module */
+.btn {
+    padding: 12px 24px;
+    border-radius: 8px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-family: inherit;
+    font-size: 14px;
+}
+
+.btnPrimary {
+    composes: btn;
+    background-color: #2563eb;
+    color: white;
+}
+
+.btnPrimary:hover:not(:disabled) {
+    background-color: #3b82f6;
+}
+
+.btnSuccess {
+    composes: btn;
+    background-color: #10b981;
+    color: white;
+}
+
+.btnSecondary {
+    composes: btn;
+    background-color: #f8fafc;
+    color: #1e293b;
+    border: 1px solid #e2e8f0;
+}
+
+.btnWarning {
+    composes: btn;
+    background-color: #f59e0b;
+    color: white;
+}
+
+.btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Dashboard Cards */
+.dashboardCards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.card {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+.cardClickable {
+    composes: card;
+    cursor: pointer;
+}
+
+.cardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.cardTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.cardIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+}
+
+.trainerIcon {
+    composes: cardIcon;
+    background-color: rgba(37, 99, 235, 0.1);
+    color: #2563eb;
+}
+
+.studentIcon {
+    composes: cardIcon;
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+}
+
+.usersIcon {
+    composes: cardIcon;
+    background-color: #e8daff;
+    color: #6f42c1;
+}
+
+.domainsIcon {
+    composes: cardIcon;
+    background-color: #dbeafe;
+    color: #1e40af;
+}
+
+.cardValue {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    color: #0f172a;
+}
+
+.cardChange {
+    font-size: 14px;
+    color: #64748b;
+}
+
+/* Success Message */
+.successMessage {
+    background-color: rgba(16, 185, 129, 0.1);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    color: #10b981;
+    padding: 16px 20px;
+    border-radius: 8px;
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Info Section */
+.infoSection {
+    background-color: white;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+    margin-top: 30px;
+}
+
+.infoSection h2 {
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 16px;
+    color: #0f172a;
+}
+
+.infoSection p {
+    font-size: 16px;
+    color: #64748b;
+    margin-bottom: 16px;
+}
+
+.infoSection ul {
+    margin-left: 20px;
+    color: #64748b;
+}
+
+.infoSection li {
+    margin-bottom: 8px;
+}
+
+/* Modal styles */
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modalContent {
+    background-color: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+}
+
+.modalHeader {
+    padding: 24px;
+    border-bottom: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modalTitle {
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.closeModal {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #64748b;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modalBody {
+    padding: 24px;
+}
+
+.formGroup {
+    margin-bottom: 20px;
+}
+
+.formLabel {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #0f172a;
+}
+
+.formInput {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: border-color 0.3s;
+    font-family: inherit;
+    box-sizing: border-box;
+}
+
+.formInput:focus {
+    outline: none;
+    border-color: #2563eb;
+}
+
+.formInput:disabled {
+    background-color: #f8fafc;
+    cursor: not-allowed;
+}
+
+.formError {
+    color: #dc2626;
+    font-size: 14px;
+    margin-top: 6px;
+}
+
+.modalFooter {
+    padding: 20px 24px;
+    border-top: 1px solid #e2e8f0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+/* Empty Dashboard State */
+.emptyDashboard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    text-align: center;
+    background: white;
+    border-radius: 12px;
+    padding: 40px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+.emptyDashboard h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 16px 0 8px;
+}
+
+.emptyDashboard p {
+    font-size: 16px;
+    color: #64748b;
+    margin: 4px 0;
+}
+
+.emptyIcon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+    color: white;
+}
+
+.emptyText {
+    max-width: 400px;
+    line-height: 1.6;
+}

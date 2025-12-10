@@ -1,6 +1,7 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
+﻿import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../utils/constants';
+import { profileAPI } from '../services/api';
 
 const AuthContext = createContext(null);
 
@@ -18,11 +19,9 @@ function tryDecodeJwtForId(token) {
     const parts = token.split('.');
     if (parts.length < 2) return null;
     const payload = parts[1];
-    // add padding for base64 if needed
     const padded = payload.padEnd(payload.length + (4 - (payload.length % 4)) % 4, '=');
     const json = atob(padded.replace(/-/g, '+').replace(/_/g, '/'));
     const obj = JSON.parse(json);
-    // common claim names for id
     return obj?.sub || obj?.user_id || obj?.id || obj?.uid || null;
   } catch (e) {
     console.warn('AuthContext - JWT decode failed:', e);
@@ -35,44 +34,72 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [token, setToken] = useState(null);
 
+  // Fetch admin profile once and merge into user state
+  const fetchAdminProfileOnce = async (currentToken) => {
+    try {
+      if (!currentToken) currentToken = localStorage.getItem('access_token');
+      if (!currentToken) return;
+
+      axios.defaults.headers.common['Authorization'] = `Bearer ${currentToken}`;
+
+      const res = await profileAPI.getAdminProfile();
+      const data = res?.data ?? res;
+
+      // Normalize possible shapes
+      const payload = (data?.data && typeof data.data === 'object') ? data.data : (data?.admin || data?.profile || data);
+
+      const name = payload?.name || payload?.full_name || payload?.first_name || payload?.username || null;
+      const email = payload?.email || localStorage.getItem('user_email') || null;
+      const avatarUrl = payload?.avatarUrl || payload?.avatar || payload?.profile_image || null;
+      const initials = (payload?.initials) ? payload.initials : (name ? name.split(' ').map(n => n[0]).slice(0,2).join('') : null);
+
+      setUser(prev => ({
+        ...(prev || {}),
+        name: name ?? prev?.name,
+        email: email ?? prev?.email,
+        avatarUrl: avatarUrl ?? prev?.avatarUrl,
+        initials: initials ?? prev?.initials
+      }));
+
+      if (name) localStorage.setItem('user_name', name);
+      if (email) localStorage.setItem('user_email', email);
+      if (payload?.id) localStorage.setItem('user_id', payload.id);
+    } catch (err) {
+      console.warn('AuthContext - fetchAdminProfileOnce failed:', err);
+    }
+  };
+
   useEffect(() => {
     const initializeAuth = async () => {
-      console.log('AuthContext - Initializing auth...');
       const storedToken = localStorage.getItem('access_token');
       const storedRole = localStorage.getItem('user_role');
       const storedEmail = localStorage.getItem('user_email');
       const storedUserId = localStorage.getItem('user_id');
-
-      console.log('AuthContext - Stored token:', storedToken ? 'Present' : 'Missing');
-      console.log('AuthContext - Stored role:', storedRole);
-      console.log('AuthContext - Stored email:', storedEmail);
-      console.log('AuthContext - Stored user id:', storedUserId);
+      const storedName = localStorage.getItem('user_name');
 
       if (storedToken && storedRole && storedEmail) {
-        console.log('AuthContext - Setting user from localStorage');
         setUser({
           role: storedRole,
           email: storedEmail,
           id: storedUserId || null,
-          token: storedToken
+          token: storedToken,
+          name: storedName || null,
         });
         setToken(storedToken);
-
-        // Set axios default header
         axios.defaults.headers.common['Authorization'] = `Bearer ${storedToken}`;
-      } else {
-        console.log('AuthContext - No valid auth data in localStorage');
+
+        if (storedRole === 'admin') {
+          await fetchAdminProfileOnce(storedToken);
+        }
       }
 
       setLoading(false);
-      console.log('AuthContext - Loading set to false');
     };
 
     initializeAuth();
   }, []);
 
   const login = async (email, password, role) => {
-    console.log('AuthContext - Login called with:', { email, role });
     try {
       const endpoints = {
         admin: '/auth/login-admin',
@@ -80,16 +107,13 @@ export const AuthProvider = ({ children }) => {
         student: '/auth/login-student'
       };
 
-      console.log('AuthContext - Making API call to:', endpoints[role]);
       const response = await axios.post(
         `${API_BASE_URL}${endpoints[role]}`,
         { email, password }
       );
 
-      console.log('AuthContext - Login response:', response.data);
       const { access_token, refresh_token } = response.data;
 
-      // Try to extract user id from common response shapes
       let userId =
         response.data?.user?.id ||
         response.data?.user_id ||
@@ -98,39 +122,20 @@ export const AuthProvider = ({ children }) => {
         response.data?.user?.userId ||
         null;
 
-      // If not found in response body, try decoding JWT payload
       if (!userId && access_token) {
         const decodedId = tryDecodeJwtForId(access_token);
-        if (decodedId) {
-          userId = decodedId;
-          console.log('AuthContext - Extracted user id from JWT:', userId);
-        } else {
-          console.log('AuthContext - No user id found in JWT payload');
-        }
-      } else if (userId) {
-        console.log('AuthContext - Extracted user id from response body:', userId);
+        if (decodedId) userId = decodedId;
       }
 
-      // Store tokens and basic user info
       if (access_token) {
         localStorage.setItem('access_token', access_token);
         localStorage.setItem('refresh_token', refresh_token || '');
         localStorage.setItem('user_role', role);
         localStorage.setItem('user_email', email);
-
-        if (userId) {
-          localStorage.setItem('user_id', userId);
-          console.log('AuthContext - user_id stored:', userId);
-        } else {
-          // remove any stale user_id to avoid incorrect checks
-          localStorage.removeItem('user_id');
-        }
+        if (userId) localStorage.setItem('user_id', userId);
+        else localStorage.removeItem('user_id');
       }
 
-      console.log('AuthContext - Tokens stored in localStorage');
-      console.log('AuthContext - Role stored:', role);
-
-      // Update state
       setToken(access_token);
       setUser({
         role,
@@ -139,9 +144,11 @@ export const AuthProvider = ({ children }) => {
         token: access_token
       });
 
-      // Set axios default header
       axios.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
-      console.log('AuthContext - Axios header set');
+
+      if (role === 'admin') {
+        await fetchAdminProfileOnce(access_token);
+      }
 
       return {
         success: true,
@@ -150,8 +157,6 @@ export const AuthProvider = ({ children }) => {
       };
     } catch (error) {
       console.error('AuthContext - Login error:', error);
-      console.error('AuthContext - Error response:', error.response?.data);
-
       let errorMessage = 'Login failed';
       if (error.response?.status === 401) {
         errorMessage = 'Invalid email or password';
@@ -171,27 +176,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    console.log('AuthContext - Logout called');
-    // Clear local storage
     localStorage.removeItem('access_token');
     localStorage.removeItem('refresh_token');
     localStorage.removeItem('user_role');
     localStorage.removeItem('user_email');
     localStorage.removeItem('token_expiry');
     localStorage.removeItem('user_id');
+    localStorage.removeItem('user_name');
 
-    // Clear session storage as well
     sessionStorage.clear();
 
-    // Clear state
     setUser(null);
     setToken(null);
 
-    // Remove axios header
     delete axios.defaults.headers.common['Authorization'];
 
-    console.log('AuthContext - User logged out, redirecting to login');
-    // Redirect to login
     window.location.href = '/login';
   };
 
@@ -203,12 +202,6 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAuthenticated: !!token && !!user
   };
-
-  console.log('AuthContext - Current auth state:', {
-    user,
-    loading,
-    isAuthenticated: !!token && !!user
-  });
 
   return (
     <AuthContext.Provider value={value}>

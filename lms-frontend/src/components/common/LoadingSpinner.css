@@ -1,4 +1,4 @@
-.loading-spinner-container {
+.loadingSpinnerContainer {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -7,7 +7,7 @@
   background-color: #f3f4f6;
 }
 
-.loading-spinner-container .spinner {
+.loadingSpinnerContainer .spinner {
   width: 50px;
   height: 50px;
   border: 5px solid #e5e7eb;
@@ -23,7 +23,7 @@
   }
 }
 
-.loading-spinner-container p {
+.loadingSpinnerContainer p {
   color: #6b7280;
   font-size: 1rem;
 }

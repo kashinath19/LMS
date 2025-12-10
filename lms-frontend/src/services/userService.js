@@ -1,14 +1,65 @@
-import api from './api'; // Assuming api.js exports an axios instance with baseURL set
+import api from './api';
+
+let _cachedDomains = null;
+
+const loadDomainsOnce = async () => {
+  if (_cachedDomains) return _cachedDomains;
+  try {
+    const res = await api.get('/domains/');
+    let raw = [];
+    if (Array.isArray(res.data)) raw = res.data;
+    else if (res.data?.results && Array.isArray(res.data.results)) raw = res.data.results;
+    else if (res.data?.data && Array.isArray(res.data.data)) raw = res.data.data;
+
+    const normalized = raw.map(d => ({ id: d.id, name: d.name || d.title || d.label || String(d.id) }));
+    _cachedDomains = normalized;
+    return normalized;
+  } catch (err) {
+    _cachedDomains = [];
+    return [];
+  }
+};
 
 // --- GET: List Users ---
+// Returns an array of user objects (normalized from multiple possible response shapes)
 export const getUsers = async (role = '', domain_id = '', is_active = '', skip = 0, limit = 100) => {
-  const params = { skip, limit };
+  const params = {};
   if (role) params.role = role;
   if (domain_id) params.domain_id = domain_id;
   if (is_active !== '') params.is_active = is_active;
+  if (typeof skip !== 'undefined') params.skip = skip;
+  if (typeof limit !== 'undefined') params.limit = limit;
 
-  const response = await api.get('/users/', { params });
-  return response.data;
+  try {
+    const response = await api.get('/users/', { params });
+    const d = response.data;
+    let users = [];
+
+    if (Array.isArray(d)) users = d;
+    else if (d?.results && Array.isArray(d.results)) users = d.results;
+    else if (d?.data && Array.isArray(d.data)) users = d.data;
+    else if (d?.users && Array.isArray(d.users)) users = d.users;
+    else if (d?.items && Array.isArray(d.items)) users = d.items;
+    else if (d && typeof d === 'object') {
+      const arr = Object.values(d).find(v => Array.isArray(v));
+      if (Array.isArray(arr)) users = arr;
+    }
+
+    // attach domain_name using domains (cached)
+    const domains = await loadDomainsOnce();
+    const mapped = users.map(u => {
+      let domainFromUser = u?.domain?.name || u?.domain_name || u?.domain;
+      if (!domainFromUser && domains && domains.length) {
+        const match = domains.find(dd => String(dd.id) === String(u.domain_id));
+        if (match) domainFromUser = match.name;
+      }
+      return { ...u, domain_name: domainFromUser ?? (u.domain_id ?? null) };
+    });
+
+    return mapped;
+  } catch (err) {
+    throw err;
+  }
 };
 
 // --- PATCH: Update User ---

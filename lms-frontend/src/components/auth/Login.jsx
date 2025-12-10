@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { API_BASE_URL } from '../../utils/constants';
-import './Login.css';
+import styles from './Login.module.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -51,10 +51,8 @@ const Login = () => {
     setError('');
   };
 
-  // Returns { ok: boolean, exists?: boolean, status?: number, message?: string }
   const checkProfileExists = async (role, userId, token) => {
     if (!userId) {
-      // No user id stored — treat as "profile not present" (redirect to /profile flow)
       return { ok: true, exists: false };
     }
     const endpointRole = role === 'trainer' ? 'trainer' : 'student';
@@ -72,12 +70,10 @@ const Login = () => {
         return { ok: true, exists: true };
       }
 
-      // 404 => profile not found (ok, exists: false)
       if (res.status === 404) {
         return { ok: true, exists: false };
       }
 
-      // For 401/403 and other non-OK statuses, try to get a message
       let msg = `Request failed with status ${res.status}`;
       try {
         const body = await res.json();
@@ -122,7 +118,6 @@ const Login = () => {
         return;
       }
 
-      // Login succeeded at auth level. Check for profile only for trainer/student.
       const storedUserId = localStorage.getItem('user_id');
       const token = localStorage.getItem('access_token');
       console.log('Login - storedUserId:', storedUserId, 'token present:', !!token);
@@ -134,7 +129,6 @@ const Login = () => {
       } else if (role === 'trainer' || role === 'student') {
         const profileCheck = await checkProfileExists(role, storedUserId, token);
         if (!profileCheck.ok) {
-          // Important: do NOT navigate; show the error card instead.
           const message = profileCheck.message || (profileCheck.status ? `Error ${profileCheck.status}` : 'Unauthorized');
           console.warn('Login - Profile check error:', message);
           setError(typeof message === 'string' ? message : 'Unauthorized');
@@ -142,12 +136,10 @@ const Login = () => {
           return;
         }
 
-        // profileCheck.ok === true
         redirectPath = profileCheck.exists ? (role === 'trainer' ? '/trainer-dashboard' : '/student-dashboard') : '/profile';
       }
 
       console.log('Login - Redirecting to:', redirectPath);
-      // small timeout to ensure state is set, then navigate
       setTimeout(() => {
         navigate(redirectPath, { replace: true });
       }, 50);
@@ -159,31 +151,31 @@ const Login = () => {
   };
 
   return (
-    <div className="login-container">
+    <div className={styles.loginContainer}>
       {/* Left: Brand Section */}
-      <div className="brand-section">
-        <div className="logo">
-          <div className="logo-icon">
+      <div className={styles.brandSection}>
+        <div className={styles.logo}>
+          <div className={styles.logoIcon}>
             <i className="fas fa-graduation-cap"></i>
           </div>
-          <div className="logo-text">LMS Portal</div>
+          <div className={styles.logoText}>LMS Portal</div>
         </div>
 
-        <h1 className="brand-title">Learning Management System</h1>
-        <p className="brand-description">
+        <h1 className={styles.brandTitle}>Learning Management System</h1>
+        <p className={styles.brandDescription}>
           A comprehensive platform designed for educational institutions to manage courses, track progress, and facilitate learning.
         </p>
 
-        <div className="features">
-          <div className="feature">
+        <div className={styles.features}>
+          <div className={styles.feature}>
             <i className="fas fa-shield-alt"></i>
             <span>Secure authentication</span>
           </div>
-          <div className="feature">
+          <div className={styles.feature}>
             <i className="fas fa-chart-line"></i>
             <span>Progress analytics</span>
           </div>
-          <div className="feature">
+          <div className={styles.feature}>
             <i className="fas fa-users"></i>
             <span>Role-based access</span>
           </div>
@@ -191,25 +183,25 @@ const Login = () => {
       </div>
 
       {/* Right: Login Section */}
-      <div className="login-section">
-        <div className="login-header">
-          <h1 className="login-title">Secure Login</h1>
-          <p className="login-subtitle">Access your personalized dashboard with your credentials</p>
-          <div className="role-indicator">
+      <div className={styles.loginSection}>
+        <div className={styles.loginHeader}>
+          <h1 className={styles.loginTitle}>Secure Login</h1>
+          <p className={styles.loginSubtitle}>Access your personalized dashboard with your credentials</p>
+          <div className={styles.roleIndicator}>
             <i className={`fas ${getRoleIcon(role)}`}></i>
             <span>{getRoleLabel(role)}</span>
           </div>
         </div>
 
         {/* Role Selection */}
-        <div className="role-selection">
-          <div className="role-label">
+        <div className={styles.roleSelection}>
+          <div className={styles.roleLabel}>
             <i className="fas fa-user-tag"></i>
             Select Access Level
           </div>
-          <div className="role-buttons">
+          <div className={styles.roleButtons}>
             <button
-              className={`role-btn admin ${role === 'admin' ? 'active' : ''}`}
+              className={`${styles.roleBtn} ${styles.admin} ${role === 'admin' ? styles.active : ''}`}
               onClick={() => handleRoleChange('admin')}
               type="button"
               disabled={loading}
@@ -218,7 +210,7 @@ const Login = () => {
               <span>Administrator</span>
             </button>
             <button
-              className={`role-btn trainer ${role === 'trainer' ? 'active' : ''}`}
+              className={`${styles.roleBtn} ${styles.trainer} ${role === 'trainer' ? styles.active : ''}`}
               onClick={() => handleRoleChange('trainer')}
               type="button"
               disabled={loading}
@@ -227,7 +219,7 @@ const Login = () => {
               <span>Trainer</span>
             </button>
             <button
-              className={`role-btn student ${role === 'student' ? 'active' : ''}`}
+              className={`${styles.roleBtn} ${styles.student} ${role === 'student' ? styles.active : ''}`}
               onClick={() => handleRoleChange('student')}
               type="button"
               disabled={loading}
@@ -240,22 +232,22 @@ const Login = () => {
 
         {/* Error Message */}
         {error && (
-          <div className="error-message">
+          <div className={styles.errorMessage}>
             <i className="fas fa-exclamation-circle"></i>
             <span>{error}</span>
           </div>
         )}
 
         {/* Login Form */}
-        <form className="login-form" onSubmit={handleSubmit}>
-          <div className="form-group">
-            <label className="form-label" htmlFor="email">Email Address</label>
-            <div className="input-container">
-              <i className="input-icon fas fa-envelope"></i>
+        <form className={styles.loginForm} onSubmit={handleSubmit}>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel} htmlFor="email">Email Address</label>
+            <div className={styles.inputContainer}>
+              <i className={`${styles.inputIcon} fas fa-envelope`}></i>
               <input
                 type="email"
                 id="email"
-                className="form-input"
+                className={styles.formInput}
                 placeholder={getPlaceholderEmail(role)}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -266,14 +258,14 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="form-group">
-            <label className="form-label" htmlFor="password">Password</label>
-            <div className="input-container">
-              <i className="input-icon fas fa-lock"></i>
+          <div className={styles.formGroup}>
+            <label className={styles.formLabel} htmlFor="password">Password</label>
+            <div className={styles.inputContainer}>
+              <i className={`${styles.inputIcon} fas fa-lock`}></i>
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
-                className="form-input"
+                className={styles.formInput}
                 placeholder="Enter your secure password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -283,7 +275,7 @@ const Login = () => {
               />
               <button
                 type="button"
-                className="password-toggle"
+                className={styles.passwordToggle}
                 onClick={() => setShowPassword(!showPassword)}
                 disabled={loading}
               >
@@ -292,8 +284,8 @@ const Login = () => {
             </div>
           </div>
 
-          <div className="form-options">
-            <label className="checkbox-container">
+          <div className={styles.formOptions}>
+            <label className={styles.checkboxContainer}>
               <input
                 type="checkbox"
                 id="remember"
@@ -304,17 +296,17 @@ const Login = () => {
               />
               <span>Keep me signed in</span>
             </label>
-            <a href="#" className="forgot-link">Forgot Password?</a>
+            <a href="#" className={styles.forgotLink}>Forgot Password?</a>
           </div>
 
           <button
             type="submit"
-            className="login-button"
+            className={styles.loginButton}
             disabled={loading}
           >
             {loading ? (
               <>
-                <div className="spinner"></div>
+                <div className={styles.spinner}></div>
                 <span>Signing In...</span>
               </>
             ) : (
@@ -325,7 +317,7 @@ const Login = () => {
             )}
           </button>
 
-          <div className="signup-link">
+          <div className={styles.signupLink}>
             Need platform access? <a href="#">Contact system administrator</a>
           </div>
         </form>

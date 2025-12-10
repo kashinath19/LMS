@@ -1,5 +1,3 @@
-/* Login.css - Import the CSS from your HTML file */
-
 :root {
   --primary: #4361ee;
   --primary-dark: #3a56d4;
@@ -15,7 +13,7 @@
   --transition: all 0.3s ease;
 }
 
-.login-container {
+.loginContainer {
   display: flex;
   width: 100%;
   max-width: 1000px;
@@ -30,7 +28,7 @@
 }
 
 /* Left Panel - Branding */
-.brand-section {
+.brandSection {
   width: 45%;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
   color: var(--white);
@@ -42,14 +40,14 @@
   z-index: 1;
 }
 
-.brand-section::before {
+.brandSection::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
+  background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2' fill='%23ffffff' fill-opacity='0.03' fill-rule='evenodd'/%3E%3C/svg%3E");
   z-index: -1;
 }
 
@@ -59,7 +57,7 @@
   margin-bottom: 30px;
 }
 
-.logo-icon {
+.logoIcon {
   width: 50px;
   height: 50px;
   background: rgba(255, 255, 255, 0.15);
@@ -74,14 +72,14 @@
   color: var(--white);
 }
 
-.logo-text {
+.logoText {
   font-size: 24px;
   font-weight: 700;
   letter-spacing: -0.5px;
   color: var(--white);
 }
 
-.brand-title {
+.brandTitle {
   font-size: 28px;
   font-weight: 700;
   margin-bottom: 20px;
@@ -89,7 +87,7 @@
   color: var(--white);
 }
 
-.brand-description {
+.brandDescription {
   font-size: 15px;
   line-height: 1.6;
   opacity: 0.85;
@@ -125,6 +123,9 @@
   font-size: 16px;
   color: var(--white);
   width: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .feature span {
@@ -132,7 +133,7 @@
 }
 
 /* Right Panel - Login Form */
-.login-section {
+.loginSection {
   width: 55%;
   padding: 50px;
   display: flex;
@@ -140,29 +141,29 @@
   justify-content: center;
 }
 
-.login-header {
+.loginHeader {
   margin-bottom: 30px;
 }
 
-.login-title {
+.loginTitle {
   font-size: 28px;
   font-weight: 700;
   color: var(--dark);
   margin-bottom: 8px;
 }
 
-.login-subtitle {
+.loginSubtitle {
   font-size: 15px;
   color: var(--gray);
   line-height: 1.5;
 }
 
 /* Role Selection */
-.role-selection {
+.roleSelection {
   margin-bottom: 30px;
 }
 
-.role-label {
+.roleLabel {
   font-size: 14px;
   font-weight: 600;
   color: var(--dark);
@@ -172,16 +173,16 @@
   gap: 8px;
 }
 
-.role-label i {
+.roleLabel i {
   color: var(--primary);
 }
 
-.role-buttons {
+.roleButtons {
   display: flex;
   gap: 10px;
 }
 
-.role-btn {
+.roleBtn {
   flex: 1;
   padding: 14px 10px;
   border: 2px solid #e9ecef;
@@ -199,11 +200,11 @@
   gap: 8px;
 }
 
-.role-btn i {
+.roleBtn i {
   font-size: 20px;
 }
 
-.role-btn.active {
+.roleBtn.active {
   border-color: var(--primary);
   background: linear-gradient(135deg, rgba(67, 97, 238, 0.08), rgba(67, 97, 238, 0.04));
   color: var(--primary);
@@ -212,43 +213,43 @@
   transform: translateY(-2px);
 }
 
-.role-btn.admin.active {
+.roleBtn.admin.active {
   border-color: var(--admin);
   background: linear-gradient(135deg, rgba(114, 9, 183, 0.08), rgba(114, 9, 183, 0.04));
   color: var(--admin);
   box-shadow: 0 8px 20px rgba(114, 9, 183, 0.12);
 }
 
-.role-btn.trainer.active {
+.roleBtn.trainer.active {
   border-color: var(--trainer);
   background: linear-gradient(135deg, rgba(248, 150, 30, 0.08), rgba(248, 150, 30, 0.04));
   color: var(--trainer);
   box-shadow: 0 8px 20px rgba(248, 150, 30, 0.12);
 }
 
-.role-btn.student.active {
+.roleBtn.student.active {
   border-color: var(--student);
   background: linear-gradient(135deg, rgba(45, 147, 108, 0.08), rgba(45, 147, 108, 0.04));
   color: var(--student);
   box-shadow: 0 8px 20px rgba(45, 147, 108, 0.12);
 }
 
-.role-btn:hover:not(.active) {
+.roleBtn:hover:not(.active) {
   border-color: #d0d7de;
   background-color: #f8f9fa;
   transform: translateY(-1px);
 }
 
 /* Login Form - FIXED SECTION */
-.login-form {
+.loginForm {
   flex: 1;
 }
 
-.form-group {
+.formGroup {
   margin-bottom: 22px;
 }
 
-.form-label {
+.formLabel {
   display: block;
   margin-bottom: 8px;
   font-weight: 500;
@@ -257,7 +258,7 @@
 }
 
 /* FIXED INPUT CONTAINER WITH ICONS */
-.input-container {
+.inputContainer {
   position: relative;
   display: flex;
   align-items: center;
@@ -265,7 +266,7 @@
 }
 
 /* Left icon - positioned absolutely */
-.input-icon {
+.inputIcon {
   position: absolute;
   left: 16px;
   top: 50%;
@@ -281,9 +282,9 @@
 }
 
 /* Input field with proper padding for icons */
-.form-input {
+.formInput {
   width: 100%;
-  padding: 14px 50px 14px 50px; /* Equal padding on both sides for symmetry */
+  padding: 14px 50px 14px 50px;
   border: 2px solid #e9ecef;
   border-radius: 10px;
   font-size: 15px;
@@ -295,31 +296,31 @@
 }
 
 /* Specific padding for email input - more on left for icon */
-.form-input[type="email"] {
-  padding-left: 48px; /* Space for email icon */
+.formInput[type="email"] {
+  padding-left: 48px;
 }
 
 /* Specific padding for password input - space for both icons */
-.form-input[type="password"],
-.form-input[type="text"] {
-  padding-left: 48px; /* Space for lock icon */
-  padding-right: 48px; /* Space for eye icon */
+.formInput[type="password"],
+.formInput[type="text"] {
+  padding-left: 48px;
+  padding-right: 48px;
 }
 
 /* Focus states */
-.form-input:focus {
+.formInput:focus {
   outline: none;
   border-color: var(--primary);
   background-color: var(--white);
   box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.1);
 }
 
-.form-input:focus + .input-icon {
+.formInput:focus + .inputIcon {
   color: var(--primary);
 }
 
 /* Password toggle button */
-.password-toggle {
+.passwordToggle {
   position: absolute;
   right: 16px;
   top: 50%;
@@ -340,24 +341,24 @@
   transition: var(--transition);
 }
 
-.password-toggle:hover {
+.passwordToggle:hover {
   color: var(--primary);
   background-color: rgba(67, 97, 238, 0.08);
 }
 
-.password-toggle:active {
+.passwordToggle:active {
   background-color: rgba(67, 97, 238, 0.12);
 }
 
 /* Form options - keep me signed in and forgot password */
-.form-options {
+.formOptions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: 25px;
 }
 
-.checkbox-container {
+.checkboxContainer {
   display: flex;
   align-items: center;
   cursor: pointer;
@@ -366,7 +367,7 @@
   user-select: none;
 }
 
-.checkbox-container input[type="checkbox"] {
+.checkboxContainer input[type="checkbox"] {
   margin-right: 8px;
   width: 16px;
   height: 16px;
@@ -374,7 +375,7 @@
   accent-color: var(--primary);
 }
 
-.forgot-link {
+.forgotLink {
   color: var(--primary);
   font-size: 14px;
   text-decoration: none;
@@ -382,13 +383,13 @@
   transition: var(--transition);
 }
 
-.forgot-link:hover {
+.forgotLink:hover {
   color: var(--primary-dark);
   text-decoration: underline;
 }
 
 /* Login button */
-.login-button {
+.loginButton {
   width: 100%;
   padding: 16px;
   background: linear-gradient(135deg, var(--primary), var(--primary-dark));
@@ -409,7 +410,7 @@
   overflow: hidden;
 }
 
-.login-button::before {
+.loginButton::before {
   content: '';
   position: absolute;
   top: 0;
@@ -420,16 +421,16 @@
   transition: 0.5s;
 }
 
-.login-button:hover {
+.loginButton:hover {
   transform: translateY(-3px);
   box-shadow: 0 15px 30px rgba(67, 97, 238, 0.25);
 }
 
-.login-button:hover::before {
+.loginButton:hover::before {
   left: 100%;
 }
 
-.login-button:disabled {
+.loginButton:disabled {
   background: #cccccc;
   cursor: not-allowed;
   transform: none;
@@ -450,26 +451,26 @@
   to { transform: rotate(360deg); }
 }
 
-.signup-link {
+.signupLink {
   text-align: center;
   color: var(--gray);
   font-size: 14px;
 }
 
-.signup-link a {
+.signupLink a {
   color: var(--primary);
   font-weight: 600;
   text-decoration: none;
   transition: var(--transition);
 }
 
-.signup-link a:hover {
+.signupLink a:hover {
   color: var(--primary-dark);
   text-decoration: underline;
 }
 
 /* Role Indicator */
-.role-indicator {
+.roleIndicator {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -483,24 +484,24 @@
 }
 
 /* Demo Buttons */
-.demo-buttons {
+.demoButtons {
   margin: 20px 0;
   text-align: center;
 }
 
-.demo-buttons p {
+.demoButtons p {
   font-size: 14px;
   color: var(--gray);
   margin-bottom: 10px;
 }
 
-.demo-buttons-group {
+.demoButtonsGroup {
   display: flex;
   gap: 10px;
   justify-content: center;
 }
 
-.demo-btn {
+.demoBtn {
   padding: 8px 15px;
   border: none;
   border-radius: 6px;
@@ -511,25 +512,25 @@
   color: white;
 }
 
-.demo-btn.admin {
+.demoBtn.admin {
   background-color: var(--admin);
 }
 
-.demo-btn.trainer {
+.demoBtn.trainer {
   background-color: var(--trainer);
 }
 
-.demo-btn.student {
+.demoBtn.student {
   background-color: var(--student);
 }
 
-.demo-btn:hover {
+.demoBtn:hover {
   opacity: 0.9;
   transform: translateY(-2px);
 }
 
 /* Error Message */
-.error-message {
+.errorMessage {
   background-color: #fee2e2;
   color: #991b1b;
   padding: 12px 16px;
@@ -542,68 +543,68 @@
   border-left: 4px solid #ef4444;
 }
 
-.error-message i {
+.errorMessage i {
   font-size: 16px;
 }
 
 /* Responsive */
 @media (max-width: 900px) {
-  .login-container {
+  .loginContainer {
     flex-direction: column;
     max-height: none;
     min-height: auto;
   }
-  
-  .brand-section, .login-section {
+
+  .brandSection, .loginSection {
     width: 100%;
     padding: 40px;
   }
-  
-  .brand-section {
+
+  .brandSection {
     padding-bottom: 30px;
   }
 }
 
 @media (max-width: 576px) {
-  .brand-section, .login-section {
+  .brandSection, .loginSection {
     padding: 30px;
   }
-  
-  .role-buttons {
+
+  .roleButtons {
     flex-direction: column;
   }
-  
-  .form-options {
+
+  .formOptions {
     flex-direction: column;
     align-items: flex-start;
     gap: 12px;
   }
-  
-  .demo-buttons-group {
+
+  .demoButtonsGroup {
     flex-direction: column;
   }
-  
+
   /* Adjust input padding for mobile */
-  .form-input {
+  .formInput {
     padding: 12px 40px 12px 40px;
   }
-  
-  .form-input[type="email"] {
+
+  .formInput[type="email"] {
     padding-left: 40px;
   }
-  
-  .form-input[type="password"],
-  .form-input[type="text"] {
+
+  .formInput[type="password"],
+  .formInput[type="text"] {
     padding-left: 40px;
     padding-right: 40px;
   }
-  
-  .input-icon {
+
+  .inputIcon {
     left: 12px;
     font-size: 14px;
   }
-  
-  .password-toggle {
+
+  .passwordToggle {
     right: 12px;
     font-size: 14px;
     padding: 6px;
@@ -611,11 +612,11 @@
 }
 
 /* Make LMS label and logo icon white on the login page */
-.login-container .logo-text {
+.loginContainer .logoText {
   color: var(--white);
 }
 
-.login-container .logo-icon,
-.login-container .logo-icon i {
+.loginContainer .logoIcon,
+.loginContainer .logoIcon i {
   color: var(--white);
 }

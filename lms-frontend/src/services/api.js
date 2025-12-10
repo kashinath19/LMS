@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+
 const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 
 // Create axios instance with default config
@@ -91,7 +92,21 @@ export const profileAPI = {
   updateTrainerProfile: (data) => api.patch('/profiles/trainer', data),
 
   // Admin endpoints
-  getAdminProfile: () => api.get('/profiles/admin'),
+  getAdminProfile: (opts = {}) => {
+    // Prefer fetching the admin via users/{user_id} when we have a user id,
+    // because some backends don't expose /profiles/admin.
+    try {
+      const userId = localStorage.getItem('user_id') || opts.userId || null;
+      if (userId) {
+        return api.get(`/users/${encodeURIComponent(userId)}`);
+      }
+    } catch (e) {
+      // ignore localStorage errors and fall back
+    }
+
+    // Fallback to the old profiles endpoint if no user id is available
+    return api.get('/profiles/admin');
+  },
   createAdminProfile: (data) => api.post('/profiles/admin', data),
   updateAdminProfile: (data) => api.patch('/profiles/admin', data),
 };

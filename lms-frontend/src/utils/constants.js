@@ -30,30 +30,6 @@ export const ENDPOINTS = {
   }
 };
 
-export const DEMO_CREDENTIALS = {
-  admin: {
-    email: 'admin@lms.edu',
-    password: 'Admin@2023',
-    icon: 'fa-user-shield',
-    label: 'Administrator Access',
-    placeholder: 'administrator@institution.edu'
-  },
-  trainer: {
-    email: 'trainer@lms.edu',
-    password: 'Trainer@2023',
-    icon: 'fa-chalkboard-teacher',
-    label: 'Trainer Access',
-    placeholder: 'trainer@institution.edu'
-  },
-  student: {
-    email: 'student@lms.edu',
-    password: 'Student@2023',
-    icon: 'fa-user-graduate',
-    label: 'Student Access',
-    placeholder: 'student@institution.edu'
-  }
-};
-
 export const GENDER_OPTIONS = [
   { value: '', label: 'Select Gender' },
   { value: 'Male', label: 'Male' },

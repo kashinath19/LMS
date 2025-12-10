@@ -1,12 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import './StudentProfile.css';
+import styles from './StudentProfile.module.css';
+import { API_BASE_URL } from '../../utils/constants';
 
-const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
+/**
+ * StudentProfile - Student profile management component
+ * Uses the following API endpoints:
+ * - GET /api/v1/profiles/student - Get student profile
+ * - POST /api/v1/profiles/student - Create student profile
+ * - PATCH /api/v1/profiles/student - Update student profile
+ * - POST /api/v1/profiles/upload-image - Upload profile image
+ */
 const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfileExists }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -47,12 +55,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       obj.profile_image,
       obj.image_url,
       obj.avatar_url,
-      obj.profile_image?.url,
-      obj.profile_image?.file_url,
-      obj.profile_image?.path,
-      obj.profile_image?.file,
-      obj.data?.profile_image_url,
-      obj.data?.url,
       obj.url,
       obj.file_url,
     ];
@@ -66,23 +68,24 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     fetchProfile();
   }, []);
 
+  // GET /api/v1/profiles/student - Fetch student profile
   const fetchProfile = async () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
 
-      console.log('Fetching student profile...');
-
       const response = await axios.get(`${API_BASE_URL}/profiles/student`, {
-        headers: { 'Authorization': `Bearer ${token}` }
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
       });
 
       const data = response.data;
-      console.log('Student profile fetched:', data);
-      
       setProfileData(data);
       setProfileExists(true);
       setIsEditing(false);
+      setIsCreatingNew(false);
 
       const imageUrl = extractImageUrl(data);
 
@@ -100,20 +103,20 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         gender: data.gender || ''
       });
 
-      showMessage('success', 'Student profile loaded successfully');
+      showMessage?.('success', 'Student profile loaded successfully');
     } catch (error) {
       if (error.response?.status === 404) {
-        console.log('No student profile found - showing create form');
+        // Profile doesn't exist - show create form
         setProfileExists(false);
         setIsCreatingNew(true);
         setIsEditing(true);
-        showMessage('info', 'Please create your student profile');
+        showMessage?.('info', 'Please create your student profile');
       } else if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
-        setTimeout(() => window.location.href = '/login', 1500);
+        showMessage?.('error', 'Session expired. Please login again.');
+        setTimeout(() => navigate('/login'), 1500);
       } else {
         console.error('Error fetching student profile:', error);
-        showMessage('error', 'Failed to load profile. Please try again.');
+        showMessage?.('error', 'Failed to load profile. Please try again.');
       }
     } finally {
       setLoading(false);
@@ -125,21 +128,22 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // POST /api/v1/profiles/student - Create profile
+  // PATCH /api/v1/profiles/student - Update profile
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.first_name || !formData.last_name || !formData.qualification) {
-      showMessage('error', 'Please fill in all required fields');
+      showMessage?.('error', 'Please fill in all required fields');
       return;
     }
 
     try {
       setLoading(true);
       const token = localStorage.getItem('access_token');
-      const endpoint = `${API_BASE_URL}/profiles/student`;
-      const method = profileExists ? 'PATCH' : 'POST';
+      const method = profileExists ? 'patch' : 'post';
 
-      const dataToSubmit = { 
+      const dataToSubmit = {
         first_name: formData.first_name.trim(),
         last_name: formData.last_name.trim(),
         phone_number: formData.phone_number?.trim() || null,
@@ -155,7 +159,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
       const response = await axios({
         method,
-        url: endpoint,
+        url: `${API_BASE_URL}/profiles/student`,
         data: dataToSubmit,
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -189,38 +193,32 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         onProfileCreated();
       }
 
-      displayToast('Changes saved successfully');
-      showMessage('success', 'Student profile saved successfully!');
-
-      // Redirect to student dashboard after a short delay
-      setTimeout(() => {
-        navigate('/student-dashboard', { replace: true });
-      }, 300);
+      displayToast(profileExists ? 'Profile updated successfully' : 'Profile created successfully');
+      showMessage?.('success', 'Student profile saved successfully!');
 
     } catch (error) {
       console.error('Error saving student profile:', error);
-      console.error('Error response data:', error.response?.data);
-      console.error('Error status:', error.response?.status);
-      
       let errorMessage = 'Failed to save profile';
-      
+
       if (error.response) {
         if (error.response.status === 400) {
           errorMessage = 'Bad request. Please check your input data.';
-          if (error.response.data?.detail) {
-            errorMessage += ` Details: ${JSON.stringify(error.response.data.detail)}`;
-          }
         } else if (error.response.status === 401) {
           errorMessage = 'Session expired. Please login again.';
+        } else if (error.response.status === 409) {
+          errorMessage = 'Profile already exists or enrollment number is taken.';
         } else if (error.response.status === 422) {
           errorMessage = 'Validation error. Please check all fields.';
           if (error.response.data?.detail) {
-            errorMessage += ` Details: ${JSON.stringify(error.response.data.detail)}`;
+            const details = error.response.data.detail;
+            if (Array.isArray(details)) {
+              errorMessage += ` ${details.map(d => d.msg).join(', ')}`;
+            }
           }
         }
       }
-      
-      showMessage('error', errorMessage);
+
+      showMessage?.('error', errorMessage);
     } finally {
       setLoading(false);
     }
@@ -248,45 +246,11 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       });
     }
     setIsEditing(false);
-    showMessage('info', 'Edit cancelled');
+    showMessage?.('info', 'Edit cancelled');
   };
 
-  const resetForm = () => {
-    if (profileData && isEditing) {
-      const imageUrl = extractImageUrl(profileData);
-      setFormData({
-        first_name: profileData.first_name || '',
-        last_name: profileData.last_name || '',
-        phone_number: profileData.phone_number || '',
-        date_of_birth: profileData.date_of_birth || '',
-        qualification: profileData.qualification || '',
-        bio: profileData.bio || '',
-        profile_image_url: imageUrl || '',
-        enrollment_number: profileData.enrollment_number || '',
-        github_url: profileData.github_url || '',
-        linkedin_url: profileData.linkedin_url || '',
-        gender: profileData.gender || ''
-      });
-    } else {
-      setFormData({
-        first_name: '',
-        last_name: '',
-        phone_number: '',
-        date_of_birth: '',
-        qualification: '',
-        bio: '',
-        profile_image_url: '',
-        enrollment_number: '',
-        github_url: '',
-        linkedin_url: '',
-        gender: ''
-      });
-    }
-    showMessage('info', 'Form reset');
-  };
-
-  const handleUploadClick = () => { 
-    if (fileInputRef.current) fileInputRef.current.click(); 
+  const handleUploadClick = () => {
+    if (fileInputRef.current) fileInputRef.current.click();
   };
 
   const onFileSelected = async (e) => {
@@ -296,6 +260,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     e.target.value = '';
   };
 
+  // POST /api/v1/profiles/upload-image - Upload profile image
   const uploadImage = async (file) => {
     try {
       setUploading(true);
@@ -303,36 +268,39 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       const form = new FormData();
       form.append('file', file);
 
-      const resp = await axios.post(`${API_BASE_URL}/profiles/upload-image`, form, {
+      const resp = await axios.post(`${API_BASE_URL}/profiles/upload-image?update_profile=true`, form, {
         headers: {
           'Authorization': `Bearer ${token}`,
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      const imageUrl = extractImageUrl(resp.data);
+      // The API returns the image URL as a string
+      const imageUrl = typeof resp.data === 'string' ? resolveUrl(resp.data) : extractImageUrl(resp.data);
+
       if (!imageUrl) {
-        showMessage('error', 'Upload succeeded but no image URL returned.');
-        console.warn('Upload response:', resp.data);
+        showMessage?.('error', 'Upload succeeded but no image URL returned.');
       } else {
-        const updatedProfileData = { 
-          ...(profileData || {}), 
-          profile_image_url: imageUrl 
+        const updatedProfileData = {
+          ...(profileData || {}),
+          profile_image_url: imageUrl
         };
         setProfileData(updatedProfileData);
-        setFormData(prev => ({ 
-          ...prev, 
-          profile_image_url: imageUrl 
+        setFormData(prev => ({
+          ...prev,
+          profile_image_url: imageUrl
         }));
-        displayToast('Changes saved successfully');
-        showMessage('success', 'Profile photo uploaded');
+        displayToast('Profile photo uploaded');
+        showMessage?.('success', 'Profile photo uploaded');
+
+        if (onProfileCreated) onProfileCreated();
       }
     } catch (error) {
       console.error('Error uploading image:', error);
       if (error.response?.status === 401) {
-        showMessage('error', 'Session expired. Please login again.');
+        showMessage?.('error', 'Session expired. Please login again.');
       } else {
-        showMessage('error', error.response?.data?.detail || 'Failed to upload image');
+        showMessage?.('error', error.response?.data?.detail || 'Failed to upload image');
       }
     } finally {
       setUploading(false);
@@ -358,64 +326,77 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     setTimeout(() => setShowToast(false), 3000);
   };
 
+  const getFallbackAvatar = () => {
+    const seed = (formData.first_name || formData.last_name || user?.email || 'Student').split('@')[0];
+    return `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(seed)}`;
+  };
+
   const profileImageUrl = formData.profile_image_url || profileData?.profile_image_url || '';
-  const userEmail = user?.email || '';
+  const userEmail = profileData?.email || user?.email || localStorage.getItem('user_email') || '';
 
   if (loading) {
-    return <div className="loading">Loading student profile...</div>;
+    return <div className={styles.loading}>Loading student profile...</div>;
   }
 
   return (
-    <div className="student-profile-wrapper">
-      {/* Top Navigation */}
-      <div className="top-nav">
+    <div className={styles.studentProfileWrapper}>
+      {/* Toast Notification */}
+      <div className={styles.topNav}>
         {showToast && (
-          <div className="toast">
-            <i className="fa-solid fa-check"></i>
+          <div className={styles.toast} role="status" aria-live="polite">
+            <i className="fa-solid fa-check" />
             {toastMessage}
           </div>
         )}
       </div>
 
       {/* Main Profile Card */}
-      <div className="profile-card">
-        
+      <div className={styles.profileCard}>
+
         {/* Left Column */}
-        <div className="left-column">
-          <div className="avatar-container">
+        <div className={styles.leftColumn}>
+          <div className={styles.avatarContainer}>
             {profileImageUrl ? (
-              <img src={profileImageUrl} alt="Profile Avatar" />
+              <img
+                src={profileImageUrl}
+                alt="Profile Avatar"
+                onError={(e) => {
+                  e.currentTarget.onerror = null;
+                  e.currentTarget.src = getFallbackAvatar();
+                }}
+              />
             ) : (
-              <div className="avatar-placeholder">
-                <span className="initials">
+              <div className={styles.avatarPlaceholder}>
+                <span className={styles.initials}>
                   {(formData.first_name?.[0] || '') + (formData.last_name?.[0] || '')}
                 </span>
               </div>
             )}
           </div>
-          
+
           <h2>{formData.first_name && formData.last_name ? `${formData.first_name} ${formData.last_name}` : 'Student'}</h2>
-          <p className="email">{userEmail}</p>
-          <p className="phone">{formData.phone_number || 'Not provided'}</p>
-          
-          <div style={{ marginBottom: '20px' }}></div>
-          <div className="student-id-badge">
+          <p className={styles.email}>{userEmail}</p>
+          <p className={styles.phone}>{formData.phone_number || 'Not provided'}</p>
+
+          <div className={styles.studentIdBadge}>
             {formData.enrollment_number || 'NO ENROLLMENT'}
           </div>
 
           {/* Upload Button in Edit Mode */}
-          {isEditing && (
-            <div style={{ marginTop: '20px' }}>
+          {(isEditing || isCreatingNew) && (
+            <div style={{ marginTop: '16px', width: '100%' }}>
               <input
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
                 style={{ display: 'none' }}
                 onChange={onFileSelected}
+                id="profile-image-upload"
+                name="profile-image"
               />
               <button
                 type="button"
-                className="btn-upload"
+                className={styles.btnUpload}
                 onClick={handleUploadClick}
                 disabled={uploading}
               >
@@ -426,38 +407,38 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         </div>
 
         {/* Right Column */}
-        <div className="right-column">
-          
+        <div className={styles.rightColumn}>
+
           {/* Display Mode */}
           {!isEditing && profileExists && (
             <>
-              <div className="header-row">
+              <div className={styles.headerRow}>
                 <h1>Profile Details</h1>
-                <button className="btn-edit" onClick={handleEdit}>
+                <button className={styles.btnEdit} onClick={handleEdit} type="button">
                   <i className="fa-solid fa-pen"></i> Edit Profile
                 </button>
               </div>
 
-              <h3 className="section-title">Personal Information</h3>
-              <div className="divider"></div>
+              <h3 className={styles.sectionTitle}>Personal Information</h3>
+              <div className={styles.divider} />
 
-              <div className="info-grid">
-                <div className="info-item">
+              <div className={styles.infoGrid}>
+                <div className={styles.infoItem}>
                   <label>Qualification</label>
                   <p>{formData.qualification || 'Not specified'}</p>
                 </div>
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <label>Date of Birth</label>
                   <p>{formatDate(formData.date_of_birth)}</p>
                 </div>
-                <div className="info-item">
+                <div className={styles.infoItem}>
                   <label>Gender</label>
                   <p>{formData.gender || 'Not specified'}</p>
                 </div>
               </div>
 
               {formData.bio && (
-                <div className="bio-section">
+                <div className={styles.bioSection}>
                   <label>Bio</label>
                   <p>{formData.bio}</p>
                 </div>
@@ -465,9 +446,9 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
               {(formData.github_url || formData.linkedin_url) && (
                 <>
-                  <h3 className="section-title">Social Links</h3>
-                  <div className="divider"></div>
-                  <div className="social-icons">
+                  <h3 className={styles.sectionTitle}>Social Links</h3>
+                  <div className={styles.divider} />
+                  <div className={styles.socialIcons}>
                     {formData.github_url && (
                       <a href={formData.github_url} target="_blank" rel="noopener noreferrer" title="GitHub">
                         <i className="fa-brands fa-github"></i>
@@ -486,16 +467,16 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
           {/* Edit Form Mode */}
           {(isEditing || isCreatingNew) && (
-            <form onSubmit={handleSubmit} className="edit-form">
-              <div className="header-row">
+            <form onSubmit={handleSubmit} className={styles.editForm}>
+              <div className={styles.headerRow}>
                 <h1>{profileExists ? 'Edit Profile' : 'Create Profile'}</h1>
               </div>
 
-              <h3 className="section-title">Personal Information</h3>
-              <div className="divider"></div>
+              <h3 className={styles.sectionTitle}>Personal Information</h3>
+              <div className={styles.divider} />
 
-              <div className="fields-grid">
-                <div className="form-group">
+              <div className={styles.fieldsGrid}>
+                <div className={styles.formGroup}>
                   <label htmlFor="firstName">First Name *</label>
                   <input
                     type="text"
@@ -508,7 +489,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="lastName">Last Name *</label>
                   <input
                     type="text"
@@ -521,7 +502,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="phone">Phone Number</label>
                   <input
                     type="tel"
@@ -534,7 +515,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="dob">Date of Birth</label>
                   <input
                     type="date"
@@ -547,7 +528,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="gender">Gender</label>
                   <select
                     id="gender"
@@ -564,7 +545,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   </select>
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="qualification">Qualification *</label>
                   <input
                     type="text"
@@ -578,7 +559,18 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={`${styles.formGroup} ${styles.fullWidth}`}>
+                  <label htmlFor="bio">Bio</label>
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleChange}
+                    placeholder="Tell us about yourself..."
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
                   <label htmlFor="enrollment">Enrollment Number</label>
                   <input
                     type="text"
@@ -586,17 +578,11 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                     name="enrollment_number"
                     value={formData.enrollment_number}
                     onChange={handleChange}
-                    placeholder="University enrollment number"
-                    disabled={loading}
+                    placeholder="Your enrollment number"
                   />
                 </div>
-              </div>
 
-              <h3 className="section-title">Social Links</h3>
-              <div className="divider"></div>
-
-              <div className="fields-grid">
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="github">GitHub URL</label>
                   <input
                     type="url"
@@ -605,11 +591,10 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                     value={formData.github_url}
                     onChange={handleChange}
                     placeholder="https://github.com/username"
-                    disabled={loading}
                   />
                 </div>
 
-                <div className="form-group">
+                <div className={styles.formGroup}>
                   <label htmlFor="linkedin">LinkedIn URL</label>
                   <input
                     type="url"
@@ -618,68 +603,21 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
                     value={formData.linkedin_url}
                     onChange={handleChange}
                     placeholder="https://linkedin.com/in/username"
-                    disabled={loading}
                   />
                 </div>
               </div>
 
-              <h3 className="section-title">Bio</h3>
-              <div className="divider"></div>
-
-              <div className="form-group full-width">
-                <label htmlFor="bio">Bio / About Me</label>
-                <textarea
-                  id="bio"
-                  name="bio"
-                  value={formData.bio}
-                  onChange={handleChange}
-                  placeholder="Tell us about your educational background, interests, and goals..."
-                  rows="4"
-                  disabled={loading}
-                />
-              </div>
-
-              <div className="form-actions">
-                {isEditing && profileExists && (
-                  <button 
-                    type="button" 
-                    className="btn-secondary" 
-                    onClick={handleCancelEdit}
-                    disabled={loading}
-                  >
+              <div className={styles.formActions}>
+                {profileExists && (
+                  <button type="button" className={styles.btnSecondary} onClick={handleCancelEdit}>
                     Cancel
                   </button>
                 )}
-                <button 
-                  type="button" 
-                  className="btn-secondary" 
-                  onClick={resetForm}
-                  disabled={loading}
-                >
-                  {profileExists ? 'Reset' : 'Clear'}
-                </button>
-                <button 
-                  type="submit" 
-                  className="btn-primary" 
-                  disabled={loading}
-                >
-                  {loading 
-                    ? 'Saving...' 
-                    : profileExists 
-                      ? 'Save Changes' 
-                      : 'Create Profile'
-                  }
+                <button type="submit" className={styles.btnPrimary} disabled={loading}>
+                  {loading ? 'Saving...' : (profileExists ? 'Save Changes' : 'Create Profile')}
                 </button>
               </div>
             </form>
-          )}
-
-          {/* Create Profile Prompt */}
-          {isCreatingNew && !profileExists && (
-            <div className="create-prompt">
-              <i className="fas fa-info-circle"></i>
-              <p>Welcome! This is your first time here. Please create your student profile to get started.</p>
-            </div>
           )}
         </div>
       </div>

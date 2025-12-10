@@ -1,786 +1,1243 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import api from '../../../services/api';
 import './Domain.css';
 
-const API_BASE_URL = 'https://learning-management-system-a258.onrender.com/api/v1';
 
-const Domain = () => {
-  const navigate = useNavigate();
-  const [showForm, setShowForm] = useState(false);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [editingDomainId, setEditingDomainId] = useState(null);
-  const [newDomain, setNewDomain] = useState({ 
-    name: '', 
-    description: '',
-    duration_weeks: 12,
-    is_active: true
-  });
-  const [domains, setDomains] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [pagination, setPagination] = useState({
-    skip: 0,
-    limit: 100,
-    active_only: false
-  });
-  const [formErrors, setFormErrors] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [domainToDelete, setDomainToDelete] = useState(null);
-  const [isDeleting, setIsDeleting] = useState(false);
-
-  // Helper function to get auth token
-  const getAuthToken = () => {
-    return localStorage.getItem('access_token') || 
-           sessionStorage.getItem('access_token') ||
-           localStorage.getItem('token') || 
-           sessionStorage.getItem('token');
-  };
-
-  // Fetch domains from backend
-  useEffect(() => {
-    fetchDomains();
-  }, [pagination]);
-
-  const fetchDomains = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      
-      // Get authentication token
-      const token = getAuthToken();
-      
-      if (!token) {
-        setError('Authentication required. Please log in.');
-        setLoading(false);
-        return;
-      }
-      
-      const queryParams = new URLSearchParams({
-        skip: pagination.skip.toString(),
-        limit: pagination.limit.toString(),
-        active_only: pagination.active_only.toString()
-      }).toString();
-      
-      const response = await fetch(
-        `${API_BASE_URL}/domains/?${queryParams}`,
-        {
-          method: 'GET',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
-        }
-      );
-
-      if (!response.ok) {
-        if (response.status === 401) {
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('token');
-          sessionStorage.removeItem('access_token');
-          sessionStorage.removeItem('token');
-          setError('Session expired. Please log in again.');
-        } else if (response.status === 403) {
-          setError('Access denied. Admin privileges required.');
-        } else if (response.status === 404) {
-          setError('API endpoint not found');
-        } else {
-          setError(`Failed to fetch domains: ${response.status} ${response.statusText}`);
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setDomains(data);
-    } catch (err) {
-      if (!error) {
-        setError(err.message);
-      }
-      console.error('Error fetching domains:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleViewDomain = (domainId) => {
-    navigate(`/admin/domains/${domainId}/topics`);
-  };
-
-  // Validate form
-  const validateForm = () => {
-    const errors = {};
-    
-    if (!newDomain.name.trim()) {
-      errors.name = 'Domain name is required';
-    } else if (newDomain.name.trim().length < 3) {
-      errors.name = 'Domain name must be at least 3 characters';
-    }
-    
-    if (!newDomain.duration_weeks) {
-      errors.duration_weeks = 'Duration is required';
-    } else if (newDomain.duration_weeks < 1) {
-      errors.duration_weeks = 'Duration must be at least 1 week';
-    } else if (newDomain.duration_weeks > 52) {
-      errors.duration_weeks = 'Duration cannot exceed 52 weeks';
-    }
-    
-    return errors;
-  };
-
-  const handleAddDomain = async () => {
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    setFormErrors({});
-
-    try {
-      const token = getAuthToken();
-      
-      if (!token) {
-        alert('Authentication required. Please log in.');
-        navigate('/login');
-        return;
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/domains/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newDomain.name.trim(),
-          description: newDomain.description.trim(),
-          duration_weeks: parseInt(newDomain.duration_weeks),
-          is_active: newDomain.is_active
-        })
-      });
-
-      if (!response.ok) {
-        let errorMessage = 'Failed to create domain';
-        try {
-          const errorData = await response.json();
-          if (errorData.detail) {
-            if (response.status === 409) {
-              errorMessage = 'Domain name already exists';
-            } else if (Array.isArray(errorData.detail)) {
-              errorMessage = errorData.detail.map(err => err.msg).join(', ');
-            } else {
-              errorMessage = errorData.detail;
-            }
-          }
-        } catch (e) {
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
-        }
-        throw new Error(errorMessage);
-      }
-
-      const createdDomain = await response.json();
-      
-      alert(`Domain "${createdDomain.name}" created successfully!`);
-      setNewDomain({ 
-        name: '', 
-        description: '', 
+const Domain = ({ onViewDomain }) => {
+    const [showForm, setShowForm] = useState(false);
+    const [isEditMode, setIsEditMode] = useState(false);
+    const [editingDomainId, setEditingDomainId] = useState(null);
+    const [newDomain, setNewDomain] = useState({
+        name: '',
+        description: '',
         duration_weeks: 12,
-        is_active: true 
-      });
-      setShowForm(false);
-      setFormErrors({});
-      
-      // Refresh the domains list
-      fetchDomains();
-    } catch (err) {
-      setFormErrors({ submit: err.message });
-      console.error('Error creating domain:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+        is_active: true
+    });
+    const [domains, setDomains] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [pagination, setPagination] = useState({
+        skip: 0,
+        limit: 100,
+        active_only: false
+    });
+    const [formErrors, setFormErrors] = useState({});
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [domainToDelete, setDomainToDelete] = useState(null);
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteConfirmation, setDeleteConfirmation] = useState(false);
+    const [deleteMessage, setDeleteMessage] = useState('');
+    const [successMessage, setSuccessMessage] = useState('');
 
-  // Handle Edit Domain
-  const handleEditDomain = async () => {
-    const errors = validateForm();
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
+    // Inline Topics View State
+    const [activeView, setActiveView] = useState('domains'); // 'domains' or 'topics'
+    const [selectedDomain, setSelectedDomain] = useState(null);
 
-    setIsSubmitting(true);
-    setFormErrors({});
+    // Topics State
+    const [topics, setTopics] = useState([]);
+    const [topicsLoading, setTopicsLoading] = useState(false);
+    const [showTopicForm, setShowTopicForm] = useState(false);
+    const [isTopicEditMode, setIsTopicEditMode] = useState(false);
+    const [editingTopicId, setEditingTopicId] = useState(null);
+    const [newTopic, setNewTopic] = useState({
+        title: '',
+        content: '',
+        resource_link: '',
+        order_index: 0
+    });
+    const [topicFormErrors, setTopicFormErrors] = useState({});
+    const [isTopicSubmitting, setIsTopicSubmitting] = useState(false);
+    const [showDeleteTopicModal, setShowDeleteTopicModal] = useState(false);
+    const [topicToDelete, setTopicToDelete] = useState(null);
+    const [isDeletingTopic, setIsDeletingTopic] = useState(false);
 
-    try {
-      const token = getAuthToken();
-      
-      if (!token) {
-        alert('Authentication required. Please log in.');
-        navigate('/login');
-        return;
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/domains/${editingDomainId}`, {
-        method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name: newDomain.name.trim(),
-          description: newDomain.description.trim(),
-          duration_weeks: parseInt(newDomain.duration_weeks),
-          is_active: newDomain.is_active
-        })
-      });
+    // Show success message with auto-dismiss
+    const showSuccessMessage = (message) => {
+        setSuccessMessage(message);
+        setTimeout(() => setSuccessMessage(''), 4000);
+    };
 
-      if (!response.ok) {
-        let errorMessage = 'Failed to update domain';
+    useEffect(() => {
+        fetchDomains();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [pagination]);
+
+    const normalizeListFromResponse = (resp) => {
+        const d = resp?.data ?? resp;
+        if (Array.isArray(d)) return d;
+        if (d?.results && Array.isArray(d.results)) return d.results;
+        if (d?.data && Array.isArray(d.data)) return d.data;
+        if (d?.items && Array.isArray(d.items)) return d.items;
+        if (d && typeof d === 'object') {
+            const arr = Object.values(d).find(v => Array.isArray(v));
+            if (Array.isArray(arr)) return arr;
+        }
+        return [];
+    };
+
+    const fetchDomains = async () => {
         try {
-          const errorData = await response.json();
-          if (errorData.detail) {
-            if (response.status === 409) {
-              errorMessage = 'Domain name already exists';
-            } else if (Array.isArray(errorData.detail)) {
-              errorMessage = errorData.detail.map(err => err.msg).join(', ');
+            setLoading(true);
+            setError(null);
+
+            const params = {
+                skip: pagination.skip,
+                limit: pagination.limit,
+                active_only: pagination.active_only
+            };
+
+            const resp = await api.get('/domains', { params });
+            const list = normalizeListFromResponse(resp);
+            setDomains(list);
+        } catch (err) {
+            console.error('Error fetching domains:', err);
+            if (err?.response?.status === 401) {
+                setError('Session expired. Please log in again.');
+                localStorage.removeItem('access_token');
+                localStorage.removeItem('refresh_token');
+                localStorage.removeItem('user_role');
+                localStorage.removeItem('user_email');
+                setTimeout(() => window.location.href = '/login', 1200);
+            } else if (err?.response?.status === 403) {
+                const detail = err.response?.data?.detail || 'Admin access required';
+                setError(detail);
             } else {
-              errorMessage = errorData.detail;
+                setError(err.message || 'Failed to fetch domains');
             }
-          }
-        } catch (e) {
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
+            setDomains([]);
+        } finally {
+            setLoading(false);
         }
-        throw new Error(errorMessage);
-      }
+    };
 
-      const updatedDomain = await response.json();
-      
-      alert(`Domain "${updatedDomain.name}" updated successfully!`);
-      
-      // Update domain in state
-      setDomains(domains.map(domain => 
-        domain.id === editingDomainId ? updatedDomain : domain
-      ));
-      
-      resetForm();
-    } catch (err) {
-      setFormErrors({ submit: err.message });
-      console.error('Error updating domain:', err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  // Handle Delete Domain
-  const handleDeleteDomain = async () => {
-    if (!domainToDelete) return;
-
-    setIsDeleting(true);
-    try {
-      const token = getAuthToken();
-      
-      if (!token) {
-        alert('Authentication required. Please log in.');
-        navigate('/login');
-        return;
-      }
-      
-      const response = await fetch(`${API_BASE_URL}/domains/${domainToDelete.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
+    const handleViewDomain = (domainId) => {
+        // If a callback prop is provided, call it (parent may handle navigation)
+        if (onViewDomain) {
+            onViewDomain(domainId);
+            return;
         }
-      });
 
-      if (!response.ok) {
-        let errorMessage = 'Failed to delete domain';
+        // Find the domain and switch to inline topics view
+        const domain = domains.find(d => (d.id === domainId || d._id === domainId));
+        if (domain) {
+            setSelectedDomain(domain);
+            setActiveView('topics');
+            // Fetch topics for this domain (using domain.id as module_id placeholder)
+            fetchTopics(domain.id || domain._id);
+        }
+    };
+
+    // Return to domains list from topics view
+    const handleBackToDomains = () => {
+        setActiveView('domains');
+        setSelectedDomain(null);
+        setTopics([]);
+        resetTopicForm();
+    };
+
+    // ==================== TOPICS CRUD ====================
+
+    // Fetch topics for selected domain
+    const fetchTopics = async (domainId) => {
+        setTopicsLoading(true);
         try {
-          const errorData = await response.json();
-          if (errorData.detail) {
-            errorMessage = errorData.detail;
-          }
-        } catch (e) {
-          errorMessage = `Error ${response.status}: ${response.statusText}`;
+            // API: GET /topics?module_id=domainId (using domain_id as module_id for now)
+            const resp = await api.get('/topics/', { params: { module_id: domainId } });
+            const data = resp?.data ?? resp;
+            setTopics(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error('Error fetching topics:', err);
+            setTopics([]);
+        } finally {
+            setTopicsLoading(false);
         }
-        throw new Error(errorMessage);
-      }
+    };
 
-      // Remove domain from state
-      setDomains(domains.filter(domain => domain.id !== domainToDelete.id));
-      
-      alert(`Domain "${domainToDelete.name}" deleted successfully!`);
-      setShowDeleteModal(false);
-      setDomainToDelete(null);
-    } catch (err) {
-      alert(`Error deleting domain: ${err.message}`);
-      console.error('Error deleting domain:', err);
-    } finally {
-      setIsDeleting(false);
-    }
-  };
+    // Validate topic form
+    const validateTopicForm = () => {
+        const errors = {};
+        if (!newTopic.title.trim()) {
+            errors.title = 'Topic title is required';
+        } else if (newTopic.title.trim().length < 3) {
+            errors.title = 'Title must be at least 3 characters';
+        }
+        return errors;
+    };
 
-  const handleToggleActiveFilter = () => {
-    setPagination(prev => ({
-      ...prev,
-      active_only: !prev.active_only
-    }));
-  };
+    // Reset topic form
+    const resetTopicForm = () => {
+        setNewTopic({ title: '', content: '', resource_link: '', order_index: 0 });
+        setTopicFormErrors({});
+        setShowTopicForm(false);
+        setIsTopicEditMode(false);
+        setEditingTopicId(null);
+    };
 
-  const handleRetry = () => {
-    setError(null);
-    fetchDomains();
-  };
+    // Create new topic
+    const handleAddTopic = async () => {
+        const errors = validateTopicForm();
+        if (Object.keys(errors).length > 0) {
+            setTopicFormErrors(errors);
+            return;
+        }
 
-  const handleLoginRedirect = () => {
-    navigate('/login');
-  };
+        setIsTopicSubmitting(true);
+        setTopicFormErrors({});
 
-  // Start edit mode
-  const startEditDomain = (domain) => {
-    setIsEditMode(true);
-    setEditingDomainId(domain.id);
-    setNewDomain({
-      name: domain.name || '',
-      description: domain.description || '',
-      duration_weeks: domain.duration_weeks || 12,
-      is_active: domain.is_active !== undefined ? domain.is_active : true
-    });
-    setShowForm(true);
-    setFormErrors({});
-  };
+        try {
+            const domainId = selectedDomain?.id || selectedDomain?._id;
+            const payload = {
+                module_id: domainId, // Using domain_id as module_id
+                title: newTopic.title.trim(),
+                content: newTopic.content.trim(),
+                resource_link: newTopic.resource_link.trim(),
+                order_index: parseInt(newTopic.order_index) || 0
+            };
 
-  // Confirm delete
-  const confirmDeleteDomain = (domain) => {
-    setDomainToDelete(domain);
-    setShowDeleteModal(true);
-  };
+            await api.post('/topics/', payload);
+            showSuccessMessage('Topic created successfully!');
+            resetTopicForm();
+            fetchTopics(domainId);
+        } catch (err) {
+            console.error('Error creating topic:', err);
+            const msg = err?.response?.data?.detail || err.message || 'Failed to create topic';
+            setTopicFormErrors({ submit: msg });
+        } finally {
+            setIsTopicSubmitting(false);
+        }
+    };
 
-  const resetForm = () => {
-    setIsEditMode(false);
-    setEditingDomainId(null);
-    setNewDomain({ 
-      name: '', 
-      description: '', 
-      duration_weeks: 12,
-      is_active: true 
-    });
-    setFormErrors({});
-    setShowForm(false);
-  };
+    // Update existing topic
+    const handleEditTopic = async () => {
+        const errors = validateTopicForm();
+        if (Object.keys(errors).length > 0) {
+            setTopicFormErrors(errors);
+            return;
+        }
 
-  // Helper function to get gradient color based on domain ID
-  const getGradientColor = (id) => {
-    const gradients = [
-      'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
-      'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
-      'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
-      'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
-      'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
-      'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
-    ];
-    
-    if (!id) return gradients[0];
-    
-    const idString = typeof id === 'string' ? id : String(id);
-    const index = idString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % gradients.length;
-    return gradients[index];
-  };
+        setIsTopicSubmitting(true);
+        setTopicFormErrors({});
 
-  // Format weeks display
-  const formatWeeks = (durationWeeks) => {
-    const weeks = durationWeeks || 0;
-    return `${weeks} Week${weeks !== 1 ? 's' : ''}`;
-  };
+        try {
+            const payload = {
+                title: newTopic.title.trim(),
+                content: newTopic.content.trim(),
+                resource_link: newTopic.resource_link.trim(),
+                order_index: parseInt(newTopic.order_index) || 0
+            };
 
-  // Format date for display
-  const formatDate = (dateString) => {
-    if (!dateString) return 'N/A';
-    
-    try {
-      const date = new Date(dateString);
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
-      });
-    } catch (e) {
-      return 'Invalid date';
-    }
-  };
+            await api.patch(`/topics/${editingTopicId}`, payload);
+            showSuccessMessage('Topic updated successfully!');
+            resetTopicForm();
+            fetchTopics(selectedDomain?.id || selectedDomain?._id);
+        } catch (err) {
+            console.error('Error updating topic:', err);
+            const msg = err?.response?.data?.detail || err.message || 'Failed to update topic';
+            setTopicFormErrors({ submit: msg });
+        } finally {
+            setIsTopicSubmitting(false);
+        }
+    };
 
-  // Generate domain code from name
-  const generateDomainCode = (name) => {
-    if (!name) return 'DOM';
-    
-    const words = name.split(' ').filter(word => word.length > 0);
-    if (words.length >= 2) {
-      return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
-    } else if (name.length >= 3) {
-      return name.substring(0, 3).toUpperCase();
-    }
-    return name.substring(0, 2).toUpperCase() || 'DM';
-  };
+    // Start editing a topic
+    const handleStartEditTopic = (topic) => {
+        setIsTopicEditMode(true);
+        setEditingTopicId(topic.id);
+        setNewTopic({
+            title: topic.title || '',
+            content: topic.content || '',
+            resource_link: topic.resource_link || '',
+            order_index: topic.order_index || 0
+        });
+        setShowTopicForm(true);
+        setTopicFormErrors({});
+    };
 
-  // Calculate total hours (assuming 4 hours per week)
-  const calculateTotalHours = (durationWeeks) => {
-    return (durationWeeks || 0) * 4;
-  };
+    // Initialize topic deletion
+    const handleDeleteTopicInit = (topic) => {
+        setTopicToDelete(topic);
+        setShowDeleteTopicModal(true);
+    };
 
-  if (loading) {
-    return (
-      <div className="domain-management">
-        <div className="domain-header">
-          <div className="header-left">
-            <h1>Domains Management</h1>
-            <p>Loading domains...</p>
-          </div>
-        </div>
-        <div className="loading-spinner">Loading...</div>
-      </div>
-    );
-  }
+    // Confirm topic deletion
+    const handleDeleteTopicConfirm = async () => {
+        if (!topicToDelete) return;
 
-  return (
-    <div className="domain-management">
-      {/* Delete Confirmation Modal */}
-      {showDeleteModal && (
-        <div className="modal-overlay" onClick={() => setShowDeleteModal(false)}>
-          <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3>Confirm Domain Deletion</h3>
-              <button 
-                className="close-btn" 
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-              >
-                ×
-              </button>
-            </div>
-            <div className="modal-body">
-              {domainToDelete ? (
-                <>
-                  <div className="warning-message">
-                    <div className="warning-icon">⚠️</div>
-                    <div className="warning-content">
-                      <h4>Delete Domain: {domainToDelete.name}</h4>
-                      <p>Are you sure you want to delete this domain? This action cannot be undone.</p>
+        setIsDeletingTopic(true);
+        try {
+            await api.delete(`/topics/${topicToDelete.id}`);
+            showSuccessMessage(`Topic "${topicToDelete.title}" deleted successfully!`);
+            setShowDeleteTopicModal(false);
+            setTopicToDelete(null);
+            fetchTopics(selectedDomain?.id || selectedDomain?._id);
+        } catch (err) {
+            console.error('Error deleting topic:', err);
+            const msg = err?.response?.data?.detail || err.message || 'Failed to delete topic';
+            alert(`Error: ${msg}`);
+        } finally {
+            setIsDeletingTopic(false);
+        }
+    };
+
+    // ==================== END TOPICS CRUD ====================
+
+    const validateForm = () => {
+        const errors = {};
+        if (!newDomain.name.trim()) {
+            errors.name = 'Domain name is required';
+        } else if (newDomain.name.trim().length < 3) {
+            errors.name = 'Domain name must be at least 3 characters';
+        }
+
+        if (!newDomain.duration_weeks) {
+            errors.duration_weeks = 'Duration is required';
+        } else if (newDomain.duration_weeks < 1) {
+            errors.duration_weeks = 'Duration must be at least 1 week';
+        } else if (newDomain.duration_weeks > 52) {
+            errors.duration_weeks = 'Duration cannot exceed 52 weeks';
+        }
+        return errors;
+    };
+
+    const handleAddDomain = async () => {
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFormErrors({});
+
+        try {
+            const payload = {
+                name: newDomain.name.trim(),
+                description: newDomain.description.trim(),
+                duration_weeks: parseInt(newDomain.duration_weeks),
+                is_active: newDomain.is_active
+            };
+
+            const resp = await api.post('/domains', payload);
+            const created = resp?.data || resp;
+
+            // Show success message
+            showSuccessMessage(`Domain "${created.name || created.title || 'New Domain'}" created successfully!`);
+
+            // Reset form and refresh
+            setNewDomain({ name: '', description: '', duration_weeks: 12, is_active: true });
+            setShowForm(false);
+            setFormErrors({});
+            fetchDomains();
+        } catch (err) {
+            console.error('Error creating domain:', err);
+            let errorMessage = 'Failed to create domain';
+            const respData = err?.response?.data;
+            if (err?.response?.status === 403) {
+                errorMessage = respData?.detail || 'Admin access required';
+            } else if (err?.response?.status === 409) {
+                errorMessage = 'Domain name already exists';
+            } else if (respData?.detail && Array.isArray(respData.detail)) {
+                errorMessage = respData.detail.map(e => e.msg || e).join(', ');
+            } else if (respData?.detail) {
+                errorMessage = respData.detail;
+            } else if (err.message) {
+                errorMessage = err.message;
+            }
+            setFormErrors({ submit: errorMessage });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleEditDomain = async () => {
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setFormErrors(errors);
+            return;
+        }
+
+        setIsSubmitting(true);
+        setFormErrors({});
+
+        try {
+            const payload = {
+                name: newDomain.name.trim(),
+                description: newDomain.description.trim(),
+                duration_weeks: parseInt(newDomain.duration_weeks),
+                is_active: newDomain.is_active
+            };
+
+            const resp = await api.patch(`/domains/${editingDomainId}`, payload);
+            const updated = resp?.data || resp;
+
+            // Show success message
+            showSuccessMessage(`Domain "${updated.name || updated.title || 'Domain'}" updated successfully!`);
+
+            // Reset form and refresh
+            setIsEditMode(false);
+            setEditingDomainId(null);
+            setShowForm(false);
+            fetchDomains();
+        } catch (err) {
+            console.error('Error updating domain:', err);
+            const respData = err?.response?.data;
+            const msg = respData?.detail || err.message || 'Failed to update domain';
+            setFormErrors({ submit: msg });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+    const handleDeleteInit = (domain) => {
+        console.log('Delete button clicked for domain:', domain);
+
+        // Set the domain to delete and show modal immediately
+        setDomainToDelete(domain);
+        setDeleteMessage(`Are you sure you want to delete domain "${domain.name || domain.title}"? This action cannot be undone.`);
+        setDeleteConfirmation(false);
+        setShowDeleteModal(true);
+    };
+
+    const handleDeleteConfirm = async () => {
+        if (!domainToDelete) {
+            console.error('No domain selected for deletion');
+            alert('Error: No domain selected');
+            return;
+        }
+
+        if (!deleteConfirmation) {
+            // As a fallback, ask window.confirm if modal wasn't properly shown or checkbox wasn't checked
+            const ok = window.confirm(`Are you sure you want to delete "${domainToDelete.name || domainToDelete.title}"? This action is permanent and cannot be undone.`);
+            if (!ok) {
+                alert('Delete cancelled.');
+                return;
+            }
+            // If user confirms via window.confirm, set deleteConfirmation to true to proceed
+            setDeleteConfirmation(true);
+        }
+
+        setIsDeleting(true);
+        try {
+            console.log('Deleting domain:', domainToDelete.id);
+
+            // Try with confirm parameter first
+            try {
+                const response = await api.delete(`/domains/${domainToDelete.id}`, {
+                    params: { confirm: true }
+                });
+                console.log('Delete response with confirm:', response);
+            } catch (confirmError) {
+                // If confirm parameter fails, try without it
+                console.log('Delete with confirm param failed, trying without:', confirmError);
+                const response = await api.delete(`/domains/${domainToDelete.id}`);
+                console.log('Delete response without confirm:', response);
+            }
+
+            // Show success message
+            showSuccessMessage(`Domain "${domainToDelete.name || domainToDelete.title}" deleted successfully!`);
+
+            // Close modal and refresh
+            setShowDeleteModal(false);
+            setDomainToDelete(null);
+            setDeleteConfirmation(false);
+            fetchDomains();
+        } catch (err) {
+            console.error('Delete confirm error:', err);
+            const errorMsg = err?.response?.data?.detail || err.message || 'Failed to delete domain';
+            alert(`Error: ${errorMsg}`);
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    const handleStartEdit = (domain) => {
+        setIsEditMode(true);
+        setEditingDomainId(domain.id || domain._id);
+        setNewDomain({
+            name: domain.name || domain.title || '',
+            description: domain.description || '',
+            duration_weeks: domain.duration_weeks || 12,
+            is_active: domain.is_active ?? true
+        });
+        setShowForm(true);
+        setFormErrors({});
+    };
+
+    const handleToggleActiveFilter = () => {
+        setPagination(prev => ({
+            ...prev,
+            active_only: !prev.active_only
+        }));
+    };
+
+    // Toggle domain active/inactive status inline
+    const handleToggleActive = async (domain, e) => {
+        if (e) e.stopPropagation();
+
+        const domainId = domain.id || domain._id;
+        const newStatus = !domain.is_active;
+
+        try {
+            await api.patch(`/domains/${domainId}/toggle-status`);
+
+            // Update local state optimistically
+            setDomains(prev => prev.map(d =>
+                (d.id === domainId || d._id === domainId)
+                    ? { ...d, is_active: newStatus }
+                    : d
+            ));
+
+            showSuccessMessage(`Domain "${domain.name || domain.title}" is now ${newStatus ? 'Active' : 'Inactive'}`);
+        } catch (err) {
+            console.error('Error toggling domain status:', err);
+            const errorMsg = err?.response?.data?.detail || err.message || 'Failed to toggle status';
+            setSuccessMessage('');
+            alert(`Error: ${errorMsg}`);
+            // Refresh to get correct state
+            fetchDomains();
+        }
+    };
+
+    // Helper function to get gradient color based on domain ID
+    const getGradientColor = (id) => {
+        const gradients = [
+            'linear-gradient(135deg, #4F46E5 0%, #6366F1 100%)',
+            'linear-gradient(135deg, #10B981 0%, #34D399 100%)',
+            'linear-gradient(135deg, #8B5CF6 0%, #A78BFA 100%)',
+            'linear-gradient(135deg, #F59E0B 0%, #FBBF24 100%)',
+            'linear-gradient(135deg, #EF4444 0%, #F87171 100%)',
+            'linear-gradient(135deg, #06B6D4 0%, #22D3EE 100%)',
+        ];
+
+        if (!id) return gradients[0];
+
+        const idString = typeof id === 'string' ? id : String(id);
+        const index = idString.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % gradients.length;
+        return gradients[index];
+    };
+
+    // Generate domain code from name
+    const generateDomainCode = (name) => {
+        if (!name) return 'DOM';
+
+        const words = name.split(' ').filter(word => word.length > 0);
+        if (words.length >= 2) {
+            return (words[0].charAt(0) + words[1].charAt(0)).toUpperCase();
+        } else if (name.length >= 3) {
+            return name.substring(0, 3).toUpperCase();
+        }
+        return name.substring(0, 2).toUpperCase() || 'DM';
+    };
+
+    // Format weeks display
+    const formatWeeks = (durationWeeks) => {
+        const weeks = durationWeeks || 0;
+        return `${weeks} Week${weeks !== 1 ? 's' : ''}`;
+    };
+
+    // Format date for display
+    const formatDate = (dateString) => {
+        if (!dateString) return 'N/A';
+
+        try {
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric'
+            });
+        } catch (e) {
+            return 'Invalid date';
+        }
+    };
+
+    // Calculate total hours (assuming 4 hours per week)
+    const calculateTotalHours = (durationWeeks) => {
+        return (durationWeeks || 0) * 4;
+    };
+
+    // Handle retry
+    const handleRetry = () => {
+        setError(null);
+        fetchDomains();
+    };
+
+    const resetForm = () => {
+        setIsEditMode(false);
+        setEditingDomainId(null);
+        setNewDomain({
+            name: '',
+            description: '',
+            duration_weeks: 12,
+            is_active: true
+        });
+        setFormErrors({});
+        setShowForm(false);
+    };
+
+    if (loading) {
+        return (
+            <div className="domain-management">
+                <div className="domain-header">
+                    <div className="header-left">
+                        <h1>Domain Management</h1>
+                        <p>Loading domains...</p>
                     </div>
-                  </div>
-                  
-                  <div className="domain-preview">
-                    <h5>Domain Details</h5>
-                    <div className="preview-grid">
-                      <div className="preview-item">
-                        <span className="preview-label">Domain Code:</span>
-                        <span className="preview-value">{generateDomainCode(domainToDelete.name)}</span>
-                      </div>
-                      <div className="preview-item">
-                        <span className="preview-label">Duration:</span>
-                        <span className="preview-value">{formatWeeks(domainToDelete.duration_weeks)}</span>
-                      </div>
-                      <div className="preview-item">
-                        <span className="preview-label">Status:</span>
-                        <span className={`preview-value ${domainToDelete.is_active ? 'status-active' : 'status-inactive'}`}>
-                          {domainToDelete.is_active ? 'Active' : 'Inactive'}
-                        </span>
-                      </div>
-                      <div className="preview-item">
-                        <span className="preview-label">Created:</span>
-                        <span className="preview-value">{formatDate(domainToDelete.created_at)}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="cascade-warning">
-                    <h5>⚠️ Important Warning:</h5>
-                    <p>This action will <strong>permanently delete</strong> the domain and all associated data:</p>
-                    <ul>
-                      <li>All modules under this domain</li>
-                      <li>All topics and content</li>
-                      <li>Student progress and records</li>
-                      <li>All related data (cascading delete)</li>
-                    </ul>
-                    <p className="final-warning">This action cannot be undone!</p>
-                  </div>
-                  
-                  <div className="confirmation-section">
-                    <label>
-                      <input type="checkbox" id="confirmDelete" required />
-                      <span>I understand this action is permanent and cannot be undone</span>
-                    </label>
-                  </div>
-                </>
-              ) : (
-                <p>Loading domain information...</p>
-              )}
-            </div>
-            <div className="modal-actions">
-              <button 
-                className="btn btn-danger"
-                onClick={handleDeleteDomain}
-                disabled={isDeleting || !domainToDelete}
-              >
-                {isDeleting ? 'Deleting...' : 'Yes, Delete Domain'}
-              </button>
-              <button 
-                className="btn btn-secondary"
-                onClick={() => setShowDeleteModal(false)}
-                disabled={isDeleting}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Header */}
-      <div className="domain-header">
-        <div className="header-left">
-          <h1>Domains Management</h1>
-          <p>Manage and organize all learning domains</p>
-        </div>
-        <div className="header-right">
-          <div className="filter-controls">
-            <button 
-              className={`btn ${pagination.active_only ? 'btn-primary' : 'btn-secondary'}`}
-              onClick={handleToggleActiveFilter}
-              style={{ fontSize: '12px', padding: '6px 12px' }}
-            >
-              {pagination.active_only ? 'Show All' : 'Active Only'}
-            </button>
-            <button 
-              className="btn btn-primary" 
-              onClick={() => {
-                resetForm();
-                setShowForm(!showForm);
-              }}
-            >
-              + Add New Domain
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Authentication Error */}
-      {error && error.includes('Authentication') && (
-        <div className="error-message">
-          <p>Error: {error}</p>
-          <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-            <button className="btn btn-primary" onClick={handleLoginRedirect}>
-              Go to Login
-            </button>
-            <button className="btn btn-secondary" onClick={handleRetry}>
-              Retry
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Other Errors */}
-      {error && !error.includes('Authentication') && (
-        <div className="error-message">
-          <p>Error: {error}</p>
-          <button className="btn btn-primary" onClick={handleRetry}>
-            Retry
-          </button>
-        </div>
-      )}
-
-      {/* Add/Edit Domain Form */}
-      {showForm && (
-        <div className="card add-domain-form">
-          <div className="card-header">
-            <h3>{isEditMode ? 'Edit Domain' : 'Add New Domain'}</h3>
-            <button className="close-btn" onClick={resetForm}>×</button>
-          </div>
-          <div className="card-body">
-            <div className="form-grid">
-              <div className="form-group">
-                <label htmlFor="domainName">Domain Name </label>
-                <input
-                  type="text"
-                  id="domainName"
-                  className={`form-control ${formErrors.name ? 'invalid' : ''}`}
-                  placeholder="Enter domain name"
-                  value={newDomain.name}
-                  onChange={(e) => {
-                    setNewDomain({...newDomain, name: e.target.value});
-                    if (formErrors.name) {
-                      setFormErrors({...formErrors, name: null});
-                    }
-                  }}
-                  required
-                />
-                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
-              </div>
-              <div className="form-group">
-                <label htmlFor="durationWeeks">Duration (Weeks) </label>
-                <input
-                  type="number"
-                  id="durationWeeks"
-                  className={`form-control ${formErrors.duration_weeks ? 'invalid' : ''}`}
-                  placeholder="e.g., 12"
-                  min="1"
-                  max="52"
-                  value={newDomain.duration_weeks}
-                  onChange={(e) => {
-                    setNewDomain({...newDomain, duration_weeks: parseInt(e.target.value) || 12});
-                    if (formErrors.duration_weeks) {
-                      setFormErrors({...formErrors, duration_weeks: null});
-                    }
-                  }}
-                  required
-                />
-                {formErrors.duration_weeks && <span className="error-text">{formErrors.duration_weeks}</span>}
-              </div>
-            </div>
-            <div className="form-group">
-              <label htmlFor="domainDescription">Description</label>
-              <textarea
-                id="domainDescription"
-                className="form-control"
-                rows="3"
-                placeholder="Enter domain description (optional)"
-                value={newDomain.description}
-                onChange={(e) => setNewDomain({...newDomain, description: e.target.value})}
-              />
-            </div>
-            <div className="form-group">
-              <label htmlFor="domainStatus">Status</label>
-              <select
-                id="domainStatus"
-                className="form-control"
-                value={newDomain.is_active}
-                onChange={(e) => setNewDomain({...newDomain, is_active: e.target.value === 'true'})}
-              >
-                <option value="true">Active</option>
-                <option value="false">Inactive</option>
-              </select>
-            </div>
-            
-            {formErrors.submit && (
-              <div className="error-text" style={{ marginBottom: '16px', textAlign: 'center' }}>
-                {formErrors.submit}
-              </div>
-            )}
-            
-            <div className="form-actions">
-              <button 
-                className="btn btn-primary" 
-                onClick={isEditMode ? handleEditDomain : handleAddDomain}
-                disabled={isSubmitting}
-              >
-                {isSubmitting 
-                  ? (isEditMode ? 'Updating...' : 'Creating...') 
-                  : (isEditMode ? 'Update Domain' : 'Create Domain')
-                }
-              </button>
-              <button className="btn btn-secondary" onClick={resetForm}>
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Only show domains grid if no authentication error */}
-      {!error && (
-        <>
-          {/* Domains Grid */}
-          <div className="domains-grid">
-            {domains.length === 0 ? (
-              <div className="no-domains">
-                <p>{pagination.active_only ? 'No active domains found.' : 'No domains found. Create your first domain!'}</p>
-                <button 
-                  className="btn btn-primary" 
-                  onClick={() => {
-                    resetForm();
-                    setShowForm(true);
-                  }}
-                  style={{ marginTop: '16px' }}
-                >
-                  + Create First Domain
-                </button>
-              </div>
-            ) : (
-              domains.map((domain) => (
-                <div 
-                  key={domain.id}
-                  className="domain-card"
-                  onClick={() => handleViewDomain(domain.id)}
-                >
-                  <div className="domain-image" style={{ background: getGradientColor(domain.id) }}>
-                    <div className="domain-code">
-                      {generateDomainCode(domain.name)}
-                    </div>
-                    <div className="domain-actions-overlay">
-                      <button 
-                        className="btn-icon btn-edit"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          startEditDomain(domain);
-                        }}
-                        title="Edit Domain"
-                      >
-                        ✏️
-                      </button>
-                      <button 
-                        className="btn-icon btn-delete"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          confirmDeleteDomain(domain);
-                        }}
-                        title="Delete Domain"
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </div>
-                  <div className="domain-content">
-                    <div className="domain-meta">
-                      <span className={`badge ${domain.is_active ? 'badge-success' : 'badge-warning'}`}>
-                        {domain.is_active ? 'Active' : 'Inactive'}
-                      </span>
-                      <span>{formatWeeks(domain.duration_weeks)}</span>
-                    </div>
-                    <h4>{domain.name}</h4>
-                    <p className="domain-description">
-                      {domain.description || 'No description provided.'}
-                    </p>
-                    
-                    <div className="domain-stats">
-                      <div className="stat-item">
-                        <div className="stat-number">--</div>
-                        <div className="stat-label">Modules</div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-number">--</div>
-                        <div className="stat-label">Students</div>
-                      </div>
-                      <div className="stat-item">
-                        <div className="stat-number">{calculateTotalHours(domain.duration_weeks)}</div>
-                        <div className="stat-label">Hours</div>
-                      </div>
-                    </div>
-                    
-                    <div className="domain-footer">
-                      <span className="created-date">
-                        Created: {formatDate(domain.created_at)}
-                      </span>
-                      <span className="view-domain">View Topics →</span>
-                    </div>
-                  </div>
                 </div>
-              ))
+                <div className="loading-spinner">Loading...</div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="domain-management">
+            {/* Success Message Toast */}
+            {successMessage && (
+                <div className="success-toast">
+                    <span className="success-icon">✓</span>
+                    <span>{successMessage}</span>
+                    <button
+                        type="button"
+                        className="toast-close"
+                        onClick={() => setSuccessMessage('')}
+                        aria-label="Dismiss message"
+                    >
+                        ×
+                    </button>
+                </div>
             )}
-          </div>
-        </>
-      )}
-    </div>
-  );
+
+            {/* Breadcrumb Navigation - shown when viewing topics */}
+            {activeView === 'topics' && selectedDomain && (
+                <div className="breadcrumb-bar">
+                    <button
+                        type="button"
+                        className="breadcrumb-link"
+                        onClick={handleBackToDomains}
+                    >
+                        Domains
+                    </button>
+                    <span className="breadcrumb-separator">›</span>
+                    <span className="breadcrumb-current">{selectedDomain.name || selectedDomain.title}</span>
+                </div>
+            )}
+
+            {/* DOMAINS VIEW */}
+            {activeView === 'domains' && (
+                <>
+                    {/* Header */}
+                    <div className="domain-header">
+                        <div className="header-left">
+                            <h1>Domain Management</h1>
+                            <p>Manage and organize all learning domains</p>
+                        </div>
+                        <div className="header-right">
+                            <div className="filter-controls">
+                                <button
+                                    className={`btn ${pagination.active_only ? 'btn-primary' : 'btn-secondary'}`}
+                                    onClick={handleToggleActiveFilter}
+                                    style={{ fontSize: '12px', padding: '6px 12px' }}
+                                >
+                                    {pagination.active_only ? 'Show All' : 'Active Only'}
+                                </button>
+                                <button
+                                    className="btn btn-primary"
+                                    onClick={() => {
+                                        resetForm();
+                                        setShowForm(true);
+                                    }}
+                                >
+                                    + Add New Domain
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Error Messages */}
+                    {error && (
+                        <div className="error-message">
+                            <p>Error: {error}</p>
+                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginTop: '16px' }}>
+                                <button className="btn btn-primary" onClick={handleRetry}>
+                                    Retry
+                                </button>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Add/Edit Domain Form displayed as a top-right popup */}
+                    {showForm && (
+                        <div
+                            className="form-modal-overlay"
+                            onClick={() => !isSubmitting && resetForm()}
+                        >
+                            <div className="form-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="card add-domain-form">
+                                    <div className="card-header">
+                                        <h3>{isEditMode ? 'Edit Domain' : 'Add New Domain'}</h3>
+                                        <button className="close-btn" onClick={resetForm} disabled={isSubmitting}>×</button>
+                                    </div>
+                                    <div className="card-body">
+                                        <div className="form-grid">
+                                            <div className="form-group">
+                                                <label htmlFor="domainName">Domain Name *</label>
+                                                <input
+                                                    type="text"
+                                                    id="domainName"
+                                                    name="domainName"
+                                                    className={`form-control ${formErrors.name ? 'invalid' : ''}`}
+                                                    placeholder="Enter domain name"
+                                                    value={newDomain.name}
+                                                    onChange={(e) => {
+                                                        setNewDomain({ ...newDomain, name: e.target.value });
+                                                        if (formErrors.name) {
+                                                            setFormErrors({ ...formErrors, name: null });
+                                                        }
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                />
+                                                {formErrors.name && <span className="error-text">{formErrors.name}</span>}
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="durationWeeks">Duration (Weeks) *</label>
+                                                <input
+                                                    type="number"
+                                                    id="durationWeeks"
+                                                    name="durationWeeks"
+                                                    className={`form-control ${formErrors.duration_weeks ? 'invalid' : ''}`}
+                                                    placeholder="e.g., 12"
+                                                    min="1"
+                                                    max="52"
+                                                    value={newDomain.duration_weeks}
+                                                    onChange={(e) => {
+                                                        setNewDomain({ ...newDomain, duration_weeks: parseInt(e.target.value) || 12 });
+                                                        if (formErrors.duration_weeks) {
+                                                            setFormErrors({ ...formErrors, duration_weeks: null });
+                                                        }
+                                                    }}
+                                                    disabled={isSubmitting}
+                                                />
+                                                {formErrors.duration_weeks && <span className="error-text">{formErrors.duration_weeks}</span>}
+                                            </div>
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="domainDescription">Description</label>
+                                            <textarea
+                                                id="domainDescription"
+                                                name="domainDescription"
+                                                className="form-control"
+                                                rows="3"
+                                                placeholder="Enter domain description (optional)"
+                                                value={newDomain.description}
+                                                onChange={(e) => setNewDomain({ ...newDomain, description: e.target.value })}
+                                                disabled={isSubmitting}
+                                            />
+                                        </div>
+                                        <div className="form-group">
+                                            <label htmlFor="domainStatus">Status</label>
+                                            <select
+                                                id="domainStatus"
+                                                name="domainStatus"
+                                                className="form-control"
+                                                value={newDomain.is_active}
+                                                onChange={(e) => setNewDomain({ ...newDomain, is_active: e.target.value === 'true' })}
+                                                disabled={isSubmitting}
+                                            >
+                                                <option value="true">Active</option>
+                                                <option value="false">Inactive</option>
+                                            </select>
+                                        </div>
+
+                                        {formErrors.submit && (
+                                            <div className="error-text" style={{ marginBottom: '16px', textAlign: 'center' }}>
+                                                {formErrors.submit}
+                                            </div>
+                                        )}
+
+                                        <div className="form-actions">
+                                            <button
+                                                className="btn btn-primary"
+                                                onClick={isEditMode ? handleEditDomain : handleAddDomain}
+                                                disabled={isSubmitting}
+                                            >
+                                                {isSubmitting
+                                                    ? (isEditMode ? 'Updating...' : 'Creating...')
+                                                    : (isEditMode ? 'Update Domain' : 'Create Domain')
+                                                }
+                                            </button>
+                                            <button className="btn btn-secondary" onClick={resetForm} disabled={isSubmitting}>
+                                                Cancel
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Delete Confirmation Modal */}
+                    {showDeleteModal && (
+                        <div className="delete-modal-overlay" onClick={() => !isDeleting && setShowDeleteModal(false)}>
+                            <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
+                                <div className="modal-header">
+                                    <h3>Confirm Domain Deletion</h3>
+                                    <button
+                                        className="close-btn"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        disabled={isDeleting}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
+                                <div className="modal-body">
+                                    {domainToDelete ? (
+                                        <>
+                                            <div className="delete-warning">
+                                                <h4>Delete Domain: {domainToDelete.name || domainToDelete.title}</h4>
+                                                <p>{deleteMessage || "Are you sure you want to delete this domain? This action cannot be undone."}</p>
+                                            </div>
+
+                                            <div className="domain-preview">
+                                                <h5>Domain Details</h5>
+                                                <div className="preview-grid">
+                                                    <div className="preview-item">
+                                                        <span className="preview-label">Domain Code:</span>
+                                                        <span className="preview-value">{generateDomainCode(domainToDelete.name || domainToDelete.title)}</span>
+                                                    </div>
+                                                    <div className="preview-item">
+                                                        <span className="preview-label">Duration:</span>
+                                                        <span className="preview-value">{formatWeeks(domainToDelete.duration_weeks)}</span>
+                                                    </div>
+                                                    <div className="preview-item">
+                                                        <span className="preview-label">Status:</span>
+                                                        <span className={`preview-value ${domainToDelete.is_active ? 'status-active' : 'status-inactive'}`}>
+                                                            {domainToDelete.is_active ? 'Active' : 'Inactive'}
+                                                        </span>
+                                                    </div>
+                                                    <div className="preview-item">
+                                                        <span className="preview-label">Created:</span>
+                                                        <span className="preview-value">{formatDate(domainToDelete.created_at)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="cascade-warning">
+                                                <h5>⚠️ Important Warning:</h5>
+                                                <p>This action will <strong>permanently delete</strong> the domain and all associated data:</p>
+                                                <ul>
+                                                    <li>All modules under this domain</li>
+                                                    <li>All topics and content</li>
+                                                    <li>Student progress and records</li>
+                                                    <li>All related data (cascading delete)</li>
+                                                </ul>
+                                                <p className="final-warning">This action cannot be undone!</p>
+                                            </div>
+
+                                            <div className="confirmation-section">
+                                                <label>
+                                                    <input
+                                                        type="checkbox"
+                                                        id="confirmDelete"
+                                                        name="confirmDelete"
+                                                        checked={deleteConfirmation}
+                                                        onChange={(e) => setDeleteConfirmation(e.target.checked)}
+                                                        required
+                                                    />
+                                                    <span>I understand this action is permanent and cannot be undone</span>
+                                                </label>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p>Loading domain information...</p>
+                                    )}
+                                </div>
+                                <div className="modal-actions">
+                                    <button
+                                        className="btn btn-danger"
+                                        onClick={handleDeleteConfirm}
+                                        disabled={isDeleting || !domainToDelete || !deleteConfirmation}
+                                    >
+                                        {isDeleting ? 'Deleting...' : 'Yes, Delete Domain'}
+                                    </button>
+                                    <button
+                                        className="btn btn-secondary"
+                                        onClick={() => setShowDeleteModal(false)}
+                                        disabled={isDeleting}
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Domains Grid */}
+                    {!error && (
+                        <div className="domains-grid">
+                            {domains.length === 0 ? (
+                                <div className="no-domains">
+                                    <div className="empty-state-icon">📚</div>
+                                    <h4>No domains found</h4>
+                                    <p>{pagination.active_only ? 'No active domains found. Try showing all domains or create a new one.' : 'No domains found. Create your first domain!'}</p>
+                                    <button
+                                        className="btn btn-primary"
+                                        onClick={() => {
+                                            resetForm();
+                                            setShowForm(true);
+                                        }}
+                                        style={{ marginTop: '16px' }}
+                                    >
+                                        + Create First Domain
+                                    </button>
+                                </div>
+                            ) : (
+                                domains.map((domain) => (
+                                    <div
+                                        key={domain.id || domain._id}
+                                        className="domain-card"
+                                        onClick={() => handleViewDomain(domain.id || domain._id)}
+                                    >
+                                        <div className="domain-image" style={{ background: getGradientColor(domain.id || domain._id) }}>
+                                            <div className="domain-code">
+                                                {generateDomainCode(domain.name || domain.title)}
+                                            </div>
+                                            <div className="domain-actions-overlay">
+                                                <button
+                                                    type="button"
+                                                    className="btn-icon btn-edit"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleStartEdit(domain);
+                                                    }}
+                                                    title="Edit Domain"
+                                                    aria-label={`Edit domain ${domain.name || domain.title || ''}`}
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    className="btn-icon btn-delete"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleDeleteInit(domain);
+                                                    }}
+                                                    title="Delete Domain"
+                                                    aria-label={`Delete domain ${domain.name || domain.title || ''}`}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div className="domain-content">
+                                            <div className="domain-meta">
+                                                <button
+                                                    type="button"
+                                                    className={`badge-toggle ${domain.is_active ? 'badge-success' : 'badge-warning'}`}
+                                                    onClick={(e) => handleToggleActive(domain, e)}
+                                                    title={`Click to ${domain.is_active ? 'deactivate' : 'activate'} this domain`}
+                                                    aria-label={`Toggle ${domain.name || domain.title} status`}
+                                                >
+                                                    {domain.is_active ? '✓ Active' : '○ Inactive'}
+                                                </button>
+                                                <span>{formatWeeks(domain.duration_weeks)}</span>
+                                            </div>
+                                            <h4>{domain.name || domain.title}</h4>
+                                            <p className="domain-description">
+                                                {domain.description || 'No description provided.'}
+                                            </p>
+
+                                            <div className="domain-stats">
+                                                <div className="stat-item">
+                                                    <div className="stat-number">--</div>
+                                                    <div className="stat-label">Modules</div>
+                                                </div>
+                                                <div className="stat-item">
+                                                    <div className="stat-number">--</div>
+                                                    <div className="stat-label">Students</div>
+                                                </div>
+                                                <div className="stat-item">
+                                                    <div className="stat-number">{calculateTotalHours(domain.duration_weeks)}</div>
+                                                    <div className="stat-label">Hours</div>
+                                                </div>
+                                            </div>
+
+                                            <div className="domain-footer">
+                                                <span className="created-date">
+                                                    Created: {formatDate(domain.created_at)}
+                                                </span>
+                                                <button
+                                                    type="button"
+                                                    className="view-domain view-link"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleViewDomain(domain.id || domain._id);
+                                                    }}
+                                                    aria-label={`View topics for ${domain.name || domain.title || ''}`}
+                                                >
+                                                    View Topics →
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    )}
+                </>
+            )}
+
+            {/* TOPICS VIEW - Inline Topics for Selected Domain */}
+            {activeView === 'topics' && selectedDomain && (
+                <div className="topics-inline-view">
+                    {/* Domain Header */}
+                    <div className="domain-header">
+                        <div className="header-left">
+                            <h1>{selectedDomain.name || selectedDomain.title}</h1>
+                            <p>{selectedDomain.description || 'Manage modules and topics for this domain'}</p>
+                        </div>
+                        <div className="header-right">
+                            <div className="filter-controls">
+                                <button className="btn btn-secondary" onClick={handleBackToDomains}>
+                                    ← Back to Domains
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Domain Info Card */}
+                    <div className="domain-info-card">
+                        <div className="info-stats">
+                            <div className="info-stat">
+                                <span className="info-label">Duration</span>
+                                <span className="info-value">{formatWeeks(selectedDomain.duration_weeks)}</span>
+                            </div>
+                            <div className="info-stat">
+                                <span className="info-label">Status</span>
+                                <span className={`info-value ${selectedDomain.is_active ? 'status-active' : 'status-inactive'}`}>
+                                    {selectedDomain.is_active ? 'Active' : 'Inactive'}
+                                </span>
+                            </div>
+                            <div className="info-stat">
+                                <span className="info-label">Created</span>
+                                <span className="info-value">{formatDate(selectedDomain.created_at)}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Topics Section */}
+                    <div className="modules-section">
+                        <div className="section-header-inline">
+                            <h3>Topics ({topics.length})</h3>
+                            <button
+                                className="btn btn-primary"
+                                onClick={() => {
+                                    resetTopicForm();
+                                    setShowTopicForm(true);
+                                }}
+                            >
+                                + Add Topic
+                            </button>
+                        </div>
+
+                        {/* Add/Edit Topic Form Modal */}
+                        {showTopicForm && (
+                            <div
+                                className="form-modal-overlay"
+                                onClick={() => !isTopicSubmitting && resetTopicForm()}
+                            >
+                                <div className="form-modal" onClick={(e) => e.stopPropagation()}>
+                                    <div className="card add-domain-form">
+                                        <div className="card-header">
+                                            <h3>{isTopicEditMode ? 'Edit Topic' : 'Add New Topic'}</h3>
+                                            <button className="close-btn" onClick={resetTopicForm} disabled={isTopicSubmitting}>×</button>
+                                        </div>
+                                        <div className="card-body">
+                                            <div className="form-group">
+                                                <label htmlFor="topicTitle">Topic Title *</label>
+                                                <input
+                                                    type="text"
+                                                    id="topicTitle"
+                                                    name="topicTitle"
+                                                    className={`form-control ${topicFormErrors.title ? 'invalid' : ''}`}
+                                                    placeholder="Enter topic title"
+                                                    value={newTopic.title}
+                                                    onChange={(e) => {
+                                                        setNewTopic({ ...newTopic, title: e.target.value });
+                                                        if (topicFormErrors.title) {
+                                                            setTopicFormErrors({ ...topicFormErrors, title: null });
+                                                        }
+                                                    }}
+                                                    disabled={isTopicSubmitting}
+                                                />
+                                                {topicFormErrors.title && <span className="error-text">{topicFormErrors.title}</span>}
+                                            </div>
+                                            <div className="form-group">
+                                                <label htmlFor="topicContent">Content</label>
+                                                <textarea
+                                                    id="topicContent"
+                                                    name="topicContent"
+                                                    className="form-control"
+                                                    rows="3"
+                                                    placeholder="Enter topic content or description"
+                                                    value={newTopic.content}
+                                                    onChange={(e) => setNewTopic({ ...newTopic, content: e.target.value })}
+                                                    disabled={isTopicSubmitting}
+                                                />
+                                            </div>
+                                            <div className="form-grid">
+                                                <div className="form-group">
+                                                    <label htmlFor="topicResourceLink">Resource Link</label>
+                                                    <input
+                                                        type="url"
+                                                        id="topicResourceLink"
+                                                        name="topicResourceLink"
+                                                        className="form-control"
+                                                        placeholder="https://..."
+                                                        value={newTopic.resource_link}
+                                                        onChange={(e) => setNewTopic({ ...newTopic, resource_link: e.target.value })}
+                                                        disabled={isTopicSubmitting}
+                                                    />
+                                                </div>
+                                                <div className="form-group">
+                                                    <label htmlFor="topicOrder">Order Index</label>
+                                                    <input
+                                                        type="number"
+                                                        id="topicOrder"
+                                                        name="topicOrder"
+                                                        className="form-control"
+                                                        placeholder="0"
+                                                        min="0"
+                                                        value={newTopic.order_index}
+                                                        onChange={(e) => setNewTopic({ ...newTopic, order_index: parseInt(e.target.value) || 0 })}
+                                                        disabled={isTopicSubmitting}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            {topicFormErrors.submit && (
+                                                <div className="error-text" style={{ marginBottom: '16px', textAlign: 'center' }}>
+                                                    {topicFormErrors.submit}
+                                                </div>
+                                            )}
+
+                                            <div className="form-actions">
+                                                <button
+                                                    className="btn btn-primary"
+                                                    onClick={isTopicEditMode ? handleEditTopic : handleAddTopic}
+                                                    disabled={isTopicSubmitting}
+                                                >
+                                                    {isTopicSubmitting
+                                                        ? (isTopicEditMode ? 'Updating...' : 'Creating...')
+                                                        : (isTopicEditMode ? 'Update Topic' : 'Create Topic')
+                                                    }
+                                                </button>
+                                                <button className="btn btn-secondary" onClick={resetTopicForm} disabled={isTopicSubmitting}>
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Delete Topic Confirmation Modal */}
+                        {showDeleteTopicModal && (
+                            <div className="delete-modal-overlay" onClick={() => !isDeletingTopic && setShowDeleteTopicModal(false)}>
+                                <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
+                                    <div className="modal-header">
+                                        <h3>Delete Topic</h3>
+                                        <button
+                                            className="close-btn"
+                                            onClick={() => setShowDeleteTopicModal(false)}
+                                            disabled={isDeletingTopic}
+                                        >
+                                            ×
+                                        </button>
+                                    </div>
+                                    <div className="modal-body">
+                                        <div className="delete-warning">
+                                            <h4>Are you sure?</h4>
+                                            <p>You are about to delete the topic: <strong>{topicToDelete?.title}</strong></p>
+                                            <p>This action cannot be undone.</p>
+                                        </div>
+                                    </div>
+                                    <div className="modal-actions">
+                                        <button
+                                            className="btn btn-danger"
+                                            onClick={handleDeleteTopicConfirm}
+                                            disabled={isDeletingTopic}
+                                        >
+                                            {isDeletingTopic ? 'Deleting...' : 'Delete Topic'}
+                                        </button>
+                                        <button
+                                            className="btn btn-secondary"
+                                            onClick={() => setShowDeleteTopicModal(false)}
+                                            disabled={isDeletingTopic}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Topics List */}
+                        {topicsLoading ? (
+                            <div className="loading-spinner">Loading topics...</div>
+                        ) : topics.length === 0 ? (
+                            <div className="no-modules-message">
+                                <div className="empty-state-icon">📝</div>
+                                <h4>No topics yet</h4>
+                                <p>Click "+ Add Topic" to create your first topic for this domain.</p>
+                            </div>
+                        ) : (
+                            <div className="topics-list">
+                                {topics.map((topic) => (
+                                    <div key={topic.id} className="topic-card">
+                                        <div className="topic-info">
+                                            <div className="topic-order">#{topic.order_index || 0}</div>
+                                            <div className="topic-details">
+                                                <h4>{topic.title}</h4>
+                                                {topic.content && <p className="topic-content">{topic.content}</p>}
+                                                {topic.resource_link && (
+                                                    <a
+                                                        href={topic.resource_link}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="topic-link"
+                                                    >
+                                                        🔗 Resource Link
+                                                    </a>
+                                                )}
+                                            </div>
+                                        </div>
+                                        <div className="topic-actions">
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-secondary"
+                                                onClick={() => handleStartEditTopic(topic)}
+                                            >
+                                                Edit
+                                            </button>
+                                            <button
+                                                type="button"
+                                                className="btn btn-sm btn-danger"
+                                                onClick={() => handleDeleteTopicInit(topic)}
+                                            >
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
 };
 
 export default Domain;
