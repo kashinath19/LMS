@@ -1,6 +1,7 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
 import styles from './TrainerCourses.module.css';
+import AuthContext from '../../context/AuthContext';
 
 /**
  * TrainerCourses - Placeholder page for trainer courses
