@@ -20,9 +20,7 @@ const AdminDashboard = () => {
 
   const [domainOptions, setDomainOptions] = useState([
     { id: '1', name: 'Data Science' },
-    { id: '2', name: 'Full Stack Development' },
-    { id: '3', name: 'Cybersecurity' },
-    { id: '4', name: 'Artificial Intelligence' }
+    { id: '2', name: 'Full Stack Development' }
   ]);
 
   const [adminUsers, setAdminUsers] = useState([]);
@@ -505,7 +503,7 @@ const AdminDashboard = () => {
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="studentDomain">Assign to Domain (Optional)</label>
+                  <label className={styles.formLabel} htmlFor="studentDomain">Assign to Domain *</label>
                   <select
                     id="studentDomain"
                     name="domain_id"
@@ -514,7 +512,7 @@ const AdminDashboard = () => {
                     onChange={(e) => setStudentForm(prev => ({ ...prev, domain_id: e.target.value }))}
                     disabled={loading}
                   >
-                    <option value="">Select a domain (optional)</option>
+                    <option value="">Select a domain</option>
                     {domainOptions.map(domain => (
                       <option key={domain.id} value={domain.id}>
                         {domain.name}

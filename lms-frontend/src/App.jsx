@@ -14,6 +14,8 @@ import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import UserManagement from './pages/admin/UserManagement';
 import Domain from './pages/admin/Domain/Domain';
+import Topics from './pages/admin/Domain/topics';
+
 import TrainerDashboard from './pages/trainer/TrainerDashboard';
 import TrainerProfilePage from './pages/trainer/TrainerProfilePage';
 import TrainerCourses from './pages/trainer/TrainerCourses';
@@ -58,6 +60,7 @@ function App() {
                 <Route path="dashboard" element={<AdminDashboard />} />
                 <Route path="users" element={<UserManagement />} />
                 <Route path="domains" element={<Domain />} />
+                <Route path="domains/:domainId/topics" element={<Topics />} />
                 <Route index element={<Navigate to="dashboard" replace />} />
               </Route>
 
