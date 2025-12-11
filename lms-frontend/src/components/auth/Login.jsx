@@ -5,9 +5,10 @@ import { API_BASE_URL } from '../../utils/constants';
 import styles from './Login.module.css';
 
 const Login = () => {
+  // CHANGED: Default role set to 'student'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState('admin');
+  const [role, setRole] = useState('student');
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -113,7 +114,18 @@ const Login = () => {
 
       if (!result || !result.success) {
         console.log('Login - Login failed:', result?.error || 'Unknown error from login');
-        setError(result?.error || 'Login failed. Please check your credentials.');
+        
+        // CHANGED: Custom error messages based on role
+        let customErrorMessage = '';
+        if (role === 'admin') {
+          customErrorMessage = 'This login is for Admins only. If you are not an admin, please select the correct Access Level above.';
+        } else if (role === 'trainer') {
+          customErrorMessage = 'This login is for Trainers only. If you are not a trainer, please select the correct Access Level above.';
+        } else {
+          customErrorMessage = 'This login is for Students only. If you are not a student, please select the correct Access Level above.';
+        }
+        
+        setError(customErrorMessage);
         setLoading(false);
         return;
       }
