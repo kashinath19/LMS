@@ -7,12 +7,12 @@
   border-right: 1px solid #e5e7eb;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
+  height: 100vh;
   box-sizing: border-box;
-  position: sticky;
+  position: fixed;
   top: 0;
   left: 0;
-  z-index: 20;
+  z-index: 50;
   transition: transform 0.28s ease-in-out, box-shadow 0.2s ease;
   flex-shrink: 0;
 }

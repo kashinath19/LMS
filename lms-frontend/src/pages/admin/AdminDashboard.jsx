@@ -6,12 +6,15 @@ import styles from './AdminDashboard.module.css';
 
 /**
  * AdminDashboard - Main dashboard page for admins
- * Layout is provided by AdminLayout via routing - this component renders content only
+ * Renders header controls and modal forms for user creation.
  */
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { setPageTitle } = useOutletContext();
+  
+  // 1. Extract setHeaderComponent from context
+  const { setPageTitle, setHeaderComponent } = useOutletContext();
+  
   const [trainerModalOpen, setTrainerModalOpen] = useState(false);
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -26,53 +29,60 @@ const AdminDashboard = () => {
 
   const [adminUsers, setAdminUsers] = useState([]);
 
-  const [trainerForm, setTrainerForm] = useState({
-    email: '',
-    username: '',
-    password: '',
-    domain_id: ''
-  });
+  // Form States
+  const [trainerForm, setTrainerForm] = useState({ email: '', username: '', password: '', domain_id: '' });
+  const [studentForm, setStudentForm] = useState({ email: '', username: '', password: '', domain_id: '' });
+  const [adminForm, setAdminForm] = useState({ email: '', username: '', password: '' });
 
-  const [studentForm, setStudentForm] = useState({
-    email: '',
-    username: '',
-    password: '',
-    domain_id: ''
-  });
-
-  const [adminForm, setAdminForm] = useState({
-    email: '',
-    username: '',
-    password: ''
-  });
-
+  // 2. Set Page Title
   useEffect(() => {
     setPageTitle('Administrator Dashboard');
     return () => setPageTitle('');
   }, [setPageTitle]);
 
-  // Listen for modal trigger events from header buttons
+  // 3. Inject Buttons into the Header using setHeaderComponent
   useEffect(() => {
-    const handleOpenModal = (event) => {
-      const { type } = event.detail || {};
-      if (type === 'trainer') {
-        setErrors({});
-        setTrainerForm({ email: '', username: '', password: '', domain_id: '' });
-        setTrainerModalOpen(true);
-      } else if (type === 'student') {
-        setErrors({});
-        setStudentForm({ email: '', username: '', password: '', domain_id: '' });
-        setStudentModalOpen(true);
-      } else if (type === 'admin') {
-        setErrors({});
-        setAdminForm({ email: '', username: '', password: '' });
-        setAdminModalOpen(true);
-      }
-    };
+    if (setHeaderComponent) {
+      setHeaderComponent(
+        <div className={styles.headerBtnGroup}>
+          <button 
+            className={styles.btnPrimary} 
+            onClick={() => {
+                setErrors({});
+                setTrainerForm({ email: '', username: '', password: '', domain_id: '' });
+                setTrainerModalOpen(true);
+            }}
+          >
+            <i className="fas fa-chalkboard-teacher"></i> Create Trainer
+          </button>
+          
+          <button 
+            className={styles.btnSuccess} 
+            onClick={() => {
+                setErrors({});
+                setStudentForm({ email: '', username: '', password: '', domain_id: '' });
+                setStudentModalOpen(true);
+            }}
+          >
+            <i className="fas fa-user-graduate"></i> Create Student
+          </button>
 
-    window.addEventListener('admin-open-modal', handleOpenModal);
-    return () => window.removeEventListener('admin-open-modal', handleOpenModal);
-  }, []);
+          <button 
+            className={styles.btnWarning} 
+            onClick={() => {
+                setErrors({});
+                setAdminForm({ email: '', username: '', password: '' });
+                setAdminModalOpen(true);
+            }}
+          >
+            <i className="fas fa-user-shield"></i> Create Admin
+          </button>
+        </div>
+      );
+    }
+    // Cleanup: Remove buttons when leaving this page
+    return () => setHeaderComponent && setHeaderComponent(null);
+  }, [setHeaderComponent]);
 
   useEffect(() => {
     const fetchDomains = async () => {
@@ -149,6 +159,7 @@ const AdminDashboard = () => {
     return newErrors;
   };
 
+  // --- Validation Logic ---
   const validateTrainerForm = () => {
     const newErrors = {};
     if (!trainerForm.email) newErrors.email = 'Email is required';
@@ -170,6 +181,7 @@ const AdminDashboard = () => {
     else if (studentForm.username.length < 3) newErrors.username = 'Username must be at least 3 characters';
     if (!studentForm.password) newErrors.password = 'Password is required';
     else if (studentForm.password.length < 8) newErrors.password = 'Password must be at least 8 characters';
+    if (!studentForm.domain_id) newErrors.domain_id = 'Domain is required for students';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -186,9 +198,9 @@ const AdminDashboard = () => {
     return Object.keys(newErrors).length === 0;
   };
 
+  // --- Registration Actions ---
   const registerTrainer = async () => {
     if (!validateTrainerForm()) return;
-
     try {
       setLoading(true);
       const trainerData = {
@@ -199,21 +211,12 @@ const AdminDashboard = () => {
       };
       await api.post('/auth/register-trainer', trainerData);
       showSuccess(`Trainer '${trainerForm.username}' has been registered successfully.`);
-      setTrainerForm({ email: '', username: '', password: '', domain_id: '' });
       setTrainerModalOpen(false);
-      setErrors({});
     } catch (error) {
-      console.error('Error registering trainer:', error?.response?.data || error.message || error);
-      const respData = error?.response?.data;
-      const status = error?.response?.status;
-      const parsed = parseValidationErrors(respData);
-      if (Object.keys(parsed).length > 0) {
-        setErrors(prev => ({ ...prev, ...parsed }));
-      } else if (status === 409) {
-        setErrors(prev => ({ ...prev, email: 'This email is already registered.' }));
-      } else {
-        showSuccess('An error occurred. Please try again.');
-      }
+      console.error('Error registering trainer:', error);
+      const parsed = parseValidationErrors(error?.response?.data);
+      if (Object.keys(parsed).length > 0) setErrors(prev => ({ ...prev, ...parsed }));
+      else showSuccess('An error occurred. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -221,7 +224,6 @@ const AdminDashboard = () => {
 
   const registerStudent = async () => {
     if (!validateStudentForm()) return;
-
     try {
       setLoading(true);
       const studentData = {
@@ -232,21 +234,12 @@ const AdminDashboard = () => {
       };
       await api.post('/auth/register-student', studentData);
       showSuccess(`Student '${studentForm.username}' has been registered successfully.`);
-      setStudentForm({ email: '', username: '', password: '', domain_id: '' });
       setStudentModalOpen(false);
-      setErrors({});
     } catch (error) {
-      console.error('Error registering student:', error?.response?.data || error.message || error);
-      const respData = error?.response?.data;
-      const status = error?.response?.status;
-      const parsed = parseValidationErrors(respData);
-      if (Object.keys(parsed).length > 0) {
-        setErrors(prev => ({ ...prev, ...parsed }));
-      } else if (status === 409) {
-        setErrors(prev => ({ ...prev, email: 'This email is already registered.' }));
-      } else {
-        showSuccess('Failed to register student. Please try again.');
-      }
+      console.error('Error registering student:', error);
+      const parsed = parseValidationErrors(error?.response?.data);
+      if (Object.keys(parsed).length > 0) setErrors(prev => ({ ...prev, ...parsed }));
+      else showSuccess('Failed to register student.');
     } finally {
       setLoading(false);
     }
@@ -254,7 +247,6 @@ const AdminDashboard = () => {
 
   const registerAdmin = async () => {
     if (!validateAdminForm()) return;
-
     try {
       setLoading(true);
       const adminData = {
@@ -264,28 +256,16 @@ const AdminDashboard = () => {
       };
       await api.post('/auth/register-admin', adminData);
       showSuccess(`Admin '${adminForm.username}' has been registered successfully.`);
-      setAdminForm({ email: '', username: '', password: '' });
       setAdminModalOpen(false);
-      setErrors({});
-      try {
-        const res = await api.get('/users/', { params: { role: 'admin' } });
-        const list = Array.isArray(res.data) ? res.data : (res.data?.results || []);
-        setAdminUsers(list);
-      } catch (err) {
-        console.warn('Could not refresh admin users after creating admin:', err?.response?.data || err.message);
-      }
+      // Refresh admin list
+      const res = await api.get('/users/', { params: { role: 'admin' } });
+      const list = Array.isArray(res.data) ? res.data : (res.data?.results || []);
+      setAdminUsers(list);
     } catch (error) {
-      console.error('Error registering admin:', error?.response?.data || error.message || error);
-      const respData = error?.response?.data;
-      const status = error?.response?.status;
-      const parsed = parseValidationErrors(respData);
-      if (Object.keys(parsed).length > 0) {
-        setErrors(prev => ({ ...prev, ...parsed }));
-      } else if (status === 409) {
-        setErrors(prev => ({ ...prev, email: 'This email is already registered.' }));
-      } else {
-        showSuccess('Failed to register admin. Please try again.');
-      }
+      console.error('Error registering admin:', error);
+      const parsed = parseValidationErrors(error?.response?.data);
+      if (Object.keys(parsed).length > 0) setErrors(prev => ({ ...prev, ...parsed }));
+      else showSuccess('Failed to register admin.');
     } finally {
       setLoading(false);
     }
@@ -294,7 +274,6 @@ const AdminDashboard = () => {
   const findCurrentAdmin = () => {
     if (!user) return null;
     if (user.username) return { id: user.id, username: user.username, email: user.email };
-
     if (user.id != null) {
       const byId = adminUsers.find(u => String(u.id) === String(user.id));
       if (byId) return byId;
@@ -307,31 +286,15 @@ const AdminDashboard = () => {
     return null;
   };
 
-  const currentAdminDisplay = () => {
+  const { displayName } = (() => {
     const current = findCurrentAdmin();
-
-    if (current) {
-      const name = current.username || (current.email ? current.email.split('@')[0] : current.email);
-      return {
-        displayName: name || (user?.email?.split('@')[0] || 'Admin'),
-        displayEmail: current.email || user?.email || ''
-      };
-    }
-
-    if (user?.email) {
-      return {
-        displayName: user.email.split('@')[0],
-        displayEmail: user.email
-      };
-    }
-
-    return { displayName: 'Admin', displayEmail: '' };
-  };
-
-  const { displayName, displayEmail } = currentAdminDisplay();
+    if (current) return { displayName: current.username || (current.email ? current.email.split('@')[0] : 'Admin') };
+    if (user?.email) return { displayName: user.email.split('@')[0] };
+    return { displayName: 'Admin' };
+  })();
 
   return (
-    <>
+    <div className={styles.container}>
       {successMessage.show && (
         <div className={styles.successMessage}>
           <i className="fas fa-check-circle"></i>
@@ -339,7 +302,7 @@ const AdminDashboard = () => {
         </div>
       )}
 
-      {/* Empty Dashboard - Cards removed, use header buttons or sidebar to navigate */}
+      {/* Empty Dashboard Content */}
       <div className={styles.emptyDashboard}>
         <div className={styles.emptyIcon}>
           <i className="fas fa-tachometer-alt"></i>
@@ -347,7 +310,7 @@ const AdminDashboard = () => {
         <h2>Admin Dashboard</h2>
         <p>Welcome, <strong>{displayName}</strong></p>
         <p className={styles.emptyText}>
-          Use the sidebar to navigate or the header buttons to create new users.
+          Use the header buttons above to create new users.
         </p>
       </div>
 
@@ -357,85 +320,37 @@ const AdminDashboard = () => {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Register New Trainer</h3>
-              <button className={styles.closeModal} onClick={() => setTrainerModalOpen(false)} disabled={loading}>
-                &times;
-              </button>
+              <button className={styles.closeModal} onClick={() => setTrainerModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form id="trainerForm" onSubmit={(e) => { e.preventDefault(); registerTrainer(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerTrainer(); }}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="trainerEmail">Email Address *</label>
-                  <input
-                    type="email"
-                    id="trainerEmail"
-                    name="email"
-                    className={styles.formInput}
-                    placeholder="trainer@example.com"
-                    value={trainerForm.email}
-                    onChange={(e) => setTrainerForm(prev => ({ ...prev, email: e.target.value }))}
-                    autoComplete="email"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Email Address *</label>
+                  <input type="email" className={styles.formInput} value={trainerForm.email} onChange={(e) => setTrainerForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="trainerUsername">Username *</label>
-                  <input
-                    type="text"
-                    id="trainerUsername"
-                    name="username"
-                    className={styles.formInput}
-                    placeholder="Enter a username (min. 3 characters)"
-                    value={trainerForm.username}
-                    onChange={(e) => setTrainerForm(prev => ({ ...prev, username: e.target.value }))}
-                    autoComplete="username"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Username *</label>
+                  <input type="text" className={styles.formInput} value={trainerForm.username} onChange={(e) => setTrainerForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="trainerPassword">Password *</label>
-                  <input
-                    type="password"
-                    id="trainerPassword"
-                    name="password"
-                    className={styles.formInput}
-                    placeholder="Enter a secure password (min. 8 characters)"
-                    value={trainerForm.password}
-                    onChange={(e) => setTrainerForm(prev => ({ ...prev, password: e.target.value }))}
-                    autoComplete="new-password"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Password *</label>
+                  <input type="password" className={styles.formInput} value={trainerForm.password} onChange={(e) => setTrainerForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="trainerDomain">Assign to Domain *</label>
-                  <select
-                    id="trainerDomain"
-                    name="domain_id"
-                    className={styles.formInput}
-                    value={trainerForm.domain_id}
-                    onChange={(e) => setTrainerForm(prev => ({ ...prev, domain_id: e.target.value }))}
-                    disabled={loading}
-                  >
+                  <label className={styles.formLabel}>Assign to Domain *</label>
+                  <select className={styles.formInput} value={trainerForm.domain_id} onChange={(e) => setTrainerForm(prev => ({ ...prev, domain_id: e.target.value }))} disabled={loading}>
                     <option value="">Select a domain</option>
-                    {domainOptions.map(domain => (
-                      <option key={domain.id} value={domain.id}>
-                        {domain.name}
-                      </option>
-                    ))}
+                    {domainOptions.map(domain => <option key={domain.id} value={domain.id}>{domain.name}</option>)}
                   </select>
                   {errors.domain_id && <div className={styles.formError}>{errors.domain_id}</div>}
                 </div>
               </form>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setTrainerModalOpen(false)} disabled={loading}>
-                Cancel
-              </button>
+              <button className={styles.btnSecondary} onClick={() => setTrainerModalOpen(false)}>Cancel</button>
               <button className={styles.btnPrimary} onClick={registerTrainer} disabled={loading}>
                 {loading ? 'Registering...' : 'Register Trainer'}
               </button>
@@ -450,84 +365,37 @@ const AdminDashboard = () => {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Register New Student</h3>
-              <button className={styles.closeModal} onClick={() => setStudentModalOpen(false)} disabled={loading}>
-                &times;
-              </button>
+              <button className={styles.closeModal} onClick={() => setStudentModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form id="studentForm" onSubmit={(e) => { e.preventDefault(); registerStudent(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerStudent(); }}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="studentEmail">Email Address *</label>
-                  <input
-                    type="email"
-                    id="studentEmail"
-                    name="email"
-                    className={styles.formInput}
-                    placeholder="student@example.com"
-                    value={studentForm.email}
-                    onChange={(e) => setStudentForm(prev => ({ ...prev, email: e.target.value }))}
-                    autoComplete="email"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Email Address *</label>
+                  <input type="email" className={styles.formInput} value={studentForm.email} onChange={(e) => setStudentForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="studentUsername">Username *</label>
-                  <input
-                    type="text"
-                    id="studentUsername"
-                    name="username"
-                    className={styles.formInput}
-                    placeholder="Enter a username (min. 3 characters)"
-                    value={studentForm.username}
-                    onChange={(e) => setStudentForm(prev => ({ ...prev, username: e.target.value }))}
-                    autoComplete="username"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Username *</label>
+                  <input type="text" className={styles.formInput} value={studentForm.username} onChange={(e) => setStudentForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="studentPassword">Password *</label>
-                  <input
-                    type="password"
-                    id="studentPassword"
-                    name="password"
-                    className={styles.formInput}
-                    placeholder="Enter a secure password (min. 8 characters)"
-                    value={studentForm.password}
-                    onChange={(e) => setStudentForm(prev => ({ ...prev, password: e.target.value }))}
-                    autoComplete="new-password"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Password *</label>
+                  <input type="password" className={styles.formInput} value={studentForm.password} onChange={(e) => setStudentForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="studentDomain">Assign to Domain *</label>
-                  <select
-                    id="studentDomain"
-                    name="domain_id"
-                    className={styles.formInput}
-                    value={studentForm.domain_id}
-                    onChange={(e) => setStudentForm(prev => ({ ...prev, domain_id: e.target.value }))}
-                    disabled={loading}
-                  >
+                  <label className={styles.formLabel}>Assign to Domain *</label>
+                  <select className={styles.formInput} value={studentForm.domain_id} onChange={(e) => setStudentForm(prev => ({ ...prev, domain_id: e.target.value }))} disabled={loading}>
                     <option value="">Select a domain</option>
-                    {domainOptions.map(domain => (
-                      <option key={domain.id} value={domain.id}>
-                        {domain.name}
-                      </option>
-                    ))}
+                    {domainOptions.map(domain => <option key={domain.id} value={domain.id}>{domain.name}</option>)}
                   </select>
+                  {errors.domain_id && <div className={styles.formError}>{errors.domain_id}</div>}
                 </div>
               </form>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setStudentModalOpen(false)} disabled={loading}>
-                Cancel
-              </button>
+              <button className={styles.btnSecondary} onClick={() => setStudentModalOpen(false)}>Cancel</button>
               <button className={styles.btnSuccess} onClick={registerStudent} disabled={loading}>
                 {loading ? 'Registering...' : 'Register Student'}
               </button>
@@ -542,65 +410,29 @@ const AdminDashboard = () => {
           <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
             <div className={styles.modalHeader}>
               <h3 className={styles.modalTitle}>Register New Admin</h3>
-              <button className={styles.closeModal} onClick={() => setAdminModalOpen(false)} disabled={loading}>
-                &times;
-              </button>
+              <button className={styles.closeModal} onClick={() => setAdminModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form id="adminForm" onSubmit={(e) => { e.preventDefault(); registerAdmin(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerAdmin(); }}>
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="adminEmail">Email Address *</label>
-                  <input
-                    type="email"
-                    id="adminEmail"
-                    name="email"
-                    className={styles.formInput}
-                    placeholder="admin@example.com"
-                    value={adminForm.email}
-                    onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))}
-                    autoComplete="email"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Email Address *</label>
+                  <input type="email" className={styles.formInput} value={adminForm.email} onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="adminUsername">Username *</label>
-                  <input
-                    type="text"
-                    id="adminUsername"
-                    name="username"
-                    className={styles.formInput}
-                    placeholder="Enter a username (min. 3 characters)"
-                    value={adminForm.username}
-                    onChange={(e) => setAdminForm(prev => ({ ...prev, username: e.target.value }))}
-                    autoComplete="username"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Username *</label>
+                  <input type="text" className={styles.formInput} value={adminForm.username} onChange={(e) => setAdminForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
-
                 <div className={styles.formGroup}>
-                  <label className={styles.formLabel} htmlFor="adminPassword">Password *</label>
-                  <input
-                    type="password"
-                    id="adminPassword"
-                    name="password"
-                    className={styles.formInput}
-                    placeholder="Enter a secure password (min. 8 characters)"
-                    value={adminForm.password}
-                    onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))}
-                    autoComplete="new-password"
-                    disabled={loading}
-                  />
+                  <label className={styles.formLabel}>Password *</label>
+                  <input type="password" className={styles.formInput} value={adminForm.password} onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
               </form>
             </div>
             <div className={styles.modalFooter}>
-              <button className={styles.btnSecondary} onClick={() => setAdminModalOpen(false)} disabled={loading}>
-                Cancel
-              </button>
+              <button className={styles.btnSecondary} onClick={() => setAdminModalOpen(false)}>Cancel</button>
               <button className={styles.btnWarning} onClick={registerAdmin} disabled={loading}>
                 {loading ? 'Registering...' : 'Register Admin'}
               </button>
@@ -608,7 +440,7 @@ const AdminDashboard = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

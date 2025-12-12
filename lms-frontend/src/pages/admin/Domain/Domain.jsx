@@ -31,7 +31,7 @@ const Domain = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     const navigate = useNavigate();
-    const { setPageTitle } = useOutletContext();
+    const { setPageTitle, setHeaderComponent } = useOutletContext();
 
     // Show success message with auto-dismiss
     const showSuccessMessage = (message) => {
@@ -43,6 +43,32 @@ const Domain = () => {
         setPageTitle('Domains Management');
         return () => setPageTitle('');
     }, [setPageTitle]);
+
+    // Inject header controls into AdminLayout header
+    useEffect(() => {
+        if (setHeaderComponent) {
+            setHeaderComponent(
+                <div className="domainHeaderControls">
+                    <button
+                        className={`btn ${pagination.active_only ? 'btn-primary' : 'btn-secondary'}`}
+                        onClick={handleToggleActiveFilter}
+                    >
+                        {pagination.active_only ? 'Show All' : 'Active Only'}
+                    </button>
+                    <button
+                        className="btn btn-primary"
+                        onClick={() => {
+                            resetForm();
+                            setShowForm(true);
+                        }}
+                    >
+                        + Add New Domain
+                    </button>
+                </div>
+            );
+        }
+        return () => setHeaderComponent && setHeaderComponent(null);
+    }, [setHeaderComponent, pagination.active_only]);
 
     useEffect(() => {
         fetchDomains();
@@ -428,33 +454,7 @@ const Domain = () => {
                 </div>
             )}
 
-            {/* Header */}
-            <div className="domain-header">
-                <div className="header-left">
-                    <h1>Domain Management</h1>
-                    <p>Manage and organize all learning domains</p>
-                </div>
-                <div className="header-right">
-                    <div className="filter-controls">
-                        <button
-                            className={`btn ${pagination.active_only ? 'btn-primary' : 'btn-secondary'}`}
-                            onClick={handleToggleActiveFilter}
-                            style={{ fontSize: '12px', padding: '6px 12px' }}
-                        >
-                            {pagination.active_only ? 'Show All' : 'Active Only'}
-                        </button>
-                        <button
-                            className="btn btn-primary"
-                            onClick={() => {
-                                resetForm();
-                                setShowForm(true);
-                            }}
-                        >
-                            + Add New Domain
-                        </button>
-                    </div>
-                </div>
-            </div>
+            {/* Header controls now injected into fixed AdminLayout header via setHeaderComponent */}
 
             {/* Error Messages */}
             {error && (

@@ -1,249 +1,290 @@
-/* UserManagement.module.css - Scoped styles for User Management page */
+/* UserManagement.module.css */
 
+/* Main Page Container - Fills the scrollable area */
 .container {
-    padding: 20px;
-    background-color: #f8f9fa;
-    height: 100%;
+    padding: 24px;
+    width: 100%;
+    min-height: 100%;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
+    flex: 1;
+    background: #f8f9fa;
 }
 
-.controls {
+/* Success Message */
+.successMessage {
+    position: absolute;
+    top: 20px;
+    right: 24px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 100;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* --- Header Controls (Injected into Main Header) --- */
+.headerControls {
     display: flex;
+    align-items: center;
     justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 16px;
-    background: white;
-    padding: 16px 20px;
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    margin-bottom: 20px;
+    width: 100%;
+    gap: 20px;
 }
 
-.filterGroup {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.filterGroup label {
-    font-weight: 500;
-    color: #374151;
-}
-
-.filterGroup select {
-    padding: 8px 12px;
-    border: 1px solid #d1d5db;
-    border-radius: 6px;
-    font-size: 14px;
-}
-
-.paginationControls {
+.leftControls {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.paginationControls label {
-    font-weight: 500;
-    color: #374151;
+.rightControls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
 }
 
-.paginationControls select {
+.label {
+    font-weight: 500;
+    color: #4b5563;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.headerSelect {
     padding: 8px 12px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
     font-size: 14px;
-}
-
-.pageInfo {
-    font-weight: 500;
-    color: #6b7280;
-}
-
-.paginationControls button {
-    padding: 8px 16px;
-    border: 1px solid #d1d5db;
-    background: white;
-    border-radius: 6px;
+    background-color: white;
     cursor: pointer;
+    min-width: 120px;
+    transition: border 0.2s;
+}
+
+.headerSelect:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.headerSelectSmall {
+    padding: 8px 8px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     font-size: 14px;
-    transition: background-color 0.2s;
+    background-color: white;
+    cursor: pointer;
+    transition: border 0.2s;
 }
 
-.paginationControls button:hover:not(:disabled) {
-    background: #f3f4f6;
+.headerSelectSmall:focus {
+    outline: none;
+    border-color: #2563eb;
 }
 
-.paginationControls button:disabled {
+.pageGroup {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 12px;
+    border-left: 1px solid #e5e7eb;
+    border-right: 1px solid #e5e7eb;
+}
+
+/* VISIBLE BUTTONS */
+.btnPage {
+    padding: 6px 12px;
+    background-color: white;
+    color: #374151;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnPage:hover:not(:disabled) {
+    background-color: #f3f4f6;
+    border-color: #9ca3af;
+}
+
+.btnPage:disabled {
     opacity: 0.5;
     cursor: not-allowed;
+    background-color: #f9fafb;
 }
 
-/* Table */
+.btnHeaderCreate {
+    background-color: #2563eb;
+    /* Blue primary */
+    color: white;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: none;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    transition: background 0.2s;
+}
+
+.btnHeaderCreate:hover {
+    background-color: #1d4ed8;
+}
+
+/* --- Table Area (Fills Content) --- */
 .tableWrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: calc(100vh - 280px);
+    flex: 1;
+    /* GROWS to fill remaining height */
+    width: 100%;
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     border: 1px solid #e5e7eb;
+    overflow: auto;
+    /* Handles both X and Y scroll */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    position: relative;
+    /* Use flex instead of fixed height */
+    min-height: 300px;
 }
 
 .table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 800px;
+    min-width: 900px;
+    /* Force horizontal scroll on small screens */
 }
 
 .table th,
 .table td {
-    padding: 12px 15px;
+    padding: 16px 20px;
     text-align: left;
-    border-bottom: 1px solid #e5e7eb;
+    border-bottom: 1px solid #f3f4f6;
 }
 
 .table th {
-    background-color: #f1f3f5;
+    background-color: #f9fafb;
     font-weight: 600;
-    color: #374151;
+    color: #4b5563;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     position: sticky;
     top: 0;
     z-index: 10;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .table tbody tr:hover {
-    background-color: #f9fafb;
+    background-color: #f8fafc;
 }
 
-.activeRow {
-    background-color: #e3f2fd !important;
-}
-
-/* Badges */
-.badge {
-    padding: 4px 8px;
-    border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: bold;
-    text-transform: capitalize;
-}
-
+/* --- Badges & Actions --- */
 .roleAdmin {
-    padding: 4px 8px;
+    background-color: #ede9fe;
+    color: #7c3aed;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: bold;
-    text-transform: capitalize;
-    background-color: #e8daff;
-    color: #6f42c1;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
 }
 
 .roleTrainer {
-    padding: 4px 8px;
+    background-color: #dbeafe;
+    color: #2563eb;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: bold;
-    text-transform: capitalize;
-    background-color: #cff4fc;
-    color: #055160;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
 }
 
 .roleStudent {
-    padding: 4px 8px;
+    background-color: #dcfce7;
+    color: #16a34a;
+    padding: 4px 10px;
     border-radius: 12px;
-    font-size: 0.85em;
-    font-weight: bold;
-    text-transform: capitalize;
-    background-color: #d1e7dd;
-    color: #0f5132;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-block;
+    min-width: 60px;
+    text-align: center;
 }
 
 .statusActive {
-    color: #10b981;
-    font-weight: bold;
+    color: #16a34a;
+    font-weight: 600;
+    font-size: 13px;
 }
 
 .statusInactive {
     color: #ef4444;
-    font-weight: bold;
-}
-
-/* Buttons */
-.btnPrimary {
-    background-color: #2563eb;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.btnPrimary:hover {
-    background-color: #1d4ed8;
-}
-
-.btnPrimary:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-.btnEdit {
-    background-color: #ffc107;
-    border: none;
-    padding: 6px 12px;
-    margin-right: 5px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.btnEdit:hover {
-    background-color: #e0a800;
-}
-
-.btnDelete {
-    background-color: #dc3545;
-    color: white;
-    border: none;
-    padding: 6px 12px;
-    cursor: pointer;
-    border-radius: 4px;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.btnDelete:hover {
-    background-color: #c82333;
-}
-
-.btnCancel {
-    background-color: #6c757d;
-    color: white;
-    border: none;
-    padding: 10px 20px;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: 500;
-    transition: background-color 0.2s;
-}
-
-.btnCancel:hover {
-    background-color: #5a6268;
+    font-weight: 600;
+    font-size: 13px;
 }
 
 .actionsCell {
     white-space: nowrap;
-    text-align: right;
-    padding-right: 20px !important;
+    width: 140px;
 }
 
-/* Modal */
+.btnEdit {
+    background: #f59e0b;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    margin-right: 8px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btnEdit:hover {
+    background: #d97706;
+}
+
+.btnDelete {
+    background: #ef4444;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 500;
+    transition: background 0.2s;
+}
+
+.btnDelete:hover {
+    background: #dc2626;
+}
+
+/* Modals */
 .modalOverlay {
     position: fixed;
     top: 0;
@@ -255,31 +296,52 @@
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(4px);
 }
 
 .modalContent {
     background: white;
-    padding: 25px;
-    border-radius: 8px;
+    padding: 24px;
+    border-radius: 12px;
     width: 400px;
-    max-width: 90%;
     max-height: 90vh;
     overflow-y: auto;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
-.modalContent h3 {
-    margin: 0 0 20px 0;
-    font-size: 1.25rem;
-    color: #111827;
+.roleSelection {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.roleBtn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 10px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+    text-align: center;
+    transition: all 0.2s;
+}
+
+.roleBtn:hover {
+    background: #e5e7eb;
+    transform: translateY(-1px);
 }
 
 .formGroup {
-    margin-bottom: 15px;
+    margin-bottom: 16px;
 }
 
 .formGroup label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 6px;
+    font-size: 14px;
     font-weight: 500;
     color: #374151;
 }
@@ -287,10 +349,10 @@
 .formGroup input,
 .formGroup select {
     width: 100%;
-    padding: 10px 12px;
-    box-sizing: border-box;
+    padding: 10px;
     border: 1px solid #d1d5db;
     border-radius: 6px;
+    box-sizing: border-box;
     font-size: 14px;
 }
 
@@ -298,29 +360,7 @@
 .formGroup select:focus {
     outline: none;
     border-color: #2563eb;
-}
-
-.formGroupCheckbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 15px;
-}
-
-.formGroupCheckbox input {
-    width: auto;
-}
-
-.formGroupCheckbox label {
-    margin: 0;
-    font-weight: 500;
-    color: #374151;
-}
-
-.formError {
-    color: #dc2626;
-    font-size: 14px;
-    margin-top: 4px;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .modalActions {
@@ -328,54 +368,42 @@
     justify-content: flex-end;
     gap: 10px;
     margin-top: 20px;
-    flex-wrap: wrap;
 }
 
-.roleSelection {
-    text-align: center;
-}
-
-.roleSelection p {
-    margin-bottom: 16px;
-    color: #374151;
-}
-
-.roleButtons {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.roleButtons button {
-    padding: 15px 25px;
-    cursor: pointer;
-    background: #e9ecef;
-    border: 1px solid #ced4da;
+.btnPrimary {
+    background: #2563eb;
+    color: white;
+    padding: 8px 16px;
     border-radius: 6px;
+    border: none;
+    cursor: pointer;
     font-weight: 500;
-    transition: background-color 0.2s;
+    transition: background 0.2s;
 }
 
-.roleButtons button:hover {
-    background: #dee2e6;
+.btnPrimary:hover {
+    background: #1d4ed8;
 }
 
-.warningText {
-    color: #dc2626;
+.btnCancel {
+    background: #f3f4f6;
+    color: #374151;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db;
+    cursor: pointer;
     font-weight: 500;
-    margin-bottom: 16px;
+    transition: all 0.2s;
 }
 
-/* Success Message */
-.successMessage {
-    background-color: #d1fae5;
-    border: 1px solid #10b981;
-    color: #065f46;
-    padding: 12px 16px;
-    border-radius: 8px;
-    margin-bottom: 16px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+.btnCancel:hover {
+    background: #e5e7eb;
+}
+
+/* Table loading/empty states */
+.table tbody tr td[colspan] {
+    text-align: center;
+    padding: 60px 20px;
+    color: #6b7280;
+    font-size: 14px;
 }

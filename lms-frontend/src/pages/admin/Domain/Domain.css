@@ -1,8 +1,26 @@
 /* Domain Management Styles */
 .domain-management {
-    padding: 20px;
+    padding: 24px;
     background: #f8f9fa;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+}
+
+/* Header Controls (injected into AdminLayout fixed header) */
+.domainHeaderControls {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.domainHeaderControls .btn {
+    font-size: 14px;
+    padding: 8px 16px;
 }
 
 /* Success Toast Message */

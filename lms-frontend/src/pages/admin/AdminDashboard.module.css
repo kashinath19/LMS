@@ -1,239 +1,248 @@
-/* AdminDashboard.module.css - Scoped styles for Admin Dashboard */
+/* AdminDashboard.module.css */
 
-/* Buttons - scoped with module */
-.btn {
-    padding: 12px 24px;
-    border-radius: 8px;
-    border: none;
-    font-weight: 600;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    transition: all 0.3s;
-    white-space: nowrap;
-    font-family: inherit;
-    font-size: 14px;
-}
-
-.btnPrimary {
-    composes: btn;
-    background-color: #2563eb;
-    color: white;
-}
-
-.btnPrimary:hover:not(:disabled) {
-    background-color: #3b82f6;
-}
-
-.btnSuccess {
-    composes: btn;
-    background-color: #10b981;
-    color: white;
-}
-
-.btnSecondary {
-    composes: btn;
-    background-color: #f8fafc;
-    color: #1e293b;
-    border: 1px solid #e2e8f0;
-}
-
-.btnWarning {
-    composes: btn;
-    background-color: #f59e0b;
-    color: white;
-}
-
-.btn:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-}
-
-/* Dashboard Cards */
-.dashboardCards {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 24px;
-    margin-bottom: 40px;
-}
-
-.card {
-    background-color: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    transition: transform 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
-}
-
-.cardClickable {
-    composes: card;
-    cursor: pointer;
-}
-
-.cardHeader {
+.container {
+    /* Remove padding to fill screen completely - padding moves to inner content if needed */
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    /* Key fix: Grow to fill parent vertical space */
+    flex: 1;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 16px;
+    flex-direction: column;
+    box-sizing: border-box;
+    background: #f8f9fa;
 }
 
-.cardTitle {
-    font-size: 18px;
-    font-weight: 600;
-    color: #0f172a;
-    margin: 0;
-}
-
-.cardIcon {
-    width: 48px;
-    height: 48px;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 24px;
-    flex-shrink: 0;
-}
-
-.trainerIcon {
-    composes: cardIcon;
-    background-color: rgba(37, 99, 235, 0.1);
-    color: #2563eb;
-}
-
-.studentIcon {
-    composes: cardIcon;
-    background-color: rgba(16, 185, 129, 0.1);
-    color: #10b981;
-}
-
-.usersIcon {
-    composes: cardIcon;
-    background-color: #e8daff;
-    color: #6f42c1;
-}
-
-.domainsIcon {
-    composes: cardIcon;
-    background-color: #dbeafe;
-    color: #1e40af;
-}
-
-.cardValue {
-    font-size: 24px;
-    font-weight: 700;
-    margin-bottom: 8px;
-    color: #0f172a;
-}
-
-.cardChange {
-    font-size: 14px;
-    color: #64748b;
-}
-
-/* Success Message */
-.successMessage {
-    background-color: rgba(16, 185, 129, 0.1);
-    border: 1px solid rgba(16, 185, 129, 0.3);
-    color: #10b981;
-    padding: 16px 20px;
-    border-radius: 8px;
-    margin-bottom: 24px;
+/* Header Button Group (Injected into Portal) */
+.headerBtnGroup {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-/* Info Section */
-.infoSection {
-    background-color: white;
-    border-radius: 12px;
-    padding: 24px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-    margin-top: 30px;
-}
-
-.infoSection h2 {
-    font-size: 22px;
+.btnPrimary {
+    background-color: #2563eb;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
     font-weight: 600;
-    margin-bottom: 16px;
-    color: #0f172a;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    white-space: nowrap;
 }
 
-.infoSection p {
-    font-size: 16px;
-    color: #64748b;
-    margin-bottom: 16px;
+.btnPrimary:hover:not(:disabled) {
+    background-color: #1d4ed8;
 }
 
-.infoSection ul {
-    margin-left: 20px;
-    color: #64748b;
+/* ADDED: Success button for Student */
+.btnSuccess {
+    background-color: #10b981;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    white-space: nowrap;
 }
 
-.infoSection li {
-    margin-bottom: 8px;
+.btnSuccess:hover:not(:disabled) {
+    background-color: #0da271;
 }
 
-/* Modal styles */
-.modal {
+/* ADDED: Warning button for Admin */
+.btnWarning {
+    background-color: #f59e0b;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+    white-space: nowrap;
+}
+
+.btnWarning:hover:not(:disabled) {
+    background-color: #d97706;
+}
+
+.btnSecondary {
+    background-color: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* Empty State - Full Fill (No boxed appearance) */
+.emptyDashboard {
     display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    /* Flex grow to fill entire available space */
+    flex: 1;
+    width: 100%;
+    min-height: 100%;
+    /* Seamless background matching the container */
+    background: #f8f9fa;
+    /* NO border-radius, box-shadow, or border - fills full screen */
+    border-radius: 0;
+    padding: 40px;
+    box-shadow: none;
+    border: none;
+    box-sizing: border-box;
+    margin: 0;
+}
+
+.emptyIcon {
+    width: 64px;
+    height: 64px;
+    background: #eff6ff;
+    color: #2563eb;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    margin-bottom: 16px;
+}
+
+.emptyDashboard h2 {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0 0 8px 0;
+}
+
+.emptyDashboard p {
+    color: #6b7280;
+    margin: 0;
+}
+
+.emptyText {
+    margin-top: 8px !important;
+    font-size: 0.9rem;
+}
+
+/* Success Message */
+.successMessage {
+    position: fixed;
+    top: 80px;
+    right: 24px;
+    background: #10b981;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Modals */
+.modal {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
     z-index: 1000;
+    display: flex;
     justify-content: center;
     align-items: center;
+    backdrop-filter: blur(4px);
 }
 
 .modalContent {
-    background-color: white;
+    background: white;
+    padding: 0;
     border-radius: 12px;
-    width: 90%;
-    max-width: 500px;
+    width: 450px;
+    max-width: 90%;
     max-height: 90vh;
     overflow-y: auto;
     box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
 }
 
 .modalHeader {
-    padding: 24px;
-    border-bottom: 1px solid #e2e8f0;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .modalTitle {
-    font-size: 20px;
-    font-weight: 600;
     margin: 0;
+    font-size: 1.25rem;
+    color: #1f2937;
 }
 
 .closeModal {
     background: none;
     border: none;
     font-size: 24px;
+    color: #6b7280;
     cursor: pointer;
-    color: #64748b;
     padding: 0;
     width: 32px;
     height: 32px;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 4px;
+}
+
+.closeModal:hover {
+    background: #f3f4f6;
 }
 
 .modalBody {
     padding: 24px;
+}
+
+.modalFooter {
+    padding: 20px 24px;
+    border-top: 1px solid #e5e7eb;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    background: #f9fafb;
+    border-radius: 0 0 12px 12px;
 }
 
 .formGroup {
@@ -243,85 +252,29 @@
 .formLabel {
     display: block;
     margin-bottom: 8px;
-    font-weight: 600;
-    color: #0f172a;
+    font-weight: 500;
+    color: #374151;
+    font-size: 14px;
 }
 
 .formInput {
     width: 100%;
-    padding: 12px 16px;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 16px;
-    transition: border-color 0.3s;
-    font-family: inherit;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
     box-sizing: border-box;
+    font-size: 14px;
+    transition: border 0.2s;
 }
 
 .formInput:focus {
     outline: none;
     border-color: #2563eb;
-}
-
-.formInput:disabled {
-    background-color: #f8fafc;
-    cursor: not-allowed;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .formError {
-    color: #dc2626;
-    font-size: 14px;
-    margin-top: 6px;
-}
-
-.modalFooter {
-    padding: 20px 24px;
-    border-top: 1px solid #e2e8f0;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-}
-
-/* Empty Dashboard State */
-.emptyDashboard {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 400px;
-    text-align: center;
-    background: white;
-    border-radius: 12px;
-    padding: 40px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-}
-
-.emptyDashboard h2 {
-    font-size: 28px;
-    font-weight: 700;
-    color: #0f172a;
-    margin: 16px 0 8px;
-}
-
-.emptyDashboard p {
-    font-size: 16px;
-    color: #64748b;
-    margin: 4px 0;
-}
-
-.emptyIcon {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #2563eb 0%, #3b82f6 100%);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 32px;
-    color: white;
-}
-
-.emptyText {
-    max-width: 400px;
-    line-height: 1.6;
+    color: #ef4444;
+    font-size: 12px;
+    margin-top: 4px;
 }

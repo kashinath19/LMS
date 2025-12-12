@@ -1,0 +1,112 @@
+/* AdminLayout.module.css */
+
+.mainArea {
+    margin-left: 240px;
+    /* Sidebar width */
+    width: calc(100% - 240px);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    /* Full viewport height */
+    min-height: 100vh;
+    overflow: hidden;
+    /* Prevent double scrollbars */
+}
+
+.fixedHeader {
+    position: fixed;
+    top: 0;
+    left: 240px;
+    right: 0;
+    z-index: 60;
+    height: 64px;
+    /* Matches Student/Trainer Layout */
+    width: calc(100% - 240px);
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    padding: 0 24px;
+    box-sizing: border-box;
+    justify-content: space-between;
+    flex-shrink: 0;
+}
+
+/* Portal for Buttons/Filters on the right side */
+.headerControlsPortal {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    /* Pushes content to the right */
+    height: 100%;
+    padding-left: 24px;
+    gap: 16px;
+    margin-left: auto;
+    /* Ensures it stays on the right */
+    min-width: 0;
+    /* Allow shrinking if needed */
+}
+
+.contentScroll {
+    margin-top: 64px;
+    /* Space for fixed header */
+    height: calc(100vh - 64px);
+    min-height: calc(100vh - 64px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    background: #f8f9fa;
+    padding: 0;
+    box-sizing: border-box;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+/* Force full width/height for inner pages - Outlet container */
+.pageInnerFull {
+    width: 100%;
+    min-height: 100%;
+    max-width: 100%;
+    /* No max-width restrictions */
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    flex: 1;
+    /* Fill remaining vertical space */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .mainArea {
+        margin-left: 0;
+        width: 100%;
+    }
+
+    .fixedHeader {
+        left: 0;
+        height: auto;
+        min-height: 56px;
+        flex-direction: column;
+        padding: 12px;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .headerControlsPortal {
+        width: 100%;
+        padding-left: 0;
+        justify-content: flex-start;
+        overflow-x: auto;
+    }
+
+    .contentScroll {
+        margin-top: 100px;
+        /* Adjust for taller mobile header */
+        height: calc(100vh - 100px);
+    }
+}

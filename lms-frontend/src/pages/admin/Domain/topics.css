@@ -3,8 +3,13 @@
 
 .topics-wrapper {
     padding: 24px;
-    background: #f3f4f6;
-    min-height: 100vh;
+    background: #f8f9fa;
+    width: 100%;
+    min-height: 100%;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
     font-family: 'Inter', sans-serif;
 }
 
@@ -14,11 +19,14 @@
     border: none;
     box-shadow: none;
     padding: 0;
-    max-width: 1200px;
-    margin: 0 auto;
+    width: 100%;
+    max-width: 100%;
+    /* Remove max-width restriction to fill available space */
+    margin: 0;
     display: flex;
     flex-direction: column;
     gap: 24px;
+    flex: 1;
 }
 
 /* =========================================
@@ -117,14 +125,14 @@
 
 .course-meta-value.status-active {
     color: #ffffff;
-    text-shadow: 0 0 10px rgba(255,255,255,0.3);
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
 }
 
 /* =========================================
    2. CONTENT CARDS
    ========================================= */
 
-.course-description, 
+.course-description,
 .modules-section {
     background: #ffffff;
     border-radius: 16px;
@@ -452,12 +460,20 @@
 }
 
 .modal.form-modal {
-    max-width: 600px; /* Wider for forms */
+    max-width: 600px;
+    /* Wider for forms */
 }
 
 @keyframes modalSlideIn {
-    from { opacity: 0; transform: translateY(-20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .modal-header {
@@ -627,25 +643,72 @@
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* RESPONSIVE */
 @media (max-width: 768px) {
-    .topics-wrapper { padding: 16px; }
-    .course-meta-grid { grid-template-columns: repeat(2, 1fr); }
-    .course-header { padding: 24px; }
-    .course-header .d-flex { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .header-right { width: 100%; }
-    .header-right .btn { width: 100%; text-align: center; }
-    .module-header { flex-direction: column; align-items: flex-start; gap: 16px; }
-    .module-toggle { align-self: flex-start; }
-    .delete-modal-overlay, .form-modal-overlay { padding: 16px; }
+    .topics-wrapper {
+        padding: 16px;
+    }
+
+    .course-meta-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .course-header {
+        padding: 24px;
+    }
+
+    .course-header .d-flex {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .header-right {
+        width: 100%;
+    }
+
+    .header-right .btn {
+        width: 100%;
+        text-align: center;
+    }
+
+    .module-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .module-toggle {
+        align-self: flex-start;
+    }
+
+    .delete-modal-overlay,
+    .form-modal-overlay {
+        padding: 16px;
+    }
 }
 
 @media (max-width: 480px) {
-    .course-meta-grid { grid-template-columns: 1fr; }
-    .modal-actions { flex-direction: column; }
-    .modal-actions .btn { width: 100%; }
+    .course-meta-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .modal-actions {
+        flex-direction: column;
+    }
+
+    .modal-actions .btn {
+        width: 100%;
+    }
 }
