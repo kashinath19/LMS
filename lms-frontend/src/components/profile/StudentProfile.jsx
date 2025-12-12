@@ -7,14 +7,6 @@ import { API_BASE_URL } from '../../utils/constants';
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
-/**
- * StudentProfile - Student profile management component
- * Uses the following API endpoints:
- * - GET /api/v1/profiles/student - Get student profile
- * - POST /api/v1/profiles/student - Create student profile
- * - PATCH /api/v1/profiles/student - Update student profile
- * - POST /api/v1/profiles/upload-image - Upload profile image
- */
 const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfileExists }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -68,7 +60,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     fetchProfile();
   }, []);
 
-  // GET /api/v1/profiles/student - Fetch student profile
   const fetchProfile = async () => {
     try {
       setLoading(true);
@@ -106,7 +97,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
       showMessage?.('success', 'Student profile loaded successfully');
     } catch (error) {
       if (error.response?.status === 404) {
-        // Profile doesn't exist - show create form
         setProfileExists(false);
         setIsCreatingNew(true);
         setIsEditing(true);
@@ -128,8 +118,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  // POST /api/v1/profiles/student - Create profile
-  // PATCH /api/v1/profiles/student - Update profile
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -189,11 +177,21 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         gender: updatedData.gender || ''
       });
 
-      if (onProfileCreated) {
-        onProfileCreated();
+      // ⭐ REDIRECT ON FIRST PROFILE CREATION: notify parent to handle redirect
+      if (!profileExists) {
+        displayToast('Profile created successfully');
+        showMessage?.('success', 'Student profile created!');
+        if (typeof onProfileCreated === 'function') {
+          onProfileCreated();
+        } else {
+          setTimeout(() => {
+            navigate('/student-dashboard', { replace: true });
+          }, 800);
+        }
+        return;
       }
 
-      displayToast(profileExists ? 'Profile updated successfully' : 'Profile created successfully');
+      displayToast('Profile updated successfully');
       showMessage?.('success', 'Student profile saved successfully!');
 
     } catch (error) {
@@ -224,9 +222,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     }
   };
 
-  const handleEdit = () => {
-    setIsEditing(true);
-  };
+  const handleEdit = () => setIsEditing(true);
 
   const handleCancelEdit = () => {
     if (profileData) {
@@ -260,7 +256,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
     e.target.value = '';
   };
 
-  // POST /api/v1/profiles/upload-image - Upload profile image
   const uploadImage = async (file) => {
     try {
       setUploading(true);
@@ -275,7 +270,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         }
       });
 
-      // The API returns the image URL as a string
       const imageUrl = typeof resp.data === 'string' ? resolveUrl(resp.data) : extractImageUrl(resp.data);
 
       if (!imageUrl) {
@@ -292,8 +286,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         }));
         displayToast('Profile photo uploaded');
         showMessage?.('success', 'Profile photo uploaded');
-
-        if (onProfileCreated) onProfileCreated();
       }
     } catch (error) {
       console.error('Error uploading image:', error);
@@ -340,7 +332,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
   return (
     <div className={styles.studentProfileWrapper}>
-      {/* Toast Notification */}
       <div className={styles.topNav}>
         {showToast && (
           <div className={styles.toast} role="status" aria-live="polite">
@@ -350,10 +341,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         )}
       </div>
 
-      {/* Main Profile Card */}
       <div className={styles.profileCard}>
-
-        {/* Left Column */}
         <div className={styles.leftColumn}>
           <div className={styles.avatarContainer}>
             {profileImageUrl ? (
@@ -382,7 +370,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             {formData.enrollment_number || 'NO ENROLLMENT'}
           </div>
 
-          {/* Upload Button in Edit Mode */}
           {(isEditing || isCreatingNew) && (
             <div style={{ marginTop: '16px', width: '100%' }}>
               <input
@@ -406,14 +393,10 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           )}
         </div>
 
-        {/* Right Column */}
         <div className={styles.rightColumn}>
-
-          {/* Display Mode */}
           {!isEditing && profileExists && (
             <>
               <div className={styles.headerRow}>
-                <h1>Profile Details</h1>
                 <button className={styles.btnEdit} onClick={handleEdit} type="button">
                   <i className="fa-solid fa-pen"></i> Edit Profile
                 </button>
@@ -465,12 +448,9 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
             </>
           )}
 
-          {/* Edit Form Mode */}
           {(isEditing || isCreatingNew) && (
             <form onSubmit={handleSubmit} className={styles.editForm}>
-              <div className={styles.headerRow}>
-                <h1>{profileExists ? 'Edit Profile' : 'Create Profile'}</h1>
-              </div>
+              <div className={styles.headerRow} />
 
               <h3 className={styles.sectionTitle}>Personal Information</h3>
               <div className={styles.divider} />

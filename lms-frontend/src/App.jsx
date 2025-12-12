@@ -4,9 +4,9 @@ import { AuthProvider } from './context/AuthContext';
 import PrivateRoute from './components/common/PrivateRoute';
 
 // Role-based Layouts
-import AdminLayout from './components/layout/AdminLayout';
-import StudentLayout from './components/layout/StudentLayout';
-import TrainerLayout from './components/layout/TrainerLayout';
+import AdminLayout from './components/layout/AdminPanel/AdminLayout';
+import StudentLayout from './components/layout/StudentPanel/StudentLayout';
+import TrainerLayout from './components/layout/TrainerPanel/TrainerLayout';
 
 // Pages
 import LoginPage from './pages/LoginPage';

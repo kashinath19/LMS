@@ -1,11 +1,13 @@
 ﻿import React from 'react';
 import { useAuth } from '../../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import StudentProfile from './StudentProfile';
 import TrainerProfile from './TrainerProfile';
 import './Profile.css';
 
 const Profile = () => {
   const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
   const [message, setMessage] = React.useState({ type: '', text: '' });
   const [profileExists, setProfileExists] = React.useState(false);
 
@@ -18,6 +20,17 @@ const Profile = () => {
 
   const handleProfileCreated = () => {
     setProfileExists(true);
+
+    // Navigate to appropriate dashboard after profile creation.
+    const role = user?.role || localStorage.getItem('user_role') || '';
+    if (role === 'admin') {
+      navigate('/admin-dashboard', { replace: true });
+    } else if (role === 'trainer') {
+      navigate('/trainer-dashboard', { replace: true });
+    } else {
+      // default to student dashboard for student or unknown roles
+      navigate('/student-dashboard', { replace: true });
+    }
   };
 
   // Wait until auth initialization completes before deciding which profile component to render

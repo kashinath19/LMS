@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import api from '../../../services/api';
 import './Domain.css';
 
@@ -31,12 +31,18 @@ const Domain = () => {
     const [successMessage, setSuccessMessage] = useState('');
 
     const navigate = useNavigate();
+    const { setPageTitle } = useOutletContext();
 
     // Show success message with auto-dismiss
     const showSuccessMessage = (message) => {
         setSuccessMessage(message);
         setTimeout(() => setSuccessMessage(''), 4000);
     };
+
+    useEffect(() => {
+        setPageTitle('Domains Management');
+        return () => setPageTitle('');
+    }, [setPageTitle]);
 
     useEffect(() => {
         fetchDomains();

@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useCallback } from 'react';
 import { Box } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { useOutletContext } from 'react-router-dom';
 import styles from './TrainerDashboard.module.css';
 import { API_BASE_URL } from '../../utils/constants';
 
@@ -12,6 +13,7 @@ import { API_BASE_URL } from '../../utils/constants';
 const TrainerDashboard = () => {
   const [profileData, setProfileData] = useState(null);
   const { user } = useAuth();
+  const { setPageTitle } = useOutletContext();
 
   // Fetch Trainer Profile Data for display name
   const fetchProfile = useCallback(async () => {
@@ -40,6 +42,11 @@ const TrainerDashboard = () => {
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
+
+  useEffect(() => {
+    setPageTitle(`Welcome, ${user?.name || user?.username || 'Trainer'}!`);
+    return () => setPageTitle('');
+  }, [setPageTitle, user]);
 
   // Helper for name display
   const getDisplayName = () => {

@@ -1,0 +1,228 @@
+/* TrainerSidebar.module.css - Trainer sidebar with same UI as AdminSidebar */
+
+/* Sidebar wrapper */
+.sidebar {
+  width: 240px;
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  box-sizing: border-box;
+  position: sticky;
+  top: 0;
+  left: 0;
+  z-index: 20;
+  transition: transform 0.28s ease-in-out, box-shadow 0.2s ease;
+  flex-shrink: 0;
+}
+
+/* Mobile: convert sidebar to drawer */
+.sidebarOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.4);
+  z-index: 18;
+}
+
+.open {
+  transform: translateX(0);
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    position: fixed;
+    transform: translateX(-100%);
+    height: 100vh;
+    width: 16rem;
+    left: 0;
+    top: 0;
+    z-index: 20;
+  }
+
+  .open {
+    transform: translateX(0);
+  }
+}
+
+/* Top area (logo + nav) */
+.top {
+  padding: 16px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  font-size: 18px;
+  color: #2563eb;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.logoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.logoText {
+  color: #2563eb;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+/* Navigation */
+.nav {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 4px;
+}
+
+.navItem {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: none;
+  background: #ffffff;
+  color: #1f2937;
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 4px 10px rgba(15, 23, 42, 0.04);
+  transition: all 0.14s ease;
+  font-weight: 600;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.navItem:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(15, 23, 42, 0.08);
+  color: #2563eb;
+}
+
+.navItem:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.active {
+  background: linear-gradient(90deg, rgba(37, 99, 235, 0.06), #fff);
+  color: #2563eb;
+  border-left: 6px solid #2563eb;
+}
+
+.navIcon {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.navLabel {
+  flex: 1;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+/* Footer area */
+.footer {
+  margin-top: auto;
+  padding: 14px 12px;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.userBlock {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #2563eb;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.userMeta {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.userName {
+  font-weight: 600;
+  color: #111827;
+  font-size: 14px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.userEmail {
+  font-size: 12px;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Logout button */
+.logout {
+  width: 100%;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  color: #dc2626;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.logout:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+.logoutIcon {
+  font-size: 14px;
+}

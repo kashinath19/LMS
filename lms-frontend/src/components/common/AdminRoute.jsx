@@ -19,11 +19,11 @@ const AdminRoute = () => {
   }
 
   if (role === 'trainer') {
-    return <Navigate to="/trainer-dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
   
   if (role === 'student') {
-    return <Navigate to="/student-dashboard" replace />;
+    return <Navigate to="/login" replace />;
   }
 
   return <Navigate to="/login" replace />;

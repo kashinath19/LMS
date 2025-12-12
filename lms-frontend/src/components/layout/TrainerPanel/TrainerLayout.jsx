@@ -1,25 +1,26 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import StudentSidebar from './StudentSidebar';
-import Header from './Header';
-import styles from './Layout.module.css';
-import { API_BASE_URL } from '../../utils/constants';
+import { useAuth } from '../../../context/AuthContext';
+import TrainerSidebar from './TrainerSidebar';
+import Header from '../Header';
+import styles from '../Layout.module.css';
+import { API_BASE_URL } from '../../../utils/constants';
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 /**
- * StudentLayout - Layout wrapper for student pages
- * Includes StudentSidebar + Header + content area with <Outlet/>
+ * TrainerLayout - Layout wrapper for trainer pages
+ * Includes TrainerSidebar + Header + content area with <Outlet/>
  */
-const StudentLayout = () => {
+const TrainerLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    const [studentProfile, setStudentProfile] = useState(null);
+    const [trainerProfile, setTrainerProfile] = useState(null);
     
     // CHANGED: State for logout modal
     const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [pageTitle, setPageTitle] = useState('');
 
     const resolveUrl = (url) => {
         if (!url) return null;
@@ -29,11 +30,11 @@ const StudentLayout = () => {
         return `${API_ORIGIN}/${url}`;
     };
 
-    // Fetch student profile for header avatar
-    const fetchStudentProfile = useCallback(async () => {
+    // Fetch trainer profile for header avatar
+    const fetchTrainerProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${API_BASE_URL}/profiles/student`, {
+            const response = await fetch(`${API_BASE_URL}/profiles/trainer`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -48,31 +49,31 @@ const StudentLayout = () => {
                 const fullName = `${firstName} ${lastName}`.trim();
                 const email = data?.email || user?.email || localStorage.getItem('user_email') || '';
 
-                // Extract profile image URL - try multiple possible fields
+                // Extract profile image URL
                 let imageUrl = data?.profile_image_url || data?.profile_image || data?.image_url || null;
                 if (imageUrl) {
                     imageUrl = resolveUrl(imageUrl);
                 }
 
-                setStudentProfile({
-                    name: fullName || email.split('@')[0] || 'Student',
+                setTrainerProfile({
+                    name: fullName || email.split('@')[0] || 'Trainer',
                     email: email,
                     avatarUrl: imageUrl
                 });
             }
         } catch (error) {
-            console.log('StudentLayout: Could not fetch student profile', error);
+            console.log('TrainerLayout: Could not fetch trainer profile', error);
         }
     }, [user?.email]);
 
     useEffect(() => {
-        fetchStudentProfile();
-    }, [fetchStudentProfile]);
+        fetchTrainerProfile();
+    }, [fetchTrainerProfile]);
 
     // Build navigation items
     const navItems = [
-        { label: 'Dashboard', icon: <i className="fas fa-home" />, to: '/student/dashboard' },
-        { label: 'My Courses', icon: <i className="fas fa-book" />, to: '/student/courses' },
+        { label: 'Dashboard', icon: <i className="fas fa-home" />, to: '/trainer/dashboard' },
+        { label: 'My Courses', icon: <i className="fas fa-book" />, to: '/trainer/courses' },
     ].map(item => ({
         label: item.label,
         icon: item.icon,
@@ -80,21 +81,21 @@ const StudentLayout = () => {
         onClick: () => navigate(item.to)
     }));
 
-    const logo = { icon: <i className="fas fa-graduation-cap" />, text: 'Student Portal' };
+    const logo = { icon: <i className="fas fa-chalkboard-teacher" />, text: 'Trainer Portal' };
 
     // Get display info for the footer user
     const getUserInfo = () => {
-        if (studentProfile) {
+        if (trainerProfile) {
             return {
-                name: studentProfile.name,
-                email: studentProfile.email,
-                initials: studentProfile.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'ST'
+                name: trainerProfile.name,
+                email: trainerProfile.email,
+                initials: trainerProfile.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'TR'
             };
         }
-        if (!user) return { name: 'Student', email: '', initials: 'ST' };
-        const name = user.username || user.name || (user.email ? user.email.split('@')[0] : null) || 'Student';
+        if (!user) return { name: 'Trainer', email: '', initials: 'TR' };
+        const name = user.username || user.name || (user.email ? user.email.split('@')[0] : null) || 'Trainer';
         const email = user.email || '';
-        const initials = (name || email.split('@')[0] || 'S').toString().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
+        const initials = (name || email.split('@')[0] || 'T').toString().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
         return { name, email, initials };
     };
 
@@ -104,17 +105,17 @@ const StudentLayout = () => {
         name,
         email,
         initials,
-        avatarUrl: studentProfile?.avatarUrl || null,
-        role: 'student'
+        avatarUrl: trainerProfile?.avatarUrl || null,
+        role: 'trainer'
     };
 
     // Header profile prop for avatar-click navigation
     const headerProfile = {
-        name: studentProfile?.name || name,
-        email: studentProfile?.email || email,
-        avatarUrl: studentProfile?.avatarUrl || null,
-        role: 'Student',
-        onClick: () => navigate('/student/profile')
+        name: trainerProfile?.name || name,
+        email: trainerProfile?.email || email,
+        avatarUrl: trainerProfile?.avatarUrl || null,
+        role: 'Trainer',
+        onClick: () => navigate('/trainer/profile')
     };
 
     // CHANGED: Trigger modal instead of window.confirm
@@ -131,7 +132,7 @@ const StudentLayout = () => {
 
     return (
         <div className={styles.pageShell}>
-            <StudentSidebar
+            <TrainerSidebar
                 logo={logo}
                 navItems={navItems}
                 footerUser={footerUser}
@@ -139,12 +140,12 @@ const StudentLayout = () => {
             />
             <div className={styles.mainColumn}>
                 <Header
-                    title=""
+                    title={pageTitle}
                     profile={headerProfile}
                 />
                 <main className={styles.contentArea}>
                     <div className={styles.pageInner}>
-                        <Outlet />
+                        <Outlet context={{ setPageTitle }} />
                     </div>
                 </main>
             </div>
@@ -199,4 +200,4 @@ const StudentLayout = () => {
     );
 };
 
-export default StudentLayout;
+export default TrainerLayout;

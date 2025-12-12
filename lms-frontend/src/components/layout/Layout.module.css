@@ -1,3 +1,5 @@
+/* Layout.module.css */
+
 .pageShell {
   display: flex;
   min-height: 100vh;
@@ -22,10 +24,13 @@
   background: #f5f7fa;
 }
 
+/* UPDATED: Removed centering and fixed width restrictions */
 .pageInner {
   width: 100%;
-  max-width: 1400px;
-  margin: 0 auto;
+  height: 100%;
+  max-width: none;  /* Forces full width */
+  margin: 0;        /* Aligns to left */
+  padding: 0;       /* Let individual pages handle padding */
   box-sizing: border-box;
 }
 

@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../services/api';
 import styles from './AdminDashboard.module.css';
@@ -11,6 +11,7 @@ import styles from './AdminDashboard.module.css';
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { setPageTitle } = useOutletContext();
   const [trainerModalOpen, setTrainerModalOpen] = useState(false);
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -46,8 +47,9 @@ const AdminDashboard = () => {
   });
 
   useEffect(() => {
-    document.title = 'Admin Dashboard';
-  }, []);
+    setPageTitle('Administrator Dashboard');
+    return () => setPageTitle('');
+  }, [setPageTitle]);
 
   // Listen for modal trigger events from header buttons
   useEffect(() => {

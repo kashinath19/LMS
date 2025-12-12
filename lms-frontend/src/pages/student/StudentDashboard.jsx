@@ -3,15 +3,12 @@ import { Box } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import styles from './StudentDashboard.module.css';
 import { API_BASE_URL } from '../../utils/constants';
+import { useOutletContext } from 'react-router-dom';
 
-/**
- * StudentDashboard - Main dashboard page for students
- * Layout is provided by StudentLayout via routing - this component renders content only
- * Profile navigation is handled by the header avatar, not dashboard content
- */
 const StudentDashboard = () => {
   const [profileData, setProfileData] = useState(null);
   const { user } = useAuth();
+  const { setPageTitle } = useOutletContext();
 
   // Fetch Student Profile Data for display name
   const fetchProfile = useCallback(async () => {
@@ -41,6 +38,11 @@ const StudentDashboard = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  useEffect(() => {
+    setPageTitle(`Welcome, ${getDisplayName()}!`);
+    return () => setPageTitle('');
+  }, [setPageTitle, profileData]);
+
   // Helper for name display
   const getDisplayName = () => {
     if (profileData && profileData.first_name) {
@@ -51,9 +53,6 @@ const StudentDashboard = () => {
 
   return (
     <div className={styles.studentDashboardContent}>
-      <div className={styles.dashboardHeader}>
-        <h1>Welcome, {getDisplayName()}!</h1>
-      </div>
       <div className={styles.emptyState}>
         <Box size={48} className={styles.emptyIcon} />
         <span className={styles.emptyText}>Your dashboard is empty</span>

@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
+import { useAuth } from '../../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
-import Header from './Header';
-import styles from './Layout.module.css';
+import Header from '../Header';
+import styles from '../Layout.module.css';
 
 /**
  * AdminLayout - Layout wrapper for admin pages
@@ -16,6 +16,7 @@ const AdminLayout = () => {
   
   // CHANGED: State for controlling the logout modal
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [pageTitle, setPageTitle] = useState('');
 
   // Build navigation items with active state based on current path
   const navItems = [
@@ -98,10 +99,10 @@ const AdminLayout = () => {
         onLogout={handleLogout}
       />
       <div className={styles.mainColumn}>
-        <Header title="" actions={headerActions} />
+        <Header title={pageTitle} actions={headerActions} />
         <main className={styles.contentArea}>
           <div className={styles.pageInner}>
-            <Outlet />
+            <Outlet context={{ setPageTitle }} />
           </div>
         </main>
       </div>

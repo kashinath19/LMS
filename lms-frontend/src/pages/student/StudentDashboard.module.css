@@ -6,7 +6,8 @@
     min-height: 100%;
     display: flex;
     flex-direction: column;
-    padding: 0;
+    padding: 24px; /* Added padding here for spacing from edges */
+    box-sizing: border-box;
 }
 
 .dashboardHeader {
@@ -25,7 +26,7 @@
     margin: 0;
 }
 
-/* Empty state */
+/* Empty state - UPDATED */
 .emptyState {
     width: 100%;
     flex: 1;
@@ -40,6 +41,7 @@
     justify-content: center;
     color: #6b7280;
     text-align: center;
+    box-sizing: border-box;
 }
 
 .emptyIcon {

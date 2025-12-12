@@ -1,4 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import {
   getUsers,
   updateUser,
@@ -15,6 +16,8 @@ import styles from './UserManagement.module.css';
  * Layout is provided by AdminLayout via routing - this component renders content only
  */
 const UserManagement = () => {
+  const { setPageTitle } = useOutletContext();
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
 
@@ -342,6 +345,11 @@ const UserManagement = () => {
       default: return styles.badge;
     }
   };
+
+  useEffect(() => {
+    setPageTitle('User Management');
+    return () => setPageTitle('');
+  }, [setPageTitle]);
 
   return (
     <div className={styles.container}>

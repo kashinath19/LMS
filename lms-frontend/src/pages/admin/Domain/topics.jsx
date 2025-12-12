@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, useOutletContext } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import axios from 'axios';
 import Layout from '../../../components/layout/Layout';
@@ -10,6 +10,7 @@ const Topics = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const { user, logout } = useAuth();
+    const { setPageTitle } = useOutletContext();
 
     // Get domain data from location state or fetch it
     const domainFromState = location.state?.domain;
@@ -370,6 +371,11 @@ const Topics = () => {
         name: user?.email?.split('@')[0] || 'Admin',
         email: user?.email || '',
     };
+
+    useEffect(() => {
+        setPageTitle('Topics Management');
+        return () => setPageTitle('');
+    }, [setPageTitle]);
 
     if (loading) return (
         <Layout title="Domain Details" navItems={navItems} logo={logo} footerUser={footerUser} onLogout={logout} backButton={{ label: 'Back to Domains', onClick: handleBack }}>

@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import styles from './StudentSidebar.module.css';
-import { API_BASE_URL } from '../../utils/constants';
+import styles from './TrainerSidebar.module.css';
+import { API_BASE_URL } from '../../../utils/constants';
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 /**
- * StudentSidebar component - Student-specific navigation sidebar
+ * TrainerSidebar component - Trainer navigation sidebar with AdminSidebar UI
  * Props:
  *  - logo: { icon, text }
  *  - navItems: [{ label, icon, active, onClick, disabled }]
@@ -14,8 +14,8 @@ const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
  *  - open: bool (optional) - controls mobile drawer open state
  *  - onClose: fn (optional) - called when the overlay is clicked
  */
-const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogout, open = false, onClose }) => {
-    const [studentProfile, setStudentProfile] = useState(null);
+const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogout, open = false, onClose }) => {
+    const [trainerProfile, setTrainerProfile] = useState(null);
 
     const resolveUrl = (url) => {
         if (!url) return null;
@@ -25,10 +25,10 @@ const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
         return `${API_ORIGIN}/${url}`;
     };
 
-    const fetchStudentProfile = useCallback(async () => {
+    const fetchTrainerProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('access_token');
-            const response = await fetch(`${API_BASE_URL}/profiles/student`, {
+            const response = await fetch(`${API_BASE_URL}/profiles/trainer`, {
                 method: 'GET',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -43,35 +43,35 @@ const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
                 const fullName = `${firstName} ${lastName}`.trim();
                 const email = data?.email || localStorage.getItem('user_email') || '';
 
-                setStudentProfile({
-                    name: fullName || email.split('@')[0] || 'Student',
+                setTrainerProfile({
+                    name: fullName || email.split('@')[0] || 'Trainer',
                     email: email,
                     avatarUrl: data?.profile_image_url ? resolveUrl(data.profile_image_url) : null
                 });
             }
         } catch (error) {
-            console.log('StudentSidebar: Could not fetch student profile', error);
+            console.log('TrainerSidebar: Could not fetch trainer profile', error);
         }
     }, []);
 
     useEffect(() => {
-        fetchStudentProfile();
-    }, [fetchStudentProfile]);
+        fetchTrainerProfile();
+    }, [fetchTrainerProfile]);
 
-    // Merge fetched student profile with prop data
+    // Merge fetched trainer profile with prop data
     const footerUser = (() => {
         const nameFromStorage = localStorage.getItem('user_name');
         const emailFromStorage = localStorage.getItem('user_email');
 
-        const name = studentProfile?.name || footerUserProp?.name || nameFromStorage || (emailFromStorage ? emailFromStorage.split('@')[0] : null) || 'Student';
-        const email = studentProfile?.email || footerUserProp?.email || emailFromStorage || null;
+        const name = trainerProfile?.name || footerUserProp?.name || nameFromStorage || (emailFromStorage ? emailFromStorage.split('@')[0] : null) || 'Trainer';
+        const email = trainerProfile?.email || footerUserProp?.email || emailFromStorage || null;
 
         return {
-            role: 'student',
+            role: 'trainer',
             name,
             email,
-            avatarUrl: studentProfile?.avatarUrl || footerUserProp?.avatarUrl || null,
-            initials: footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'ST')
+            avatarUrl: trainerProfile?.avatarUrl || footerUserProp?.avatarUrl || null,
+            initials: footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'TR')
         };
     })();
 
@@ -96,7 +96,7 @@ const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
                         </div>
                     )}
 
-                    <nav className={styles.nav} aria-label="Student navigation">
+                    <nav className={styles.nav} aria-label="Trainer navigation">
                         {navItems.map((item, idx) => (
                             <button
                                 key={idx}
@@ -147,4 +147,4 @@ const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
     );
 };
 
-export default StudentSidebar;
+export default TrainerSidebar;

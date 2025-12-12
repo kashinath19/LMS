@@ -4,8 +4,7 @@ import {
   ChevronDown, 
   ChevronRight,
   FileText,
-  ExternalLink,
-  ListOrdered
+  ExternalLink
 } from 'lucide-react';
 import api from '../../services/api';
 import AuthContext from '../../context/AuthContext';
@@ -64,11 +63,6 @@ const TrainerCourses = () => {
                         trainerModules = modulesData.data;
                     }
                     
-                    // Sort modules by order_index if available
-                    if (trainerModules.length > 0 && trainerModules[0].order_index !== undefined) {
-                        trainerModules.sort((a, b) => a.order_index - b.order_index);
-                    }
-                    
                 } catch (modulesErr) {
                     console.error('Error fetching modules:', modulesErr);
                     trainerModules = [];
@@ -122,11 +116,6 @@ const TrainerCourses = () => {
                 topicsList = topicsData.data;
             }
             
-            // Sort topics by order_index if available
-            if (topicsList.length > 0 && topicsList[0].order_index !== undefined) {
-                topicsList.sort((a, b) => a.order_index - b.order_index);
-            }
-            
             setModuleTopics(prev => ({
                 ...prev,
                 [moduleId]: topicsList
@@ -158,22 +147,6 @@ const TrainerCourses = () => {
             ...prev,
             [moduleId]: !prev[moduleId]
         }));
-    };
-
-    const formatDate = (dateString) => {
-        if (!dateString) return 'N/A';
-        try {
-            const date = new Date(dateString);
-            return date.toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'short',
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        } catch (e) {
-            return 'Invalid Date';
-        }
     };
 
     // Loading state
@@ -270,28 +243,12 @@ const TrainerCourses = () => {
                                         <div className={styles.moduleInfo}>
                                             <h4 className={styles.moduleTitle}>
                                                 {module.title || 'Untitled Module'}
-                                                {module.order_index !== undefined && (
-                                                    <span className={styles.orderIndex}>
-                                                        <ListOrdered size={14} />
-                                                        {module.order_index + 1}
-                                                    </span>
-                                                )}
                                             </h4>
                                             {module.description && (
                                                 <p className={styles.moduleDescription}>
                                                     {module.description}
                                                 </p>
                                             )}
-                                            <div className={styles.moduleMeta}>
-                                                <span className={styles.moduleId}>
-                                                    ID: {module.id.substring(0, 8)}...
-                                                </span>
-                                                {module.updated_at && (
-                                                    <span className={styles.moduleDate}>
-                                                        Updated: {formatDate(module.updated_at)}
-                                                    </span>
-                                                )}
-                                            </div>
                                         </div>
                                     </div>
                                     <div className={styles.moduleHeaderRight}>
@@ -329,62 +286,51 @@ const TrainerCourses = () => {
                                             ) : Array.isArray(moduleTopics[module.id]) ? (
                                                 <div className={styles.topicsList}>
                                                     {moduleTopics[module.id].length > 0 ? (
-                                                        moduleTopics[module.id].map((topic) => (
-                                                            <div key={topic.id} className={styles.topicCard}>
-                                                                <div className={styles.topicHeader}>
-                                                                    <h5 className={styles.topicTitle}>
-                                                                        {topic.title || 'Untitled Topic'}
-                                                                        {topic.order_index !== undefined && (
-                                                                            <span className={styles.topicOrder}>
-                                                                                #{topic.order_index + 1}
-                                                                            </span>
-                                                                        )}
-                                                                    </h5>
-                                                                </div>
-                                                                
-                                                                <div className={styles.topicContent}>
-                                                                    {topic.content && (
-                                                                        <p className={styles.topicDescription}>
-                                                                            {topic.content.length > 200 
-                                                                                ? `${topic.content.substring(0, 200)}...`
-                                                                                : topic.content
-                                                                            }
-                                                                        </p>
-                                                                    )}
-                                                                    
-                                                                    <div className={styles.topicMeta}>
-                                                                        <span className={styles.topicId}>
-                                                                            Topic ID: {topic.id.substring(0, 8)}...
-                                                                        </span>
-                                                                        {topic.updated_at && (
-                                                                            <span className={styles.topicDate}>
-                                                                                Updated: {formatDate(topic.updated_at)}
-                                                                            </span>
-                                                                        )}
+                                                        moduleTopics[module.id].map((topic) => {
+                                                            // Clean the content to remove any "View Details" text
+                                                            let cleanedContent = topic.content;
+                                                            if (cleanedContent) {
+                                                                // Remove "View Details" text from content
+                                                                cleanedContent = cleanedContent.replace(/View Details/gi, '').trim();
+                                                                // Remove any trailing hyphens or separators
+                                                                cleanedContent = cleanedContent.replace(/[-—]+$/g, '').trim();
+                                                            }
+                                                            
+                                                            return (
+                                                                <div key={topic.id} className={styles.topicCard}>
+                                                                    <div className={styles.topicHeader}>
+                                                                        <h5 className={styles.topicTitle}>
+                                                                            {topic.title || 'Untitled Topic'}
+                                                                        </h5>
                                                                     </div>
                                                                     
-                                                                    {topic.resource_link && (
-                                                                        <div className={styles.resourceLink}>
-                                                                            <ExternalLink size={16} />
-                                                                            <a 
-                                                                                href={topic.resource_link} 
-                                                                                target="_blank" 
-                                                                                rel="noopener noreferrer"
-                                                                                className={styles.resourceAnchor}
-                                                                            >
-                                                                                View Resource
-                                                                            </a>
-                                                                        </div>
-                                                                    )}
+                                                                    <div className={styles.topicContent}>
+                                                                        {cleanedContent && (
+                                                                            <p className={styles.topicDescription}>
+                                                                                {cleanedContent.length > 200 
+                                                                                    ? `${cleanedContent.substring(0, 200)}...`
+                                                                                    : cleanedContent
+                                                                                }
+                                                                            </p>
+                                                                        )}
+                                                                        
+                                                                        {topic.resource_link && (
+                                                                            <div className={styles.resourceLink}>
+                                                                                <ExternalLink size={16} />
+                                                                                <a 
+                                                                                    href={topic.resource_link} 
+                                                                                    target="_blank" 
+                                                                                    rel="noopener noreferrer"
+                                                                                    className={styles.resourceAnchor}
+                                                                                >
+                                                                                    View Resource
+                                                                                </a>
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
                                                                 </div>
-                                                                
-                                                                <div className={styles.topicActions}>
-                                                                    <button className={styles.viewTopicButton}>
-                                                                        View Details
-                                                                    </button>
-                                                                </div>
-                                                            </div>
-                                                        ))
+                                                            );
+                                                        })
                                                     ) : (
                                                         <div className={styles.noTopics}>
                                                             <FileText size={32} className={styles.noTopicsIcon} />
@@ -430,23 +376,6 @@ const TrainerCourses = () => {
                     </div>
                 )}
             </div>
-
-            {/* Quick Actions - Only show if we have modules */}
-            {modules.length > 0 && (
-                <div className={styles.quickActions}>
-                    <h3>Quick Actions</h3>
-                    <div className={styles.actionButtons}>
-                        <button className={styles.actionButton}>
-                            <BookOpen size={20} />
-                            <span>View All Modules</span>
-                        </button>
-                        <button className={styles.actionButton}>
-                            <FileText size={20} />
-                            <span>Manage Topics</span>
-                        </button>
-                    </div>
-                </div>
-            )}
         </div>
     );
 };

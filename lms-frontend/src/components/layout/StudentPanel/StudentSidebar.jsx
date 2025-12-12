@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import styles from './AdminSidebar.module.css';
-import api from '../../services/api';
+import React, { useEffect, useState, useCallback } from 'react';
+import styles from './StudentSidebar.module.css';
+import { API_BASE_URL } from '../../../utils/constants';
+
+const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 /**
- * AdminSidebar component - Admin-specific navigation sidebar
+ * StudentSidebar component - Student-specific navigation sidebar
  * Props:
  *  - logo: { icon, text }
  *  - navItems: [{ label, icon, active, onClick, disabled }]
@@ -12,82 +14,64 @@ import api from '../../services/api';
  *  - open: bool (optional) - controls mobile drawer open state
  *  - onClose: fn (optional) - called when the overlay is clicked
  */
-const AdminSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogout, open = false, onClose }) => {
-    const [adminProfile, setAdminProfile] = useState(null);
+const StudentSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogout, open = false, onClose }) => {
+    const [studentProfile, setStudentProfile] = useState(null);
 
-    useEffect(() => {
-        const fetchAdminData = async () => {
-            const userId = localStorage.getItem('user_id');
-            const cacheKey = userId ? `admin_profile_${userId}` : 'admin_profile';
+    const resolveUrl = (url) => {
+        if (!url) return null;
+        if (/^https?:\/\//i.test(url)) return url;
+        if (url.startsWith('//')) return window.location.protocol + url;
+        if (url.startsWith('/')) return `${API_ORIGIN}${url}`;
+        return `${API_ORIGIN}/${url}`;
+    };
 
-            // Try cache first
-            try {
-                const cached = localStorage.getItem(cacheKey);
-                if (cached) {
-                    const parsed = JSON.parse(cached);
-                    if (parsed && (parsed.username || parsed.name) && parsed.email) {
-                        setAdminProfile(parsed);
-                        return;
-                    }
+    const fetchStudentProfile = useCallback(async () => {
+        try {
+            const token = localStorage.getItem('access_token');
+            const response = await fetch(`${API_BASE_URL}/profiles/student`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            } catch (e) {
-                // ignore parse errors
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                const firstName = data?.first_name || '';
+                const lastName = data?.last_name || '';
+                const fullName = `${firstName} ${lastName}`.trim();
+                const email = data?.email || localStorage.getItem('user_email') || '';
+
+                setStudentProfile({
+                    name: fullName || email.split('@')[0] || 'Student',
+                    email: email,
+                    avatarUrl: data?.profile_image_url ? resolveUrl(data.profile_image_url) : null
+                });
             }
-
-            if (!userId) {
-                const fallbackEmail = localStorage.getItem('user_email');
-                const fallbackName = localStorage.getItem('user_name') || (fallbackEmail ? fallbackEmail.split('@')[0] : null);
-                setAdminProfile({ id: null, name: fallbackName, username: null, email: fallbackEmail });
-                return;
-            }
-
-            try {
-                const res = await api.get(`/users/${encodeURIComponent(userId)}`);
-                const data = res?.data ?? res;
-                const username = data?.username || data?.user_name || data?.name || null;
-                const email = data?.email || data?.email_address || null;
-                const displayName = username || (email ? email.split('@')[0] : null);
-
-                const normalized = {
-                    id: data?.id || null,
-                    name: displayName,
-                    username,
-                    email,
-                    avatarUrl: data?.avatarUrl || null
-                };
-
-                setAdminProfile(normalized);
-
-                try {
-                    localStorage.setItem(cacheKey, JSON.stringify(normalized));
-                } catch (err) {
-                    // ignore storage errors
-                }
-            } catch (err) {
-                console.warn('AdminSidebar: could not fetch admin profile', err);
-                const fallbackEmail = localStorage.getItem('user_email');
-                const fallbackName = localStorage.getItem('user_name') || (fallbackEmail ? fallbackEmail.split('@')[0] : null);
-                setAdminProfile({ id: userId, name: fallbackName, username: null, email: fallbackEmail });
-            }
-        };
-
-        fetchAdminData();
+        } catch (error) {
+            console.log('StudentSidebar: Could not fetch student profile', error);
+        }
     }, []);
 
-    // Merge fetched admin profile with prop data
+    useEffect(() => {
+        fetchStudentProfile();
+    }, [fetchStudentProfile]);
+
+    // Merge fetched student profile with prop data
     const footerUser = (() => {
         const nameFromStorage = localStorage.getItem('user_name');
         const emailFromStorage = localStorage.getItem('user_email');
 
-        const name = adminProfile?.name || footerUserProp?.name || nameFromStorage || (emailFromStorage ? emailFromStorage.split('@')[0] : null);
-        const email = adminProfile?.email || footerUserProp?.email || emailFromStorage || null;
+        const name = studentProfile?.name || footerUserProp?.name || nameFromStorage || (emailFromStorage ? emailFromStorage.split('@')[0] : null) || 'Student';
+        const email = studentProfile?.email || footerUserProp?.email || emailFromStorage || null;
 
         return {
-            role: 'admin',
+            role: 'student',
             name,
             email,
-            avatarUrl: adminProfile?.avatarUrl || footerUserProp?.avatarUrl || null,
-            initials: footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'AD')
+            avatarUrl: studentProfile?.avatarUrl || footerUserProp?.avatarUrl || null,
+            initials: footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'ST')
         };
     })();
 
@@ -112,7 +96,7 @@ const AdminSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogou
                         </div>
                     )}
 
-                    <nav className={styles.nav} aria-label="Admin navigation">
+                    <nav className={styles.nav} aria-label="Student navigation">
                         {navItems.map((item, idx) => (
                             <button
                                 key={idx}
@@ -163,4 +147,4 @@ const AdminSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogou
     );
 };
 
-export default AdminSidebar;
+export default StudentSidebar;

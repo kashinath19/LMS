@@ -198,7 +198,8 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         profile_image_url: imageUrl || ''
       });
 
-      if (onProfileCreated) {
+      // Only trigger redirect callback when creating a NEW profile, not on updates
+      if (onProfileCreated && !profileExists) {
         onProfileCreated();
       }
 
@@ -299,7 +300,7 @@ const TrainerProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         displayToast('Profile photo uploaded');
         showMessage?.('success', 'Profile photo uploaded');
 
-        if (onProfileCreated) onProfileCreated();
+        // Image upload should not trigger redirect
       }
     } catch (error) {
       console.error('Error uploading image:', error);
