@@ -8,6 +8,7 @@
     flex-direction: column;
     background-color: #f9fafb;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    position: relative;
 }
 
 /* Header Section */
@@ -30,13 +31,13 @@
     margin: 0;
 }
 
-/* Main Content Area - UPDATED */
+/* Main Content Area */
 .sc-content {
     flex: 1;
     padding: 24px 32px;
-    overflow-y: visible; /* Changed from auto since parent scrolls */
-    max-width: 100%;     /* UPDATED: Full width */
-    margin: 0;           /* UPDATED: Left align */
+    overflow-y: visible;
+    max-width: 100%;
+    margin: 0;
     width: 100%;
     box-sizing: border-box;
 }
@@ -92,7 +93,7 @@
     background-color: #dc2626;
 }
 
-/* Empty State - UPDATED */
+/* Empty State */
 .sc-empty-state {
     display: flex;
     flex-direction: column;
@@ -104,9 +105,9 @@
     border-radius: 12px;
     border: 1px solid #e5e7eb;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    width: 100%;         /* Fill width */
-    max-width: 100%;     /* Allow full expansion */
-    margin: 20px 0;      /* Margin only top/bottom */
+    width: 100%;
+    max-width: 100%;
+    margin: 20px 0;
 }
 
 .sc-empty-state h3 {
@@ -124,7 +125,7 @@
     margin: 0;
 }
 
-/* Modules List - UPDATED */
+/* Modules List */
 .sc-modules-list {
     display: flex;
     flex-direction: column;
@@ -134,14 +135,10 @@
     padding: 0;
 }
 
-/* StudentCourses.css */
-
-/* ... other code ... */
-
 /* Module Card */
 .sc-module-card {
-    width: 100%;           /* Allows it to shrink on smaller devices */
-    max-width: 400px;      /* ADD THIS LINE: This restricts the width to be small like the image */
+    width: 100%;
+    max-width: 400px;
     margin-left: 0;
     background: #ffffff;
     border: 1px solid #e5e7eb;
@@ -149,8 +146,6 @@
     overflow: hidden;
     transition: box-shadow 0.2s ease, border-color 0.2s ease;
 }
-
-/* ... rest of the CSS ... */
 
 .sc-module-card:hover {
     border-color: #d1d5db;
@@ -251,6 +246,9 @@
 
 .sc-topic-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 .sc-topic-title {
@@ -267,19 +265,55 @@
     line-height: 1.4;
 }
 
-.sc-topic-link {
+/* Topic Actions */
+.sc-topic-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+}
+
+.sc-view-resource-btn {
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    background-color: #4f46e5;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 6px;
     font-size: 0.8125rem;
     font-weight: 500;
-    color: #4f46e5;
+    cursor: pointer;
+    transition: all 0.2s ease;
     text-decoration: none;
-    padding: 4px 0;
 }
 
-.sc-topic-link:hover {
-    text-decoration: underline;
+.sc-view-resource-btn:hover {
+    background-color: #4338ca;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.sc-download-resource {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: #6b7280;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    text-decoration: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+    border: 1px solid #e5e7eb;
+    background-color: #ffffff;
+}
+
+.sc-download-resource:hover {
+    color: #4f46e5;
+    border-color: #4f46e5;
+    background-color: #f8fafc;
 }
 
 .sc-no-topics {
@@ -288,6 +322,248 @@
     color: #9ca3af;
     font-size: 0.875rem;
     font-style: italic;
+}
+
+/* Resource Display Panel */
+.sc-resource-display {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 70%;
+    height: 100vh;
+    background: #ffffff;
+    box-shadow: -2px 0 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    animation: slideInRight 0.3s ease;
+    overflow: hidden;
+}
+
+.sc-resource-display.fullscreen {
+    width: 100%;
+    height: 100vh;
+    z-index: 1000;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+    }
+    to {
+        transform: translateX(0);
+    }
+}
+
+.sc-resource-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+
+.sc-resource-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.sc-resource-title h3 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.sc-resource-type {
+    font-size: 0.8125rem;
+    color: #6b7280;
+    margin: 0;
+    font-weight: 500;
+}
+
+.sc-resource-controls {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.sc-resource-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 6px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.sc-resource-btn.secondary {
+    border: 1px solid #e5e7eb;
+    background: #f8fafc;
+}
+
+.sc-resource-btn.secondary:hover {
+    background: #e5e7eb;
+    color: #374151;
+}
+
+.sc-resource-btn.close {
+    background: #ef4444;
+    color: white;
+}
+
+.sc-resource-btn.close:hover {
+    background: #dc2626;
+}
+
+.sc-resource-content {
+    flex: 1;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+/* Video Container */
+.sc-video-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #000;
+}
+
+.sc-resource-video {
+    flex: 1;
+    width: 100%;
+    height: calc(100% - 60px);
+    object-fit: contain;
+    background: #000;
+}
+
+.sc-video-info {
+    padding: 16px 24px;
+    background: rgba(0, 0, 0, 0.8);
+    color: #ffffff;
+    border-top: 1px solid #333;
+}
+
+.sc-video-info p {
+    margin: 0;
+    font-size: 0.875rem;
+    opacity: 0.9;
+}
+
+/* PDF Container */
+.sc-pdf-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f9fafb;
+}
+
+.sc-resource-pdf {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background: #ffffff;
+}
+
+.sc-pdf-info {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.sc-pdf-info p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* Image Container */
+.sc-image-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: #f9fafb;
+}
+
+.sc-resource-image {
+    flex: 1;
+    width: 100%;
+    object-fit: contain;
+    background: #ffffff;
+    padding: 20px;
+}
+
+.sc-image-info {
+    padding: 16px 24px;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+    color: #374151;
+}
+
+.sc-image-info p {
+    margin: 0;
+    font-size: 0.875rem;
+}
+
+/* External Resource Container */
+.sc-external-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    background: #f9fafb;
+}
+
+.sc-external-content {
+    text-align: center;
+    padding: 40px;
+    max-width: 400px;
+}
+
+.sc-external-content h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 16px 0 8px;
+}
+
+.sc-external-content p {
+    font-size: 0.875rem;
+    color: #6b7280;
+    margin-bottom: 24px;
+}
+
+.sc-external-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background-color: #4f46e5;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.sc-external-link:hover {
+    background-color: #4338ca;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.2);
 }
 
 /* Animations */
@@ -302,7 +578,17 @@
 }
 
 /* Responsive */
-@media (max-width: 640px) {
+@media (max-width: 1024px) {
+    .sc-resource-display {
+        width: 80%;
+    }
+}
+
+@media (max-width: 768px) {
+    .sc-resource-display {
+        width: 100%;
+    }
+    
     .sc-header {
         padding: 20px;
     }
@@ -326,5 +612,34 @@
 
     .sc-topic-item {
         padding: 16px;
+    }
+    
+    .sc-resource-header {
+        padding: 16px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    
+    .sc-resource-controls {
+        order: 1;
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .sc-module-card {
+        max-width: 100%;
+    }
+    
+    .sc-topic-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .sc-view-resource-btn,
+    .sc-download-resource {
+        width: 100%;
+        justify-content: center;
     }
 }

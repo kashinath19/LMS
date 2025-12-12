@@ -5,18 +5,19 @@ import { API_BASE_URL } from '../../../utils/constants';
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
 /**
- * TrainerSidebar component - Trainer navigation sidebar with AdminSidebar UI
+ * TrainerSidebar component - Trainer navigation sidebar
  * Props:
- *  - logo: { icon, text }
- *  - navItems: [{ label, icon, active, onClick, disabled }]
- *  - footerUser: { name, email, initials, avatarUrl }
- *  - onLogout: fn
- *  - open: bool (optional) - controls mobile drawer open state
- *  - onClose: fn (optional) - called when the overlay is clicked
+ * - logo: { icon, text }
+ * - navItems: [{ label, icon, active, onClick, disabled }]
+ * - footerUser: { name, email, initials, avatarUrl }
+ * - onLogout: fn
+ * - open: bool (optional) - controls mobile drawer open state
+ * - onClose: fn (optional) - called when the overlay is clicked
  */
 const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLogout, open = false, onClose }) => {
     const [trainerProfile, setTrainerProfile] = useState(null);
 
+    // FIX: Helper to convert relative paths to full URLs
     const resolveUrl = (url) => {
         if (!url) return null;
         if (/^https?:\/\//i.test(url)) return url;
@@ -28,6 +29,10 @@ const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
     const fetchTrainerProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('access_token');
+            // If we already have a prop with an avatar, we might skip fetching, 
+            // but fetching ensures we have the latest data if props are stale.
+            if (!token) return;
+
             const response = await fetch(`${API_BASE_URL}/profiles/trainer`, {
                 method: 'GET',
                 headers: {
@@ -43,10 +48,16 @@ const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
                 const fullName = `${firstName} ${lastName}`.trim();
                 const email = data?.email || localStorage.getItem('user_email') || '';
 
+                // FIX: Resolve the image URL immediately
+                let imageUrl = data?.profile_image_url || data?.profile_image || data?.image_url || null;
+                if (imageUrl) {
+                    imageUrl = resolveUrl(imageUrl);
+                }
+
                 setTrainerProfile({
                     name: fullName || email.split('@')[0] || 'Trainer',
                     email: email,
-                    avatarUrl: data?.profile_image_url ? resolveUrl(data.profile_image_url) : null
+                    avatarUrl: imageUrl
                 });
             }
         } catch (error) {
@@ -63,15 +74,20 @@ const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
         const nameFromStorage = localStorage.getItem('user_name');
         const emailFromStorage = localStorage.getItem('user_email');
 
-        const name = trainerProfile?.name || footerUserProp?.name || nameFromStorage || (emailFromStorage ? emailFromStorage.split('@')[0] : null) || 'Trainer';
+        // Priority: State (Fresh Fetch) -> Prop (From Layout) -> Storage -> Fallback
+        const name = trainerProfile?.name || footerUserProp?.name || nameFromStorage || 'Trainer';
         const email = trainerProfile?.email || footerUserProp?.email || emailFromStorage || null;
+        const avatarUrl = trainerProfile?.avatarUrl || footerUserProp?.avatarUrl || null;
+
+        // Calculate initials
+        const initials = footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'TR');
 
         return {
             role: 'trainer',
             name,
             email,
-            avatarUrl: trainerProfile?.avatarUrl || footerUserProp?.avatarUrl || null,
-            initials: footerUserProp?.initials || (name ? name.split(' ').map(n => n[0]).slice(0, 2).join('').toUpperCase() : 'TR')
+            avatarUrl,
+            initials
         };
     })();
 
@@ -121,7 +137,11 @@ const TrainerSidebar = ({ logo, navItems = [], footerUser: footerUserProp, onLog
                                     <img
                                         src={footerUser.avatarUrl}
                                         alt={footerUser.name || 'User'}
-                                        onError={(e) => (e.currentTarget.style.display = 'none')}
+                                        onError={(e) => {
+                                            // Fallback to initials if image fails to load
+                                            e.currentTarget.style.display = 'none';
+                                            e.currentTarget.parentElement.innerText = footerUser.initials;
+                                        }}
                                     />
                                 ) : (
                                     <span>{footerUser.initials}</span>

@@ -5,17 +5,12 @@ import { useOutletContext } from 'react-router-dom';
 import styles from './TrainerDashboard.module.css';
 import { API_BASE_URL } from '../../utils/constants';
 
-/**
- * TrainerDashboard - Main dashboard page for trainers
- * Layout is provided by TrainerLayout via routing - this component renders content only
- * Profile navigation is handled by the header avatar, not dashboard content
- */
 const TrainerDashboard = () => {
   const [profileData, setProfileData] = useState(null);
   const { user } = useAuth();
   const { setPageTitle } = useOutletContext();
 
-  // Fetch Trainer Profile Data for display name
+  // Fetch Profile to get accurate name for the Welcome Message
   const fetchProfile = useCallback(async () => {
     try {
       const token = localStorage.getItem('access_token');
@@ -30,12 +25,9 @@ const TrainerDashboard = () => {
       if (response.ok) {
         const data = await response.json();
         setProfileData(data);
-      } else if (response.status === 404) {
-        setProfileData(null);
       }
     } catch (error) {
-      console.log("Profile not created yet or error loading:", error);
-      setProfileData(null);
+      console.log("Error loading profile for dashboard:", error);
     }
   }, []);
 
@@ -43,24 +35,23 @@ const TrainerDashboard = () => {
     fetchProfile();
   }, [fetchProfile]);
 
+  // Update the Header Title with the specific name
   useEffect(() => {
-    setPageTitle(`Welcome, ${user?.name || user?.username || 'Trainer'}!`);
-    return () => setPageTitle('');
-  }, [setPageTitle, user]);
-
-  // Helper for name display
-  const getDisplayName = () => {
+    let displayName = 'Trainer';
     if (profileData && profileData.first_name) {
-      return `${profileData.first_name} ${profileData.last_name || ''}`.trim();
+        displayName = `${profileData.first_name} ${profileData.last_name || ''}`.trim();
+    } else if (user?.name) {
+        displayName = user.name;
+    } else if (user?.username) {
+        displayName = user.username;
     }
-    return user?.email?.split('@')[0] || 'Trainer';
-  };
+
+    setPageTitle(`Welcome, ${displayName}!`);
+    return () => setPageTitle('');
+  }, [setPageTitle, profileData, user]);
 
   return (
     <div className={styles.trainerDashboardContent}>
-      <div className={styles.dashboardHeader}>
-        <h1>Welcome, {getDisplayName()}!</h1>
-      </div>
       <div className={styles.emptyState}>
         <Box size={48} className={styles.emptyIcon} />
         <span className={styles.emptyText}>Your dashboard is empty</span>

@@ -1,21 +1,19 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { 
-  BookOpen, 
   ChevronDown, 
   ChevronRight,
   FileText,
-  ExternalLink
+  ExternalLink,
+  AlertCircle 
 } from 'lucide-react';
+import { useOutletContext } from 'react-router-dom';
 import api from '../../services/api';
 import AuthContext from '../../context/AuthContext';
 import styles from './TrainerCourses.module.css';
 
-/**
- * TrainerCourses - Trainer page showing modules and topics
- */
 const TrainerCourses = () => {
     const { user } = useContext(AuthContext);
-    const [trainerInfo, setTrainerInfo] = useState(null);
+    const { setPageTitle } = useOutletContext();
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [modules, setModules] = useState([]);
@@ -23,61 +21,58 @@ const TrainerCourses = () => {
     const [moduleTopics, setModuleTopics] = useState({});
     const [loadingTopics, setLoadingTopics] = useState({});
 
+    // Dynamic Header Title
+    useEffect(() => {
+        const titleWithBadge = (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span>My Modules & Topics</span>
+                {modules.length > 0 && (
+                    <span style={{ 
+                        fontSize: '0.75rem', 
+                        backgroundColor: '#4f46e5', 
+                        color: 'white', 
+                        padding: '4px 12px', 
+                        borderRadius: '9999px',
+                        fontWeight: '600',
+                        lineHeight: '1'
+                    }}>
+                        {modules.length} {modules.length === 1 ? 'module' : 'modules'}
+                    </span>
+                )}
+            </div>
+        );
+        setPageTitle(titleWithBadge);
+        return () => setPageTitle('');
+    }, [setPageTitle, modules.length]);
+
     useEffect(() => {
         const fetchTrainerData = async () => {
             try {
                 setLoading(true);
                 setError(null);
 
-                // Check if user is authenticated
-                if (!user) {
-                    throw new Error('No authenticated user found. Please log in.');
+                if (!user || user.role !== 'trainer') {
+                    throw new Error('Access denied');
                 }
 
-                // Check if user is a trainer
-                if (user.role !== 'trainer') {
-                    throw new Error('This page is only accessible to trainers.');
-                }
-
-                // Use the authenticated trainer data
-                const trainerData = user;
-                
-                // Fetch modules for the trainer's domain
-                let trainerModules = [];
+                // Fetch modules
                 try {
-                    const modulesResponse = await api.get('/modules/', {
-                        params: {
-                            limit: 100,
-                            skip: 0
-                        }
-                    });
-                    
+                    const modulesResponse = await api.get('/modules/', { params: { limit: 100, skip: 0 } });
                     const modulesData = modulesResponse.data;
                     
-                    // Handle different response formats
-                    if (Array.isArray(modulesData)) {
-                        trainerModules = modulesData;
-                    } else if (modulesData?.results) {
-                        trainerModules = modulesData.results;
-                    } else if (modulesData?.data) {
-                        trainerModules = modulesData.data;
-                    }
-                    
+                    let trainerModules = [];
+                    if (Array.isArray(modulesData)) trainerModules = modulesData;
+                    else if (modulesData?.results) trainerModules = modulesData.results;
+                    else if (modulesData?.data) trainerModules = modulesData.data;
+
+                    setModules(trainerModules);
                 } catch (modulesErr) {
                     console.error('Error fetching modules:', modulesErr);
-                    trainerModules = [];
+                    setModules([]);
                 }
-                
-                setTrainerInfo(trainerData);
-                setModules(trainerModules);
-                
             } catch (err) {
-                console.error('Error fetching trainer data:', err);
-                const errorMessage = err.response?.data?.detail || 
-                                   err.response?.data?.message || 
-                                   err.message || 
-                                   'Failed to load trainer information';
-                setError(errorMessage);
+                console.error('Error fetching data:', err);
+                setError(err.message);
             } finally {
                 setLoading(false);
             }
@@ -88,74 +83,32 @@ const TrainerCourses = () => {
 
     const fetchTopicsForModule = async (moduleId) => {
         if (moduleTopics[moduleId]) {
-            // Topics already loaded, just toggle expansion
             toggleModuleExpansion(moduleId);
             return;
         }
 
         try {
             setLoadingTopics(prev => ({ ...prev, [moduleId]: true }));
+            const res = await api.get('/topics/', { params: { module_id: moduleId, limit: 100 } });
+            const data = res.data.results || res.data.data || res.data || [];
             
-            const topicsResponse = await api.get('/topics/', {
-                params: {
-                    module_id: moduleId,
-                    limit: 100,
-                    skip: 0
-                }
-            });
-            
-            const topicsData = topicsResponse.data;
-            let topicsList = [];
-            
-            // Handle different response formats
-            if (Array.isArray(topicsData)) {
-                topicsList = topicsData;
-            } else if (topicsData?.results) {
-                topicsList = topicsData.results;
-            } else if (topicsData?.data) {
-                topicsList = topicsData.data;
-            }
-            
-            setModuleTopics(prev => ({
-                ...prev,
-                [moduleId]: topicsList
-            }));
-            
+            setModuleTopics(prev => ({ ...prev, [moduleId]: Array.isArray(data) ? data : [] }));
             toggleModuleExpansion(moduleId);
-            
         } catch (err) {
-            console.error('Error fetching topics for module:', moduleId, err);
-            const errorMessage = err.response?.data?.detail || 
-                               err.response?.data?.message || 
-                               err.message || 
-                               'Failed to load topics';
-            
-            // Set error state for this module
-            setModuleTopics(prev => ({
-                ...prev,
-                [moduleId]: { error: errorMessage }
-            }));
-            
+            setModuleTopics(prev => ({ ...prev, [moduleId]: { error: 'Failed to load topics' } }));
             toggleModuleExpansion(moduleId);
         } finally {
             setLoadingTopics(prev => ({ ...prev, [moduleId]: false }));
         }
     };
 
-    const toggleModuleExpansion = (moduleId) => {
-        setExpandedModules(prev => ({
-            ...prev,
-            [moduleId]: !prev[moduleId]
-        }));
+    const toggleModuleExpansion = (id) => {
+        setExpandedModules(prev => ({ ...prev, [id]: !prev[id] }));
     };
 
-    // Loading state
     if (loading) {
         return (
             <div className={styles.coursesContainer}>
-                <div className={styles.header}>
-                    <h1>My Modules & Topics</h1>
-                </div>
                 <div className={styles.loadingState}>
                     <div className={styles.spinner}></div>
                     <span className={styles.loadingText}>Loading your modules...</span>
@@ -164,67 +117,9 @@ const TrainerCourses = () => {
         );
     }
 
-    // Error state - only show if we have a critical error
-    if (error && modules.length === 0) {
-        return (
-            <div className={styles.coursesContainer}>
-                <div className={styles.header}>
-                    <h1>My Modules & Topics</h1>
-                </div>
-                <div className={styles.errorState}>
-                    <span className={styles.errorText}>Error: {error}</span>
-                    <button 
-                        className={styles.retryButton}
-                        onClick={() => window.location.reload()}
-                    >
-                        Retry
-                    </button>
-                </div>
-            </div>
-        );
-    }
-
-    // If no trainer info
-    if (!trainerInfo) {
-        return (
-            <div className={styles.coursesContainer}>
-                <div className={styles.header}>
-                    <h1>My Modules & Topics</h1>
-                </div>
-                <div className={styles.errorState}>
-                    <span className={styles.errorText}>No trainer information available.</span>
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div className={styles.coursesContainer}>
-            <div className={styles.header}>
-                <h1>My Modules & Topics</h1>
-                <div className={styles.welcomeMessage}>
-                    Welcome back, <span className={styles.trainerName}>{trainerInfo.username}</span>!
-                </div>
-            </div>
-
-            {/* Error banner if modules failed to load */}
-            {error && (
-                <div className={styles.errorBanner}>
-                    <span className={styles.errorBannerText}>
-                        Warning: {error} Modules list may be incomplete.
-                    </span>
-                </div>
-            )}
-
-            {/* Modules & Topics Section */}
             <div className={styles.modulesSection}>
-                <div className={styles.sectionHeader}>
-                    <h2>Modules & Topics</h2>
-                    <span className={styles.modulesCount}>
-                        {modules.length} {modules.length === 1 ? 'module' : 'modules'}
-                    </span>
-                </div>
-                
                 {modules.length > 0 ? (
                     <div className={styles.modulesList}>
                         {modules.map((module) => (
@@ -235,20 +130,11 @@ const TrainerCourses = () => {
                                 >
                                     <div className={styles.moduleHeaderLeft}>
                                         <div className={styles.moduleIcon}>
-                                            {expandedModules[module.id] ? 
-                                                <ChevronDown size={20} /> : 
-                                                <ChevronRight size={20} />
-                                            }
+                                            {expandedModules[module.id] ? <ChevronDown size={20} /> : <ChevronRight size={20} />}
                                         </div>
                                         <div className={styles.moduleInfo}>
-                                            <h4 className={styles.moduleTitle}>
-                                                {module.title || 'Untitled Module'}
-                                            </h4>
-                                            {module.description && (
-                                                <p className={styles.moduleDescription}>
-                                                    {module.description}
-                                                </p>
-                                            )}
+                                            <h4 className={styles.moduleTitle}>{module.title || 'Untitled Module'}</h4>
+                                            {module.description && <p className={styles.moduleDescription}>{module.description}</p>}
                                         </div>
                                     </div>
                                     <div className={styles.moduleHeaderRight}>
@@ -268,91 +154,29 @@ const TrainerCourses = () => {
                                     </div>
                                 </div>
                                 
-                                {/* Topics Section - Collapsible */}
                                 {expandedModules[module.id] && (
                                     <div className={styles.topicsSection}>
                                         <div className={styles.topicsHeader}>
                                             <FileText size={18} />
-                                            <span>Topics in this Module</span>
+                                            <span>Topics</span>
                                         </div>
-                                        
-                                        {moduleTopics[module.id] ? (
-                                            moduleTopics[module.id].error ? (
-                                                <div className={styles.topicsError}>
-                                                    <span className={styles.errorText}>
-                                                        Error: {moduleTopics[module.id].error}
-                                                    </span>
-                                                </div>
-                                            ) : Array.isArray(moduleTopics[module.id]) ? (
-                                                <div className={styles.topicsList}>
-                                                    {moduleTopics[module.id].length > 0 ? (
-                                                        moduleTopics[module.id].map((topic) => {
-                                                            // Clean the content to remove any "View Details" text
-                                                            let cleanedContent = topic.content;
-                                                            if (cleanedContent) {
-                                                                // Remove "View Details" text from content
-                                                                cleanedContent = cleanedContent.replace(/View Details/gi, '').trim();
-                                                                // Remove any trailing hyphens or separators
-                                                                cleanedContent = cleanedContent.replace(/[-—]+$/g, '').trim();
-                                                            }
-                                                            
-                                                            return (
-                                                                <div key={topic.id} className={styles.topicCard}>
-                                                                    <div className={styles.topicHeader}>
-                                                                        <h5 className={styles.topicTitle}>
-                                                                            {topic.title || 'Untitled Topic'}
-                                                                        </h5>
-                                                                    </div>
-                                                                    
-                                                                    <div className={styles.topicContent}>
-                                                                        {cleanedContent && (
-                                                                            <p className={styles.topicDescription}>
-                                                                                {cleanedContent.length > 200 
-                                                                                    ? `${cleanedContent.substring(0, 200)}...`
-                                                                                    : cleanedContent
-                                                                                }
-                                                                            </p>
-                                                                        )}
-                                                                        
-                                                                        {topic.resource_link && (
-                                                                            <div className={styles.resourceLink}>
-                                                                                <ExternalLink size={16} />
-                                                                                <a 
-                                                                                    href={topic.resource_link} 
-                                                                                    target="_blank" 
-                                                                                    rel="noopener noreferrer"
-                                                                                    className={styles.resourceAnchor}
-                                                                                >
-                                                                                    View Resource
-                                                                                </a>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </div>
-                                                            );
-                                                        })
-                                                    ) : (
-                                                        <div className={styles.noTopics}>
-                                                            <FileText size={32} className={styles.noTopicsIcon} />
-                                                            <span className={styles.noTopicsText}>
-                                                                No topics available for this module
-                                                            </span>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            ) : (
-                                                <div className={styles.noTopics}>
-                                                    <FileText size={32} className={styles.noTopicsIcon} />
-                                                    <span className={styles.noTopicsText}>
-                                                        No topics data available
-                                                    </span>
-                                                </div>
-                                            )
-                                        ) : (
-                                            <div className={styles.loadingTopics}>
-                                                <div className={styles.smallSpinner}></div>
-                                                <span>Loading topics...</span>
+                                        {moduleTopics[module.id]?.length > 0 ? (
+                                            <div className={styles.topicsList}>
+                                                {moduleTopics[module.id].map(topic => (
+                                                    <div key={topic.id} className={styles.topicCard}>
+                                                        <h5 className={styles.topicTitle}>{topic.title}</h5>
+                                                        <p className={styles.topicDescription}>{topic.content}</p>
+                                                        {topic.resource_link && (
+                                                            <div className={styles.resourceLink}>
+                                                                <ExternalLink size={14} />
+                                                                <a href={topic.resource_link} target="_blank" rel="noreferrer" className={styles.resourceAnchor}>View Resource</a>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
+                                        ) : (
+                                            <div className={styles.noTopics}>No topics available.</div>
                                         )}
                                     </div>
                                 )}
@@ -360,19 +184,50 @@ const TrainerCourses = () => {
                         ))}
                     </div>
                 ) : (
-                    <div className={styles.emptyState}>
-                        <BookOpen size={48} className={styles.emptyIcon} />
-                        <span className={styles.emptyText}>No modules found</span>
-                        <p className={styles.emptyDescription}>
-                            {error ? 'Could not load modules. Please check your connection and try again.' : 'You don\'t have any modules assigned to you yet. Modules will appear here when they are created.'}
+                    /* Module Not Assigned Card */
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '48px 24px',
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        border: '1px solid #e5e7eb',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                        maxWidth: '500px',
+                        margin: '40px auto',
+                        textAlign: 'center'
+                    }}>
+                        <div style={{
+                            width: '64px',
+                            height: '64px',
+                            backgroundColor: '#fee2e2',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            marginBottom: '20px',
+                            color: '#ef4444'
+                        }}>
+                            <AlertCircle size={32} />
+                        </div>
+                        <h3 style={{
+                            fontSize: '1.25rem',
+                            fontWeight: '700',
+                            color: '#1f2937',
+                            marginBottom: '12px'
+                        }}>
+                            Module Not Assigned
+                        </h3>
+                        <p style={{
+                            fontSize: '0.95rem',
+                            color: '#6b7280',
+                            marginBottom: '24px',
+                            lineHeight: '1.5'
+                        }}>
+                            You have not been assigned to any modules yet. Please contact the administrator to get your domain and modules assigned.
                         </p>
-                        <button 
-                            className={styles.retryButton}
-                            onClick={() => window.location.reload()}
-                            style={{ marginTop: '16px' }}
-                        >
-                            Try Again
-                        </button>
                     </div>
                 )}
             </div>

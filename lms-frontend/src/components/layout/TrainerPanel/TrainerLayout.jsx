@@ -3,22 +3,17 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import TrainerSidebar from './TrainerSidebar';
 import Header from '../Header';
+import panelStyles from './TrainerLayout.module.css';
 import styles from '../Layout.module.css';
 import { API_BASE_URL } from '../../../utils/constants';
 
 const API_ORIGIN = API_BASE_URL.replace(/\/api\/v\d+\/?$/, '');
 
-/**
- * TrainerLayout - Layout wrapper for trainer pages
- * Includes TrainerSidebar + Header + content area with <Outlet/>
- */
 const TrainerLayout = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
     const [trainerProfile, setTrainerProfile] = useState(null);
-    
-    // CHANGED: State for logout modal
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [pageTitle, setPageTitle] = useState('');
 
@@ -30,10 +25,12 @@ const TrainerLayout = () => {
         return `${API_ORIGIN}/${url}`;
     };
 
-    // Fetch trainer profile for header avatar
+    // Fetch profile for Header AND Sidebar
     const fetchTrainerProfile = useCallback(async () => {
         try {
             const token = localStorage.getItem('access_token');
+            if (!token) return;
+
             const response = await fetch(`${API_BASE_URL}/profiles/trainer`, {
                 method: 'GET',
                 headers: {
@@ -49,14 +46,14 @@ const TrainerLayout = () => {
                 const fullName = `${firstName} ${lastName}`.trim();
                 const email = data?.email || user?.email || localStorage.getItem('user_email') || '';
 
-                // Extract profile image URL
+                // FIX: Resolve URL here
                 let imageUrl = data?.profile_image_url || data?.profile_image || data?.image_url || null;
                 if (imageUrl) {
                     imageUrl = resolveUrl(imageUrl);
                 }
 
                 setTrainerProfile({
-                    name: fullName || email.split('@')[0] || 'Trainer',
+                    name: fullName || user?.name || 'Trainer',
                     email: email,
                     avatarUrl: imageUrl
                 });
@@ -64,13 +61,12 @@ const TrainerLayout = () => {
         } catch (error) {
             console.log('TrainerLayout: Could not fetch trainer profile', error);
         }
-    }, [user?.email]);
+    }, [user]);
 
     useEffect(() => {
         fetchTrainerProfile();
     }, [fetchTrainerProfile]);
 
-    // Build navigation items
     const navItems = [
         { label: 'Dashboard', icon: <i className="fas fa-home" />, to: '/trainer/dashboard' },
         { label: 'My Courses', icon: <i className="fas fa-book" />, to: '/trainer/courses' },
@@ -83,47 +79,29 @@ const TrainerLayout = () => {
 
     const logo = { icon: <i className="fas fa-chalkboard-teacher" />, text: 'Trainer Portal' };
 
-    // Get display info for the footer user
-    const getUserInfo = () => {
-        if (trainerProfile) {
-            return {
-                name: trainerProfile.name,
-                email: trainerProfile.email,
-                initials: trainerProfile.name.split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase() || 'TR'
-            };
-        }
-        if (!user) return { name: 'Trainer', email: '', initials: 'TR' };
-        const name = user.username || user.name || (user.email ? user.email.split('@')[0] : null) || 'Trainer';
-        const email = user.email || '';
-        const initials = (name || email.split('@')[0] || 'T').toString().split(' ').map(p => p[0]).slice(0, 2).join('').toUpperCase();
-        return { name, email, initials };
+    // Prepare profile object
+    const currentProfile = trainerProfile || {
+        name: user?.name || user?.username || 'Trainer',
+        email: user?.email || '',
+        avatarUrl: null
     };
 
-    const { name, email, initials } = getUserInfo();
-
-    const footerUser = {
-        name,
-        email,
-        initials,
-        avatarUrl: trainerProfile?.avatarUrl || null,
-        role: 'trainer'
-    };
-
-    // Header profile prop for avatar-click navigation
     const headerProfile = {
-        name: trainerProfile?.name || name,
-        email: trainerProfile?.email || email,
-        avatarUrl: trainerProfile?.avatarUrl || null,
+        ...currentProfile,
         role: 'Trainer',
         onClick: () => navigate('/trainer/profile')
     };
 
-    // CHANGED: Trigger modal instead of window.confirm
-    const handleLogout = () => {
-        setShowLogoutModal(true);
+    // Pass the resolved avatarUrl to Sidebar via footerUser
+    const footerUser = {
+        name: currentProfile.name,
+        email: currentProfile.email,
+        initials: currentProfile.name.slice(0, 2).toUpperCase(),
+        avatarUrl: currentProfile.avatarUrl,
+        role: 'trainer'
     };
 
-    // CHANGED: Function to execute logout
+    const handleLogout = () => setShowLogoutModal(true);
     const confirmLogout = () => {
         setShowLogoutModal(false);
         logout();
@@ -138,26 +116,29 @@ const TrainerLayout = () => {
                 footerUser={footerUser}
                 onLogout={handleLogout}
             />
-            <div className={styles.mainColumn}>
-                <Header
-                    title={pageTitle}
-                    profile={headerProfile}
-                />
-                <main className={styles.contentArea}>
+
+            <div className={panelStyles.mainArea}>
+                <div className={panelStyles.fixedHeader}>
+                    <Header
+                        title={pageTitle}
+                        profile={headerProfile}
+                    />
+                </div>
+
+                <div className={panelStyles.contentScroll}>
                     <div className={styles.pageInner}>
                         <Outlet context={{ setPageTitle }} />
                     </div>
-                </main>
+                </div>
             </div>
 
-            {/* CHANGED: Custom Logout Modal */}
             {showLogoutModal && (
                 <div style={{
                     position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
                     backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(2px)',
                     zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                    <div style={{
+                     <div style={{
                         backgroundColor: 'white', padding: '30px', borderRadius: '16px',
                         width: '90%', maxWidth: '380px', textAlign: 'center',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.2)'

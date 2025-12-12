@@ -1,6 +1,8 @@
 /* TrainerSidebar.module.css - Trainer sidebar with same UI as AdminSidebar */
 
 /* Sidebar wrapper */
+/* src/components/layout/TrainerPanel/TrainerSidebar.module.css */
+
 .sidebar {
   width: 240px;
   background: #ffffff;
@@ -9,14 +11,19 @@
   flex-direction: column;
   min-height: 100vh;
   box-sizing: border-box;
-  position: sticky;
+  
+  /* CHANGED: Fixed position to match Student/Admin layout fix */
+  position: fixed; 
   top: 0;
   left: 0;
-  z-index: 20;
+  height: 100vh;
+  
+  z-index: 60;
   transition: transform 0.28s ease-in-out, box-shadow 0.2s ease;
   flex-shrink: 0;
 }
 
+/* ... keep the rest of the file (mobile drawer etc) ... */
 /* Mobile: convert sidebar to drawer */
 .sidebarOverlay {
   position: fixed;
