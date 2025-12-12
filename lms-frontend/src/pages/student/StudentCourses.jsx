@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  BookOpen, FileText, ExternalLink, ChevronDown, ChevronUp, 
-  Loader2, AlertCircle, LogIn, Video, File, X, Play, 
-  Download, Maximize2, Minimize2
-} from 'lucide-react';
+import { BookOpen, FileText, ExternalLink, ChevronDown, ChevronUp, Loader2, AlertCircle, LogIn } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import './StudentCourses.css';
 
@@ -12,8 +8,6 @@ const StudentCourses = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [expandedModuleId, setExpandedModuleId] = useState(null);
-    const [activeResource, setActiveResource] = useState(null);
-    const [isFullscreen, setIsFullscreen] = useState(false);
     const { setPageTitle } = useOutletContext();
 
     // FIX 1: Set Base URL to the root domain (without /api/v1 suffix to avoid duplication)
@@ -129,65 +123,6 @@ const StudentCourses = () => {
         setExpandedModuleId(expandedModuleId === id ? null : id);
     };
 
-    const openResource = (resourceUrl, topicTitle) => {
-        // Determine resource type based on URL extension
-        const url = resourceUrl.toLowerCase();
-        let type = 'external';
-        
-        if (url.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/)) {
-            type = 'video';
-        } else if (url.match(/\.(pdf)$/)) {
-            type = 'pdf';
-        } else if (url.match(/\.(jpg|jpeg|png|gif|bmp|webp)$/)) {
-            type = 'image';
-        } else if (url.match(/\.(ppt|pptx|doc|docx|xls|xlsx)$/)) {
-            type = 'document';
-        }
-        
-        setActiveResource({
-            url: resourceUrl,
-            type: type,
-            title: topicTitle
-        });
-    };
-
-    const closeResource = () => {
-        setActiveResource(null);
-        setIsFullscreen(false);
-    };
-
-    const toggleFullscreen = () => {
-        setIsFullscreen(!isFullscreen);
-    };
-
-    const getResourceIcon = (url) => {
-        const urlLower = url.toLowerCase();
-        if (urlLower.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/)) {
-            return <Video size={16} />;
-        } else if (urlLower.match(/\.(pdf)$/)) {
-            return <File size={16} />;
-        } else if (urlLower.match(/\.(ppt|pptx|doc|docx|xls|xlsx)$/)) {
-            return <FileText size={16} />;
-        }
-        return <ExternalLink size={16} />;
-    };
-
-    const getResourceTypeText = (url) => {
-        const urlLower = url.toLowerCase();
-        if (urlLower.match(/\.(mp4|webm|ogg|avi|mov|wmv|flv|mkv)$/)) {
-            return 'Video';
-        } else if (urlLower.match(/\.(pdf)$/)) {
-            return 'PDF Document';
-        } else if (urlLower.match(/\.(ppt|pptx)$/)) {
-            return 'Presentation';
-        } else if (urlLower.match(/\.(doc|docx)$/)) {
-            return 'Document';
-        } else if (urlLower.match(/\.(xls|xlsx)$/)) {
-            return 'Spreadsheet';
-        }
-        return 'External Resource';
-    };
-
     if (loading) {
         return (
             <div className="sc-loading-container">
@@ -219,13 +154,8 @@ const StudentCourses = () => {
 
     // Main content - show empty state or courses
     return (
-        <div className={`student-courses-page ${activeResource ? 'resource-open' : ''}`}>
-            <header className="sc-header">
-                <div className="sc-header-content">
-                    <h1>My Learning Modules</h1>
-                    <p>Track your progress and access course materials</p>
-                </div>
-            </header>
+        <div className="student-courses-page">
+            
 
             <div className="sc-content">
                 {courses.length === 0 ? (
@@ -307,26 +237,15 @@ const StudentCourses = () => {
                                                             <h4 className="sc-topic-title">{topic.title}</h4>
                                                             <p className="sc-topic-desc">{topic.content}</p>
                                                             {topic.resource_link && (
-                                                                <div className="sc-topic-actions">
-                                                                    <button 
-                                                                        className="sc-view-resource-btn"
-                                                                        onClick={() => openResource(topic.resource_link, topic.title)}
-                                                                    >
-                                                                        {getResourceIcon(topic.resource_link)}
-                                                                        <span>View {getResourceTypeText(topic.resource_link)}</span>
-                                                                        <Play size={14} />
-                                                                    </button>
-                                                                    <a 
-                                                                        href={topic.resource_link} 
-                                                                        target="_blank" 
-                                                                        rel="noopener noreferrer"
-                                                                        className="sc-download-resource"
-                                                                        onClick={(e) => e.stopPropagation()}
-                                                                    >
-                                                                        <Download size={14} />
-                                                                        <span>Download</span>
-                                                                    </a>
-                                                                </div>
+                                                                <a 
+                                                                    href={topic.resource_link} 
+                                                                    target="_blank" 
+                                                                    rel="noopener noreferrer"
+                                                                    className="sc-topic-link"
+                                                                >
+                                                                    <ExternalLink size={14} />
+                                                                    View Resource
+                                                                </a>
                                                             )}
                                                         </div>
                                                     </li>
@@ -344,111 +263,6 @@ const StudentCourses = () => {
                     </div>
                 )}
             </div>
-
-            {/* Resource Display Panel */}
-            {activeResource && (
-                <div className={`sc-resource-display ${isFullscreen ? 'fullscreen' : ''}`}>
-                    <div className="sc-resource-header">
-                        <div className="sc-resource-title">
-                            <h3>
-                                {getResourceIcon(activeResource.url)}
-                                <span>{activeResource.title}</span>
-                            </h3>
-                            <p className="sc-resource-type">{getResourceTypeText(activeResource.url)}</p>
-                        </div>
-                        <div className="sc-resource-controls">
-                            <button 
-                                className="sc-resource-btn secondary"
-                                onClick={toggleFullscreen}
-                                title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
-                            >
-                                {isFullscreen ? <Minimize2 size={18} /> : <Maximize2 size={18} />}
-                            </button>
-                            <a 
-                                href={activeResource.url} 
-                                target="_blank" 
-                                rel="noopener noreferrer"
-                                className="sc-resource-btn secondary"
-                                title="Open in new tab"
-                            >
-                                <ExternalLink size={18} />
-                            </a>
-                            <a 
-                                href={activeResource.url} 
-                                download
-                                className="sc-resource-btn secondary"
-                                title="Download"
-                            >
-                                <Download size={18} />
-                            </a>
-                            <button 
-                                className="sc-resource-btn close"
-                                onClick={closeResource}
-                                title="Close"
-                            >
-                                <X size={18} />
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div className="sc-resource-content">
-                        {activeResource.type === 'video' ? (
-                            <div className="sc-video-container">
-                                <video 
-                                    controls 
-                                    autoPlay 
-                                    className="sc-resource-video"
-                                >
-                                    <source src={activeResource.url} type="video/mp4" />
-                                    Your browser does not support the video tag.
-                                </video>
-                                <div className="sc-video-info">
-                                    <p>Video Resource: {activeResource.title}</p>
-                                </div>
-                            </div>
-                        ) : activeResource.type === 'pdf' ? (
-                            <div className="sc-pdf-container">
-                                <iframe 
-                                    src={activeResource.url} 
-                                    title={activeResource.title}
-                                    className="sc-resource-pdf"
-                                />
-                                <div className="sc-pdf-info">
-                                    <p>PDF Document: {activeResource.title}</p>
-                                </div>
-                            </div>
-                        ) : activeResource.type === 'image' ? (
-                            <div className="sc-image-container">
-                                <img 
-                                    src={activeResource.url} 
-                                    alt={activeResource.title}
-                                    className="sc-resource-image"
-                                />
-                                <div className="sc-image-info">
-                                    <p>Image: {activeResource.title}</p>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="sc-external-container">
-                                <div className="sc-external-content">
-                                    <ExternalLink size={48} />
-                                    <h4>External Resource</h4>
-                                    <p>This resource will open in a new tab</p>
-                                    <a 
-                                        href={activeResource.url} 
-                                        target="_blank" 
-                                        rel="noopener noreferrer"
-                                        className="sc-external-link"
-                                    >
-                                        <span>Open {getResourceTypeText(activeResource.url)}</span>
-                                        <ExternalLink size={16} />
-                                    </a>
-                                </div>
-                            </div>
-                        )}
-                    </div>
-                </div>
-            )}
         </div>
     );
 };
