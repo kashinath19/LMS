@@ -1,38 +1,50 @@
 /* StudentProfile.module.css - Profile-specific scoped styles */
 
 .studentProfileWrapper {
-    background-color: #F3F4F6;
+    /* UPDATED: Standard layout background color */
+    background-color: #f9fafb;
     width: 100%;
-    padding: 20px;
+    /* UPDATED: Padding to match trainer/dashboard */
+    padding-top: 100px;
+    padding-left: 120px;
+    padding-right : 120px;
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
     box-sizing: border-box;
+    min-height: 100%;
 }
 
 /* Main Card Container */
 .profileCard {
     background: white;
+    /* UPDATED: Full width, left aligned */
     width: 100%;
-    max-width: 1100px;
-    margin: 0 auto;
+    max-width: 100%;
+    margin: 0;
     border-radius: 12px;
     padding: 28px;
     display: flex;
     gap: 32px;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    /* UPDATED: Lighter shadow */
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     overflow: visible;
     box-sizing: border-box;
+    /* UPDATED: Consistent border */
+    border: 1px solid #e5e7eb;
 }
 
 /* Left Column (Avatar & Basic Info) */
 .leftColumn {
-    flex: 0 0 210px;
+    flex: 0 0 240px; /* Matched trainer width */
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     text-align: center;
+    /* UPDATED: Added border separation */
+    border-right: 1px solid #f3f4f6;
+    padding-right: 32px;
 }
 
 .avatarContainer {
@@ -40,7 +52,8 @@
     height: 140px;
     border-radius: 50%;
     overflow: hidden;
-    border: 4px solid #0891b2;
+    /* UPDATED: Blue border */
+    border: 4px solid #2563eb;
     margin-bottom: 20px;
     background-color: #e5e7eb;
 }
@@ -57,7 +70,8 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #0891b2 0%, #06b6d4 100%);
+    /* UPDATED: Blue gradient */
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
 }
 
 .avatarPlaceholder .initials {
@@ -67,7 +81,8 @@
 }
 
 .leftColumn h2 {
-    font-size: 22px;
+    /* UPDATED: Matches Trainer Profile size */
+    font-size: 18px;
     font-weight: 700;
     color: #111827;
     margin-bottom: 5px;
@@ -75,30 +90,34 @@
 
 .email {
     color: #6B7280;
-    font-size: 14px;
+    /* UPDATED: Matches Trainer Profile size */
+    font-size: 13px;
     margin-bottom: 2px;
 }
 
 .phone {
     color: #6B7280;
-    font-size: 14px;
+    /* UPDATED: Matches Trainer Profile size */
+    font-size: 13px;
     margin-bottom: 20px;
 }
 
 .studentIdBadge {
-    background-color: #ecfeff;
-    color: #0891b2;
+    /* UPDATED: Light blue bg, blue text/border */
+    background-color: #eff6ff;
+    color: #2563eb;
     padding: 6px 20px;
     border-radius: 20px;
     font-weight: 600;
     font-size: 14px;
     letter-spacing: 0.5px;
     margin-bottom: 20px;
-    border: 1px solid #0891b2;
+    border: 1px solid #2563eb;
 }
 
 .btnUpload {
-    background-color: #0891b2;
+    /* UPDATED: Blue background */
+    background-color: #2563eb;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -111,7 +130,7 @@
 }
 
 .btnUpload:hover {
-    background-color: #0e7490;
+    background-color: #1d4ed8;
 }
 
 .btnUpload:disabled {
@@ -134,14 +153,16 @@
 }
 
 .headerRow h1 {
-    font-size: 24px;
+    /* UPDATED: Matches Trainer Profile size */
+    font-size: 20px;
     font-weight: 700;
     color: #111827;
     margin: 0;
 }
 
 .btnEdit {
-    background-color: #0891b2;
+    /* UPDATED: Blue background */
+    background-color: #2563eb;
     color: white;
     border: none;
     padding: 10px 20px;
@@ -157,12 +178,13 @@
 }
 
 .btnEdit:hover {
-    background-color: #0e7490;
+    background-color: #1d4ed8;
 }
 
 /* Section titles and dividers */
 .sectionTitle {
-    font-size: 16px;
+    /* UPDATED: Matches Trainer Profile size */
+    font-size: 14px;
     font-weight: 700;
     color: #374151;
     margin-bottom: 15px;
@@ -187,17 +209,20 @@
 .infoItem label {
     display: block;
     font-size: 12px;
-    font-weight: 500;
-    color: #6B7280;
+    /* UPDATED: Bold Label */
+    font-weight: 700;
+    color: #374151;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .infoItem p {
-    font-size: 15px;
-    font-weight: 600;
-    color: #374151;
+    /* UPDATED: Matches Trainer Profile description size */
+    font-size: 13px;
+    /* UPDATED: Normal Weight Content */
+    font-weight: 400;
+    color: #1f2937;
     line-height: 1.5;
     margin: 0;
 }
@@ -210,16 +235,20 @@
 .bioSection label {
     display: block;
     font-size: 12px;
-    font-weight: 500;
-    color: #6B7280;
+    /* UPDATED: Bold Label */
+    font-weight: 700;
+    color: #374151;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
 
 .bioSection p {
-    font-size: 15px;
-    color: #374151;
+    /* UPDATED: Matches Trainer Profile description size */
+    font-size: 13px;
+    /* UPDATED: Normal Weight Content */
+    font-weight: 400;
+    color: #1f2937;
     line-height: 1.6;
     margin: 0;
 }
@@ -239,7 +268,8 @@
 }
 
 .socialIcons a:hover {
-    color: #0891b2;
+    /* UPDATED: Blue hover */
+    color: #2563eb;
 }
 
 /* Edit Form Styles */
@@ -265,8 +295,9 @@
 
 .formGroup label {
     font-size: 12px;
-    font-weight: 500;
-    color: #6B7280;
+    /* UPDATED: Bold Label */
+    font-weight: 700;
+    color: #374151;
     margin-bottom: 6px;
     text-transform: uppercase;
     letter-spacing: 0.5px;
@@ -288,8 +319,9 @@
 .formGroup select:focus,
 .formGroup textarea:focus {
     outline: none;
-    border-color: #0891b2;
-    box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+    /* UPDATED: Blue focus ring */
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }
 
 .formGroup textarea {
@@ -316,12 +348,13 @@
 }
 
 .btnPrimary {
-    background-color: #0891b2;
+    /* UPDATED: Blue background */
+    background-color: #2563eb;
     color: white;
 }
 
 .btnPrimary:hover {
-    background-color: #0e7490;
+    background-color: #1d4ed8;
 }
 
 .btnPrimary:disabled {
@@ -388,6 +421,11 @@
     .leftColumn {
         flex: none;
         width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #f3f4f6;
+        padding-right: 0;
+        padding-bottom: 32px;
+        margin-bottom: 32px;
     }
 
     .infoGrid,
