@@ -8,6 +8,12 @@
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Page Header */
+.sc-header {
+    background-color: #ffffff;
+    padding: 24px 32px;
+    border-bottom: 1px solid #e9ecef;
+}
 
 .sc-header h1 {
     font-size: 24px;
@@ -19,8 +25,7 @@
 /* Main Container */
 .sc-container {
     display: flex;
-   /* padding: 24px 32px;*/
-   ;
+    padding: 24px 32px;
     gap: 24px;
     height: calc(100vh - 120px);
 }
@@ -29,7 +34,6 @@
 .sc-left-panel {
     width: 380px;
     min-width: 380px;
-    height: 100%;
     background: #ffffff;
     border-radius: 12px;
     border: 1px solid #e0e0e0;
@@ -201,6 +205,7 @@
     border-radius: 4px;
     text-transform: uppercase;
     letter-spacing: 0.3px;
+    margin-top: 4px;
 }
 
 .sc-no-topics {
@@ -289,7 +294,7 @@
     background: #000;
 }
 
-.sc-youtube-iframe {
+.sc-iframe-youtube {
     width: 100%;
     height: 100%;
     border: none;
@@ -304,7 +309,7 @@
     background: #000;
 }
 
-.sc-vimeo-iframe {
+.sc-iframe-vimeo {
     width: 100%;
     height: 100%;
     border: none;
@@ -330,13 +335,38 @@
 }
 
 /* PDF Viewer */
-.sc-pdf-viewer {
+.sc-pdf-viewer,
+.sc-document-viewer,
+.sc-presentation-viewer,
+.sc-spreadsheet-viewer,
+.sc-google-drive-viewer,
+.sc-google-drive-file-viewer,
+.sc-google-document-viewer,
+.sc-google-presentation-viewer,
+.sc-google-spreadsheet-viewer,
+.sc-microsoft-document-viewer,
+.sc-microsoft-presentation-viewer,
+.sc-microsoft-spreadsheet-viewer,
+.sc-webpage-viewer {
     height: 100%;
     width: 100%;
     background: #ffffff;
 }
 
-.sc-pdf-iframe {
+/* Common iframe styles for all document types */
+.sc-pdf-viewer iframe,
+.sc-document-viewer iframe,
+.sc-presentation-viewer iframe,
+.sc-spreadsheet-viewer iframe,
+.sc-google-drive-viewer iframe,
+.sc-google-drive-file-viewer iframe,
+.sc-google-document-viewer iframe,
+.sc-google-presentation-viewer iframe,
+.sc-google-spreadsheet-viewer iframe,
+.sc-microsoft-document-viewer iframe,
+.sc-microsoft-presentation-viewer iframe,
+.sc-microsoft-spreadsheet-viewer iframe,
+.sc-webpage-viewer iframe {
     width: 100%;
     height: 100%;
     border: none;
@@ -354,6 +384,21 @@
     padding: 20px;
 }
 
+.sc-image-viewer iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+    background: #ffffff;
+}
+
+.sc-image-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .sc-image-display {
     max-width: 100%;
     max-height: 100%;
@@ -363,46 +408,18 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
-/* Document Viewer */
-.sc-document-viewer {
+/* Error message for iframes */
+.sc-content-area:has(iframe[src*="error"])::before {
+    content: "Unable to load content. Please check if the file is publicly accessible.";
+    display: flex;
+    align-items: center;
+    justify-content: center;
     height: 100%;
-    width: 100%;
-    background: #ffffff;
-}
-
-.sc-document-iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #ffffff;
-}
-
-/* Office Viewer (PPT, Excel, Word) */
-.sc-office-viewer {
-    height: 100%;
-    width: 100%;
-    background: #ffffff;
-}
-
-.sc-office-iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #ffffff;
-}
-
-/* Webpage Viewer */
-.sc-webpage-viewer {
-    height: 100%;
-    width: 100%;
-    background: #ffffff;
-}
-
-.sc-webpage-iframe {
-    width: 100%;
-    height: 100%;
-    border: none;
-    background: #ffffff;
+    color: #666;
+    font-size: 14px;
+    background: #f8f9fa;
+    text-align: center;
+    padding: 20px;
 }
 
 /* Resource Description */
@@ -448,8 +465,7 @@
 }
 
 /* Loading & Error States */
-.sc-loading-container,
-.sc-error-container {
+.sc-loading-container, .sc-error-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -555,13 +571,8 @@
 
 /* Animations */
 @keyframes spin {
-    from {
-        transform: rotate(0deg);
-    }
-
-    to {
-        transform: rotate(360deg);
-    }
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }
 
 /* Responsive */
@@ -571,7 +582,7 @@
         padding: 20px;
         height: auto;
     }
-
+    
     .sc-left-panel {
         width: 100%;
         min-width: auto;
@@ -583,25 +594,30 @@
     .sc-header {
         padding: 20px;
     }
-
+    
     .sc-container {
         padding: 16px;
     }
-
+    
     .sc-modules-header,
     .sc-viewer-header {
         padding: 16px;
     }
-
+    
     .sc-modules-list {
         padding: 16px;
     }
-
+    
     .sc-resource-description {
         padding: 16px;
     }
-
+    
     .sc-topic-item {
         padding: 12px;
+    }
+    
+    .sc-topic-badge {
+        font-size: 10px;
+        padding: 3px 6px;
     }
 }

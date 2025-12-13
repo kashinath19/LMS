@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, ChevronDown, ChevronUp, Loader2, AlertCircle, LogIn, File, Image, Film, FileText as DocIcon } from 'lucide-react';
+import { BookOpen, FileText, ChevronDown, ChevronUp, Loader2, AlertCircle, LogIn, File, Image, Film, Presentation, FileText as DocIcon, Sheet } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import './StudentCourses.css';
 
@@ -20,13 +20,51 @@ const StudentCourses = () => {
         return (match && match[2].length === 11) ? match[2] : null;
     };
 
+    // Function to extract Google Drive file ID
+    const getGoogleDriveFileId = (url) => {
+        // Handle different Google Drive URL formats
+        const patterns = [
+            /drive\.google\.com\/file\/d\/([^\/]+)/,
+            /drive\.google\.com\/open\?id=([^&]+)/,
+            /drive\.google\.com\/uc\?id=([^&]+)/,
+            /docs\.google\.com\/(?:presentation|document|spreadsheets)\/d\/([^\/]+)/,
+        ];
+        
+        for (const pattern of patterns) {
+            const match = url.match(pattern);
+            if (match && match[1]) {
+                return match[1];
+            }
+        }
+        return null;
+    };
+
+    // Function to check if URL is from Google Docs/Sheets/Slides
+    const isGoogleWorkspaceUrl = (url) => {
+        return url.includes('docs.google.com') && 
+               (url.includes('/presentation/') || 
+                url.includes('/document/') || 
+                url.includes('/spreadsheets/'));
+    };
+
+    // Function to check if URL is a direct file link
+    const isDirectFileLink = (url) => {
+        const directFilePatterns = [
+            /\.(pdf|ppt|pptx|doc|docx|xls|xlsx|txt|rtf|jpg|jpeg|png|gif|bmp|svg|webp|mp4|webm|avi|mov|wmv|flv|mkv)$/i,
+        ];
+        return directFilePatterns.some(pattern => pattern.test(url));
+    };
+
     // Function to get file extension
     const getFileExtension = (url) => {
         try {
             const urlObj = new URL(url);
             const pathname = urlObj.pathname;
             const extension = pathname.split('.').pop().toLowerCase();
-            return extension;
+            
+            // Clean extension from query parameters
+            const cleanExtension = extension.split('?')[0];
+            return cleanExtension;
         } catch (error) {
             // If URL parsing fails, try to extract extension from string
             const parts = url.split('.').pop().toLowerCase();
@@ -38,66 +76,184 @@ const StudentCourses = () => {
     // Function to determine resource type
     const getResourceType = (url) => {
         if (!url) return 'unknown';
-
+        
         // Check for YouTube
         if (url.includes('youtube.com') || url.includes('youtu.be')) {
             return 'youtube';
         }
-
+        
         // Check for Vimeo
         if (url.includes('vimeo.com')) {
             return 'vimeo';
         }
-
-        const extension = getFileExtension(url);
-
-        // Video formats
-        const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'm4v', '3gp'];
-        if (videoExtensions.includes(extension)) {
-            return 'video';
+        
+        // Check for Google Drive
+        if (url.includes('drive.google.com')) {
+            const fileId = getGoogleDriveFileId(url);
+            if (fileId) {
+                // Try to determine type from URL patterns
+                if (url.includes('/presentation/') || url.includes('/open?id=') && url.includes('presentation')) {
+                    return 'google-presentation';
+                } else if (url.includes('/document/') || url.includes('/open?id=') && url.includes('document')) {
+                    return 'google-document';
+                } else if (url.includes('/spreadsheets/') || url.includes('/open?id=') && url.includes('spreadsheet')) {
+                    return 'google-spreadsheet';
+                } else if (url.includes('/file/d/')) {
+                    // Generic Google Drive file - we'll try to determine by extension
+                    return 'google-drive-file';
+                }
+            }
+            return 'google-drive';
         }
-
-        // PDF
-        if (extension === 'pdf') {
-            return 'pdf';
+        
+        // Check for Google Workspace (Docs, Sheets, Slides)
+        if (isGoogleWorkspaceUrl(url)) {
+            if (url.includes('/presentation/')) {
+                return 'google-presentation';
+            } else if (url.includes('/document/')) {
+                return 'google-document';
+            } else if (url.includes('/spreadsheets/')) {
+                return 'google-spreadsheet';
+            }
         }
-
-        // Image formats
-        const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp'];
-        if (imageExtensions.includes(extension)) {
-            return 'image';
+        
+        // Check for Microsoft Office files
+        if (url.includes('office.com') || url.includes('live.com') || url.includes('sharepoint.com')) {
+            if (url.includes('.ppt') || url.includes('.pptx') || url.includes('PowerPoint')) {
+                return 'microsoft-presentation';
+            } else if (url.includes('.doc') || url.includes('.docx') || url.includes('Word')) {
+                return 'microsoft-document';
+            } else if (url.includes('.xls') || url.includes('.xlsx') || url.includes('Excel')) {
+                return 'microsoft-spreadsheet';
+            }
         }
-
-        // Document formats
-        const docExtensions = ['doc', 'docx', 'txt', 'rtf'];
-        if (docExtensions.includes(extension)) {
-            return 'document';
+        
+        // Check for direct file links with extensions
+        if (isDirectFileLink(url)) {
+            const extension = getFileExtension(url);
+            
+            // Video formats
+            const videoExtensions = ['mp4', 'webm', 'ogg', 'avi', 'mov', 'wmv', 'flv', 'mkv', 'm4v', '3gp'];
+            if (videoExtensions.includes(extension)) {
+                return 'video';
+            }
+            
+            // PDF
+            if (extension === 'pdf') {
+                return 'pdf';
+            }
+            
+            // Image formats
+            const imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg', 'webp', 'tiff'];
+            if (imageExtensions.includes(extension)) {
+                return 'image';
+            }
+            
+            // Document formats
+            const docExtensions = ['doc', 'docx', 'txt', 'rtf', 'odt'];
+            if (docExtensions.includes(extension)) {
+                return 'document';
+            }
+            
+            // PowerPoint formats
+            const pptExtensions = ['ppt', 'pptx', 'pps', 'ppsx', 'odp'];
+            if (pptExtensions.includes(extension)) {
+                return 'presentation';
+            }
+            
+            // Excel formats
+            const excelExtensions = ['xls', 'xlsx', 'csv', 'ods'];
+            if (excelExtensions.includes(extension)) {
+                return 'spreadsheet';
+            }
         }
-
-        // PowerPoint formats
-        const pptExtensions = ['ppt', 'pptx', 'pps', 'ppsx'];
-        if (pptExtensions.includes(extension)) {
-            return 'powerpoint';
-        }
-
-        // Excel formats
-        const excelExtensions = ['xls', 'xlsx', 'csv'];
-        if (excelExtensions.includes(extension)) {
-            return 'excel';
-        }
-
+        
         // Default to iframe for web pages
         return 'webpage';
     };
 
-    // Function to get Google Docs embed URL for documents
-    const getGoogleDocsEmbedUrl = (url) => {
-        return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+    // Function to get proper embed URL for different services
+    const getEmbedUrl = (url, resourceType) => {
+        switch (resourceType) {
+            case 'youtube': {
+                const videoId = getYouTubeVideoId(url);
+                return `https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`;
+            }
+
+            case 'vimeo': {
+                const vimeoId = url.split('/').pop();
+                return `https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0`;
+            }
+
+            case 'google-drive':
+            case 'google-drive-file': {
+                const fileId = getGoogleDriveFileId(url);
+                return `https://drive.google.com/file/d/${fileId}/preview`;
+            }
+
+            case 'google-presentation':
+            case 'google-document':
+            case 'google-spreadsheet': {
+                // Convert to embed-friendly URL
+                const fileId = getGoogleDriveFileId(url);
+                let embedUrl = url.replace('/edit', '/preview');
+                if (embedUrl.includes('/presentation/')) {
+                    embedUrl = embedUrl.replace('/pub', '').replace('/pubhtml', '') + '?rm=minimal';
+                } else if (embedUrl.includes('/document/')) {
+                    embedUrl = embedUrl + '?rm=minimal';
+                } else if (embedUrl.includes('/spreadsheets/')) {
+                    embedUrl = embedUrl + '?rm=minimal&single=true&widget=false&headers=false';
+                }
+                return embedUrl;
+            }
+
+            case 'microsoft-presentation':
+            case 'microsoft-document':
+            case 'microsoft-spreadsheet': {
+                // Use Microsoft Office Online Viewer
+                return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+            }
+
+            case 'presentation':
+            case 'document':
+            case 'spreadsheet': {
+                // Use Microsoft Office Online Viewer for direct file links
+                return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+            }
+
+            case 'pdf': {
+                // For PDFs, use Google Docs viewer for better compatibility
+                return `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+            }
+
+            default:
+                return url;
+        }
     };
 
-    // Function to get Office 365 embed URL
-    const getOfficeEmbedUrl = (url) => {
-        return `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(url)}`;
+    // Function to get display name for resource type
+    const getResourceTypeName = (resourceType) => {
+        const typeNames = {
+            'youtube': 'YOUTUBE',
+            'vimeo': 'VIDEO',
+            'video': 'VIDEO',
+            'pdf': 'PDF',
+            'image': 'IMAGE',
+            'document': 'DOCUMENT',
+            'presentation': 'PRESENTATION',
+            'spreadsheet': 'SPREADSHEET',
+            'google-drive': 'GOOGLE DRIVE',
+            'google-drive-file': 'GOOGLE DRIVE FILE',
+            'google-document': 'GOOGLE DOC',
+            'google-presentation': 'GOOGLE SLIDES',
+            'google-spreadsheet': 'GOOGLE SHEETS',
+            'microsoft-document': 'WORD DOCUMENT',
+            'microsoft-presentation': 'POWERPOINT',
+            'microsoft-spreadsheet': 'EXCEL',
+            'webpage': 'WEBPAGE',
+            'unknown': 'RESOURCE'
+        };
+        return typeNames[resourceType] || 'RESOURCE';
     };
 
     const renderResourceContent = (topic) => {
@@ -110,39 +266,29 @@ const StudentCourses = () => {
         }
 
         const resourceType = getResourceType(topic.resource_link);
+        const embedUrl = getEmbedUrl(topic.resource_link, resourceType);
+
+        // Common iframe attributes
+        const iframeAttributes = {
+            title: topic.title,
+            className: `sc-iframe-${resourceType}`,
+            frameBorder: "0",
+            allowFullScreen: true,
+            sandbox: "allow-same-origin allow-scripts allow-popups allow-forms allow-presentation"
+        };
 
         switch (resourceType) {
-            case 'youtube': {
-                const videoId = getYouTubeVideoId(topic.resource_link);
+            case 'youtube':
+            case 'vimeo':
                 return (
-                    <div className="sc-youtube-player">
+                    <div className={`sc-${resourceType}-player`}>
                         <iframe
-                            src={`https://www.youtube.com/embed/${videoId}?autoplay=1&rel=0&modestbranding=1`}
-                            title={topic.title}
-                            className="sc-youtube-iframe"
-                            frameBorder="0"
+                            {...iframeAttributes}
+                            src={embedUrl}
                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                            allowFullScreen
                         />
                     </div>
                 );
-            }
-
-            case 'vimeo': {
-                const vimeoId = topic.resource_link.split('/').pop();
-                return (
-                    <div className="sc-vimeo-player">
-                        <iframe
-                            src={`https://player.vimeo.com/video/${vimeoId}?autoplay=1&title=0&byline=0&portrait=0`}
-                            title={topic.title}
-                            className="sc-vimeo-iframe"
-                            frameBorder="0"
-                            allow="autoplay; fullscreen; picture-in-picture"
-                            allowFullScreen
-                        />
-                    </div>
-                );
-            }
 
             case 'video':
                 return (
@@ -159,59 +305,43 @@ const StudentCourses = () => {
                 );
 
             case 'pdf':
-                return (
-                    <div className="sc-pdf-viewer">
-                        <iframe
-                            src={topic.resource_link}
-                            title={topic.title}
-                            className="sc-pdf-iframe"
-                        />
-                    </div>
-                );
-
             case 'image':
-                return (
-                    <div className="sc-image-viewer">
-                        <img
-                            src={topic.resource_link}
-                            alt={topic.title}
-                            className="sc-image-display"
-                        />
-                    </div>
-                );
-
             case 'document':
-                return (
-                    <div className="sc-document-viewer">
-                        <iframe
-                            src={getGoogleDocsEmbedUrl(topic.resource_link)}
-                            title={topic.title}
-                            className="sc-document-iframe"
-                        />
-                    </div>
-                );
-
-            case 'powerpoint':
-            case 'excel':
-                return (
-                    <div className="sc-office-viewer">
-                        <iframe
-                            src={getOfficeEmbedUrl(topic.resource_link)}
-                            title={topic.title}
-                            className="sc-office-iframe"
-                        />
-                    </div>
-                );
-
+            case 'presentation':
+            case 'spreadsheet':
+            case 'google-drive':
+            case 'google-drive-file':
+            case 'google-document':
+            case 'google-presentation':
+            case 'google-spreadsheet':
+            case 'microsoft-document':
+            case 'microsoft-presentation':
+            case 'microsoft-spreadsheet':
             case 'webpage':
+                return (
+                    <div className={`sc-${resourceType}-viewer`}>
+                        <iframe
+                            {...iframeAttributes}
+                            src={embedUrl}
+                        />
+                        {resourceType === 'image' && (
+                            <div className="sc-image-fallback">
+                                <img
+                                    src={topic.resource_link}
+                                    alt={topic.title}
+                                    className="sc-image-display"
+                                />
+                            </div>
+                        )}
+                    </div>
+                );
+
             default:
                 return (
                     <div className="sc-webpage-viewer">
                         <iframe
-                            src={topic.resource_link}
-                            title={topic.title}
-                            className="sc-webpage-iframe"
-                            sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
+                            {...iframeAttributes}
+                            src={embedUrl}
                         />
                     </div>
                 );
@@ -232,10 +362,10 @@ const StudentCourses = () => {
                     'Authorization': `Bearer ${token}`,
                     'Content-Type': 'application/json'
                 };
-
+                
                 const [modulesRes, topicsRes] = await Promise.all([
                     fetch(`${API_BASE_URL}/api/v1/modules/?limit=100`, { headers }),
-                    fetch(`${API_BASE_URL}/api/v1/topics/?limit=1000`, { headers })
+                    fetch(`${API_BASE_URL}/api/v1/topics/?limit=1000`, { headers }) 
                 ]);
 
                 if (modulesRes.status === 401 || topicsRes.status === 401) {
@@ -251,7 +381,7 @@ const StudentCourses = () => {
 
                 if (!modulesRes.ok) {
                     const errorText = await modulesRes.text();
-                    if (errorText.includes('assigned') || errorText.includes('domain') ||
+                    if (errorText.includes('assigned') || errorText.includes('domain') || 
                         errorText.includes('no modules') || modulesRes.status === 400) {
                         setCourses([]);
                         setError(null);
@@ -273,7 +403,7 @@ const StudentCourses = () => {
                 }
 
                 const organizedCourses = modulesData.map(module => {
-                    const moduleTopics = Array.isArray(topicsData)
+                    const moduleTopics = Array.isArray(topicsData) 
                         ? topicsData
                             .filter(topic => topic.module_id === module.id)
                             .sort((a, b) => a.order_index - b.order_index)
@@ -318,7 +448,7 @@ const StudentCourses = () => {
     // Function to get icon for resource type
     const getResourceIcon = (resourceLink) => {
         if (!resourceLink) return <FileText size={16} />;
-
+        
         const type = getResourceType(resourceLink);
         switch (type) {
             case 'youtube':
@@ -330,9 +460,20 @@ const StudentCourses = () => {
             case 'image':
                 return <Image size={16} />;
             case 'document':
-            case 'powerpoint':
-            case 'excel':
+            case 'google-document':
+            case 'microsoft-document':
                 return <DocIcon size={16} />;
+            case 'presentation':
+            case 'google-presentation':
+            case 'microsoft-presentation':
+                return <Presentation size={16} />;
+            case 'spreadsheet':
+            case 'google-spreadsheet':
+            case 'microsoft-spreadsheet':
+                return <Sheet size={16} />;
+            case 'google-drive':
+            case 'google-drive-file':
+                return <File size={16} />;
             default:
                 return <FileText size={16} />;
         }
@@ -354,7 +495,7 @@ const StudentCourses = () => {
                 <p className="sc-error-message">{error}</p>
                 {error.includes("log in") || error.includes("Unauthorized") ? (
                     <button onClick={() => window.location.href = '/login'} className="sc-retry-btn">
-                        <LogIn size={16} style={{ marginRight: '8px' }} />
+                        <LogIn size={16} style={{marginRight: '8px'}}/>
                         Go to Login
                     </button>
                 ) : (
@@ -368,6 +509,10 @@ const StudentCourses = () => {
 
     return (
         <div className="student-courses-page">
+            {/* Page Header */}
+            <div className="sc-header">
+                <h1>My Courses</h1>
+            </div>
 
             <div className="sc-container">
                 {/* Left Panel - My Learning Modules */}
@@ -376,13 +521,13 @@ const StudentCourses = () => {
                         <h2>My Learning Modules</h2>
                         <p>Track your progress and access content</p>
                     </div>
-
+                    
                     {courses.length === 0 ? (
                         <div className="sc-empty-state">
                             <BookOpen size={64} />
                             <h3>No Modules Assigned Yet</h3>
                             <p>
-                                You haven't been assigned to any domain modules yet.
+                                You haven't been assigned to any domain modules yet. 
                                 <br />
                                 Please check back later or contact your administrator.
                             </p>
@@ -399,8 +544,8 @@ const StudentCourses = () => {
                         <div className="sc-modules-list">
                             {courses.map((module) => (
                                 <div key={module.id} className={`sc-module-card ${expandedModuleId === module.id ? 'expanded' : ''}`}>
-                                    <div
-                                        className="sc-module-header"
+                                    <div 
+                                        className="sc-module-header" 
                                         onClick={() => toggleModule(module.id)}
                                     >
                                         <div className="sc-module-info">
@@ -418,8 +563,8 @@ const StudentCourses = () => {
                                             {module.topics && module.topics.length > 0 ? (
                                                 <ul className="sc-topics-list">
                                                     {module.topics.map((topic) => (
-                                                        <li
-                                                            key={topic.id}
+                                                        <li 
+                                                            key={topic.id} 
                                                             className={`sc-topic-item ${selectedTopic?.id === topic.id ? 'active' : ''}`}
                                                             onClick={() => handleTopicClick(topic)}
                                                         >
@@ -431,7 +576,7 @@ const StudentCourses = () => {
                                                                 <p className="sc-topic-desc">{topic.content}</p>
                                                                 {topic.resource_link && (
                                                                     <div className="sc-topic-badge">
-                                                                        {getResourceType(topic.resource_link).toUpperCase()} Available
+                                                                        {getResourceTypeName(getResourceType(topic.resource_link))} AVAILABLE
                                                                     </div>
                                                                 )}
                                                             </div>
