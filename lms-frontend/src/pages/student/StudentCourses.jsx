@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { BookOpen, FileText, ChevronDown, ChevronUp, Loader2, AlertCircle, LogIn, File, Image, Film, Presentation, FileText as DocIcon, Sheet } from 'lucide-react';
+import { BookOpen, FileText, ChevronDown, ChevronUp, Loader2, AlertCircle, LogIn, File, Image, Film, Presentation, FileText as DocIcon, Sheet, Globe, ExternalLink, AlertTriangle } from 'lucide-react';
 import { useOutletContext } from 'react-router-dom';
 import './StudentCourses.css';
 
@@ -508,18 +508,13 @@ const StudentCourses = () => {
     }
 
     return (
-        <div className="student-courses-page">
-            {/* Page Header */}
-            <div className="sc-header">
-                <h1>My Courses</h1>
-            </div>
-
-            <div className="sc-container">
+        <div className="sc-courses-container">
+            <div className="sc-main-container">
                 {/* Left Panel - My Learning Modules */}
                 <div className="sc-left-panel">
                     <div className="sc-modules-header">
                         <h2>My Learning Modules</h2>
-                        <p>Track your progress and access content</p>
+                        <p>Track your progress and manage course content</p>
                     </div>
                     
                     {courses.length === 0 ? (
@@ -543,15 +538,14 @@ const StudentCourses = () => {
                     ) : (
                         <div className="sc-modules-list">
                             {courses.map((module) => (
-                                <div key={module.id} className={`sc-module-card ${expandedModuleId === module.id ? 'expanded' : ''}`}>
+                                <div key={module.id} className={`sc-module-card ${expandedModuleId === module.id ? 'sc-module-card-expanded' : ''}`}>
                                     <div 
                                         className="sc-module-header" 
                                         onClick={() => toggleModule(module.id)}
                                     >
                                         <div className="sc-module-info">
-                                            <span className="sc-module-label">MODULE</span>
                                             <h3 className="sc-module-title">{module.title}</h3>
-                                            <p className="sc-module-desc">{module.description}</p>
+                                            <p className="sc-module-description">{module.description}</p>
                                         </div>
                                         <div className="sc-module-toggle">
                                             {expandedModuleId === module.id ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
@@ -559,35 +553,52 @@ const StudentCourses = () => {
                                     </div>
 
                                     {expandedModuleId === module.id && (
-                                        <div className="sc-module-body">
-                                            {module.topics && module.topics.length > 0 ? (
-                                                <ul className="sc-topics-list">
-                                                    {module.topics.map((topic) => (
-                                                        <li 
-                                                            key={topic.id} 
-                                                            className={`sc-topic-item ${selectedTopic?.id === topic.id ? 'active' : ''}`}
-                                                            onClick={() => handleTopicClick(topic)}
-                                                        >
-                                                            <div className="sc-topic-icon">
-                                                                {getResourceIcon(topic.resource_link)}
-                                                            </div>
-                                                            <div className="sc-topic-content">
-                                                                <h4 className="sc-topic-title">{topic.title}</h4>
-                                                                <p className="sc-topic-desc">{topic.content}</p>
-                                                                {topic.resource_link && (
-                                                                    <div className="sc-topic-badge">
-                                                                        {getResourceTypeName(getResourceType(topic.resource_link))} AVAILABLE
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </li>
-                                                    ))}
-                                                </ul>
-                                            ) : (
-                                                <div className="sc-no-topics">
-                                                    <p>No topics available in this module yet.</p>
+                                        <div className="sc-module-card-content">
+                                            {/* Progress Bar */}
+                                            <div className="sc-progress-container">
+                                                <div className="sc-progress-label">
+                                                    <span>Progress</span>
+                                                    <span className="sc-progress-percent">0%</span>
                                                 </div>
-                                            )}
+                                                <div className="sc-progress-bar">
+                                                    <div className="sc-progress-fill" style={{ width: '0%' }}></div>
+                                                </div>
+                                            </div>
+
+                                            {/* Topics Section */}
+                                            <div className="sc-topics-section">
+                                                {module.topics && module.topics.length > 0 ? (
+                                                    <div className="sc-topics-list">
+                                                        {module.topics.map((topic, index) => (
+                                                            <div 
+                                                                key={topic.id} 
+                                                                className={`sc-topic-card ${selectedTopic?.id === topic.id ? 'sc-topic-card-active' : ''}`}
+                                                                onClick={() => handleTopicClick(topic)}
+                                                            >
+                                                                <div className="sc-topic-card-content">
+                                                                    <div className="sc-topic-icon">
+                                                                        {getResourceIcon(topic.resource_link)}
+                                                                    </div>
+                                                                    <div className="sc-topic-info">
+                                                                        <div className="sc-topic-badge">{index + 1}</div>
+                                                                        <h4 className="sc-topic-title">{topic.title}</h4>
+                                                                        <p className="sc-topic-description">{topic.content}</p>
+                                                                        {topic.resource_link && (
+                                                                            <div className="sc-resource-tag">
+                                                                                {getResourceTypeName(getResourceType(topic.resource_link))}
+                                                                            </div>
+                                                                        )}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <div className="sc-no-topics">
+                                                        <p>No topics available in this module yet.</p>
+                                                    </div>
+                                                )}
+                                            </div>
                                         </div>
                                     )}
                                 </div>
@@ -600,7 +611,14 @@ const StudentCourses = () => {
                 <div className="sc-right-panel">
                     <div className="sc-content-viewer">
                         <div className="sc-viewer-header">
-                            <h2>Content Viewer</h2>
+                            <div className="sc-viewer-header-top">
+                                <h2>Content Viewer</h2>
+                                {selectedTopic && (
+                                    <span className="sc-module-badge">
+                                        {courses.find(m => m.topics?.some(t => t.id === selectedTopic.id))?.title || 'Module'}
+                                    </span>
+                                )}
+                            </div>
                             {selectedTopic && (
                                 <div className="sc-viewer-topic-title">{selectedTopic.title}</div>
                             )}
@@ -616,6 +634,7 @@ const StudentCourses = () => {
 
                                     {/* Description */}
                                     <div className="sc-resource-description">
+                                        <h3>Topic Details</h3>
                                         <p>{selectedTopic.content || 'No description available'}</p>
                                     </div>
                                 </>
