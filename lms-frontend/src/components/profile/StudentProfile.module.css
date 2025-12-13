@@ -5,7 +5,7 @@
     width: 100%;
     padding-top: 100px;
     padding-left: 120px;
-    padding-right : 120px;
+    padding-right: 120px;
     display: flex;
     justify-content: flex-start;
     align-items: flex-start;
@@ -376,6 +376,14 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+
+    /* ADDED: Reduce wrapper padding for smaller screens */
+    .studentProfileWrapper {
+        padding-left: 40px;
+        padding-right: 40px;
+        padding-top: 60px;
+    }
+
     .profileCard {
         gap: 24px;
         padding: 24px;
@@ -387,6 +395,14 @@
 }
 
 @media (max-width: 768px) {
+
+    /* ADDED: Further reduce wrapper padding for tablets */
+    .studentProfileWrapper {
+        padding-left: 20px;
+        padding-right: 20px;
+        padding-top: 40px;
+    }
+
     .profileCard {
         flex-direction: column;
         padding: 20px;
@@ -415,5 +431,70 @@
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
+    }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+    .studentProfileWrapper {
+        padding-left: 12px;
+        padding-right: 12px;
+        padding-top: 24px;
+    }
+
+    .profileCard {
+        padding: 16px;
+        gap: 20px;
+        border-radius: 8px;
+    }
+
+    .leftColumn {
+        padding-bottom: 24px;
+        margin-bottom: 24px;
+    }
+
+    .avatarContainer {
+        width: 100px;
+        height: 100px;
+        margin-bottom: 16px;
+    }
+
+    .avatarPlaceholder .initials {
+        font-size: 36px;
+    }
+
+    .leftColumn h2 {
+        font-size: 16px;
+    }
+
+    .headerRow h1 {
+        font-size: 18px;
+    }
+
+    .btnEdit {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .btnUpload {
+        padding: 8px 16px;
+        font-size: 13px;
+    }
+
+    .infoGrid {
+        gap: 16px;
+    }
+
+    .formGroup input,
+    .formGroup select,
+    .formGroup textarea {
+        padding: 10px;
+        font-size: 14px;
+    }
+
+    .btnPrimary,
+    .btnSecondary {
+        padding: 10px 20px;
+        width: 100%;
     }
 }

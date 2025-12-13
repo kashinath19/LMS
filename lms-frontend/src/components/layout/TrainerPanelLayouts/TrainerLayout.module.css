@@ -1,17 +1,22 @@
-/* src/components/layout/TrainerPanel/TrainerLayout.module.css */
+/* TrainerLayout.module.css */
+/* UPDATED: Responsive layout with proper breakpoints for mobile/tablet/desktop */
 
 .mainArea {
-    margin-left: 240px; /* sidebar width */
+    margin-left: 240px;
+    /* sidebar width */
     width: calc(100% - 240px);
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    overflow-x: hidden;
+    /* ADDED: Prevent horizontal scroll */
 }
 
 .fixedHeader {
     position: fixed;
     top: 0;
-    left: 240px; /* align after sidebar */
+    left: 240px;
+    /* align after sidebar */
     right: 0;
     z-index: 60;
     height: 64px;
@@ -20,9 +25,12 @@
 }
 
 .contentScroll {
-    margin-top: 64px; /* space for fixed header */
+    margin-top: 64px;
+    /* space for fixed header */
     height: calc(100vh - 64px);
     overflow-y: auto;
+    overflow-x: hidden;
+    /* ADDED: Prevent horizontal scroll */
     -webkit-overflow-scrolling: touch;
     background: transparent;
     padding: 0;
@@ -30,8 +38,8 @@
     width: 100%;
 }
 
-/* Responsive: on small screens sidebar is overlay */
-@media (max-width: 768px) {
+/* UPDATED: Changed from 768px to 1024px - sidebar stays visible on small laptops */
+@media (max-width: 1024px) {
     .mainArea {
         margin-left: 0;
         width: 100%;
@@ -39,12 +47,35 @@
 
     .fixedHeader {
         left: 0;
-        height: 56px;
+        height: 64px;
         width: 100%;
+    }
+
+    .contentScroll {
+        margin-top: 64px;
+        height: calc(100vh - 64px);
+    }
+}
+
+/* ADDED: Tablet-specific adjustments */
+@media (max-width: 768px) {
+    .fixedHeader {
+        height: 56px;
     }
 
     .contentScroll {
         margin-top: 56px;
         height: calc(100vh - 56px);
+    }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+    .contentScroll {
+        padding: 0;
+    }
+
+    .fixedHeader {
+        padding: 0 8px;
     }
 }

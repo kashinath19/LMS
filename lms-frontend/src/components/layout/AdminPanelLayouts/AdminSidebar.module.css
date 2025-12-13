@@ -204,14 +204,18 @@
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.4);
-  z-index: 18;
+  z-index: 1000;
+  /* UPDATED: Higher z-index for overlay */
 }
 
 .open {
   transform: translateX(0);
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+  /* ADDED: Shadow when drawer is open */
 }
 
-@media (max-width: 768px) {
+/* UPDATED: Changed from 768px to 1024px - sidebar stays visible on small laptops */
+@media (max-width: 1024px) {
   .sidebar {
     position: fixed;
     transform: translateX(-100%);
@@ -219,10 +223,77 @@
     width: 16rem;
     left: 0;
     top: 0;
-    z-index: 20;
+    z-index: 1001;
+    /* UPDATED: Above overlay */
   }
 
   .open {
     transform: translateX(0);
+  }
+}
+
+/* ADDED: Tablet-specific adjustments */
+@media (max-width: 768px) {
+  .sidebar {
+    width: 280px;
+  }
+
+  .top {
+    padding: 12px 10px;
+  }
+
+  .nav {
+    padding: 10px 2px;
+  }
+
+  .navItem {
+    padding: 10px 12px;
+    font-size: 13px;
+  }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+  .sidebar {
+    width: 85vw;
+    max-width: 300px;
+  }
+
+  .logo {
+    font-size: 16px;
+    padding: 6px 8px;
+  }
+
+  .logoIcon {
+    width: 24px;
+    height: 24px;
+  }
+
+  .navItem {
+    padding: 10px 10px;
+    font-size: 13px;
+    border-radius: 10px;
+  }
+
+  .footer {
+    padding: 12px 10px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .userName {
+    font-size: 13px;
+  }
+
+  .userEmail {
+    font-size: 11px;
+  }
+
+  .logout {
+    padding: 10px;
+    font-size: 13px;
   }
 }

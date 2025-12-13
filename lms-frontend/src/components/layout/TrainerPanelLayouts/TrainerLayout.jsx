@@ -17,6 +17,12 @@ const TrainerLayout = () => {
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [pageTitle, setPageTitle] = useState('');
 
+    // ADDED: State for mobile sidebar drawer toggle
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // ADDED: Toggle function for hamburger menu
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
+
     const resolveUrl = (url) => {
         if (!url) return null;
         if (/^https?:\/\//i.test(url)) return url;
@@ -110,18 +116,23 @@ const TrainerLayout = () => {
 
     return (
         <div className={styles.pageShell}>
+            {/* UPDATED: Added open/onClose props for mobile drawer behavior */}
             <TrainerSidebar
                 logo={logo}
                 navItems={navItems}
                 footerUser={footerUser}
                 onLogout={handleLogout}
+                open={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
             <div className={panelStyles.mainArea}>
                 <div className={panelStyles.fixedHeader}>
+                    {/* UPDATED: Added onToggleSidebar prop for hamburger menu */}
                     <Header
                         title={pageTitle}
                         profile={headerProfile}
+                        onToggleSidebar={toggleSidebar}
                     />
                 </div>
 
@@ -138,7 +149,7 @@ const TrainerLayout = () => {
                     backgroundColor: 'rgba(0, 0, 0, 0.6)', backdropFilter: 'blur(2px)',
                     zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center'
                 }}>
-                     <div style={{
+                    <div style={{
                         backgroundColor: 'white', padding: '30px', borderRadius: '16px',
                         width: '90%', maxWidth: '380px', textAlign: 'center',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
@@ -155,7 +166,7 @@ const TrainerLayout = () => {
                             Are you sure you want to log out?
                         </p>
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            <button 
+                            <button
                                 onClick={() => setShowLogoutModal(false)}
                                 style={{
                                     flex: 1, padding: '12px', borderRadius: '8px', border: 'none',
@@ -164,7 +175,7 @@ const TrainerLayout = () => {
                             >
                                 Cancel
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmLogout}
                                 style={{
                                     flex: 1, padding: '12px', borderRadius: '8px', border: 'none',

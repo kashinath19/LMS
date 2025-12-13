@@ -16,6 +16,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-shrink: 0;
 }
 
 .title {
@@ -45,6 +46,17 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  flex: 1 1 auto;
+  min-width: 0;
+  justify-content: flex-end;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.right::-webkit-scrollbar {
+  display: none;
 }
 
 .actions {
@@ -176,6 +188,14 @@
 }
 
 /* responsive adjustments */
+/* UPDATED: Changed from 768px to 1024px - hamburger shows when sidebar becomes drawer */
+@media (max-width: 1024px) {
+  .mobileToggle {
+    display: inline-flex;
+  }
+}
+
+/* ADDED: Tablet-specific adjustments */
 @media (max-width: 768px) {
   .header {
     padding: 0 12px;
@@ -194,7 +214,45 @@
     padding: 8px 12px;
   }
 
+  .profileInfo {
+    display: none;
+    /* Hide profile text on smaller tablets */
+  }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+  .header {
+    padding: 0 8px;
+    height: 52px;
+    gap: 8px;
+  }
+
+  .left {
+    gap: 8px;
+  }
+
+  .title {
+    font-size: 16px;
+  }
+
   .mobileToggle {
-    display: inline-flex;
+    width: 32px;
+    height: 32px;
+  }
+
+  .actionButton {
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+
+  .profileAvatar {
+    width: 34px;
+    height: 34px;
+  }
+
+  .profile {
+    padding: 4px;
+    gap: 6px;
   }
 }

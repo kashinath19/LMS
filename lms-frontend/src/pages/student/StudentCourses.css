@@ -465,7 +465,8 @@
 }
 
 /* Loading & Error States */
-.sc-loading-container, .sc-error-container {
+.sc-loading-container,
+.sc-error-container {
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -571,8 +572,13 @@
 
 /* Animations */
 @keyframes spin {
-    from { transform: rotate(0deg); }
-    to { transform: rotate(360deg); }
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
 }
 
 /* Responsive */
@@ -582,7 +588,7 @@
         padding: 20px;
         height: auto;
     }
-    
+
     .sc-left-panel {
         width: 100%;
         min-width: auto;
@@ -594,30 +600,122 @@
     .sc-header {
         padding: 20px;
     }
-    
+
     .sc-container {
         padding: 16px;
     }
-    
+
     .sc-modules-header,
     .sc-viewer-header {
         padding: 16px;
     }
-    
+
     .sc-modules-list {
         padding: 16px;
     }
-    
+
     .sc-resource-description {
         padding: 16px;
     }
-    
+
     .sc-topic-item {
         padding: 12px;
     }
-    
+
     .sc-topic-badge {
         font-size: 10px;
         padding: 3px 6px;
+    }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+    .sc-header {
+        padding: 12px;
+    }
+
+    .sc-header h1 {
+        font-size: 18px;
+    }
+
+    .sc-container {
+        padding: 12px;
+        gap: 16px;
+    }
+
+    .sc-modules-header,
+    .sc-viewer-header {
+        padding: 12px;
+    }
+
+    .sc-modules-header h2,
+    .sc-viewer-header h2 {
+        font-size: 16px;
+    }
+
+    .sc-modules-list {
+        padding: 12px;
+    }
+
+    .sc-module-header {
+        padding: 12px;
+    }
+
+    .sc-module-title {
+        font-size: 14px;
+    }
+
+    .sc-topic-title {
+        font-size: 13px;
+    }
+
+    .sc-topic-desc {
+        font-size: 12px;
+    }
+
+    /* Ensure content viewers fit mobile screens */
+    .sc-youtube-player,
+    .sc-vimeo-player,
+    .sc-video-player-container,
+    .sc-pdf-viewer,
+    .sc-image-viewer,
+    .sc-content-area {
+        max-width: 100% !important;
+        overflow-x: hidden;
+    }
+
+    .sc-video-player,
+    .sc-iframe-youtube,
+    .sc-iframe-vimeo {
+        max-width: 100% !important;
+    }
+
+    .sc-image-display {
+        max-width: 100%;
+    }
+
+    .sc-no-selection {
+        padding: 24px;
+    }
+
+    .sc-no-selection h3 {
+        font-size: 14px;
+    }
+
+    .sc-no-selection p {
+        font-size: 12px;
+    }
+
+    .sc-empty-state {
+        padding: 24px 16px;
+    }
+
+    .sc-empty-actions {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .sc-empty-actions button {
+        width: 100%;
     }
 }

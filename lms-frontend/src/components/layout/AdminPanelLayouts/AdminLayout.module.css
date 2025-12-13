@@ -28,24 +28,36 @@
     align-items: center;
     padding: 0 24px;
     box-sizing: border-box;
-    justify-content: space-between;
+    justify-content: flex-start;
     flex-shrink: 0;
+    gap: 16px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 /* Portal for Buttons/Filters on the right side */
 .headerControlsPortal {
-    flex: 1;
+    flex: 1 1 auto;
     display: flex;
     align-items: center;
     justify-content: flex-end;
     /* Pushes content to the right */
     height: 100%;
-    padding-left: 24px;
-    gap: 16px;
+    padding-left: 16px;
+    gap: 12px;
     margin-left: auto;
     /* Ensures it stays on the right */
     min-width: 0;
     /* Allow shrinking if needed */
+    overflow-x: auto;
+    overflow-y: hidden;
+    /* Allow horizontal scroll if buttons overflow */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.headerControlsPortal::-webkit-scrollbar {
+    display: none;
 }
 
 .contentScroll {
@@ -81,7 +93,8 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+/* UPDATED: Changed from 768px to 1024px - sidebar stays visible on small laptops */
+@media (max-width: 1024px) {
     .mainArea {
         margin-left: 0;
         width: 100%;
@@ -89,11 +102,25 @@
 
     .fixedHeader {
         left: 0;
+        height: 64px;
+        width: 100%;
+        padding: 0 12px;
+        gap: 12px;
+    }
+
+    .contentScroll {
+        margin-top: 64px;
+        height: calc(100vh - 64px);
+    }
+}
+
+/* ADDED: Tablet-specific adjustments */
+@media (max-width: 768px) {
+    .fixedHeader {
         height: auto;
         min-height: 56px;
         flex-direction: column;
         padding: 12px;
-        width: 100%;
         gap: 12px;
         z-index: 100;
     }
@@ -109,5 +136,21 @@
         margin-top: 100px;
         /* Adjust for taller mobile header */
         height: calc(100vh - 100px);
+    }
+}
+
+/* ADDED: Small mobile breakpoint for 480px */
+@media (max-width: 480px) {
+    .fixedHeader {
+        padding: 8px;
+        gap: 8px;
+    }
+
+    .headerControlsPortal {
+        gap: 8px;
+    }
+
+    .contentScroll {
+        padding: 0;
     }
 }

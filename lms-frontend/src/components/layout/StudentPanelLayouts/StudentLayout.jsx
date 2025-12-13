@@ -18,10 +18,16 @@ const StudentLayout = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const [studentProfile, setStudentProfile] = useState(null);
-    
+
     // CHANGED: State for logout modal
     const [showLogoutModal, setShowLogoutModal] = useState(false);
     const [pageTitle, setPageTitle] = useState('');
+
+    // ADDED: State for mobile sidebar drawer toggle
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    // ADDED: Toggle function for hamburger menu
+    const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
     const resolveUrl = (url) => {
         if (!url) return null;
@@ -133,18 +139,23 @@ const StudentLayout = () => {
 
     return (
         <div className={`${styles.pageShell} ${panelStyles.studentLayout}`}>
+            {/* UPDATED: Added open/onClose props for mobile drawer behavior */}
             <StudentSidebar
                 logo={logo}
                 navItems={navItems}
                 footerUser={footerUser}
                 onLogout={handleLogout}
+                open={sidebarOpen}
+                onClose={() => setSidebarOpen(false)}
             />
 
             <div className={panelStyles.mainArea}>
                 <div className={panelStyles.fixedHeader}>
+                    {/* UPDATED: Added onToggleSidebar prop for hamburger menu */}
                     <Header
                         title={pageTitle}
                         profile={headerProfile}
+                        onToggleSidebar={toggleSidebar}
                     />
                 </div>
 
@@ -179,7 +190,7 @@ const StudentLayout = () => {
                             Are you sure you want to log out?
                         </p>
                         <div style={{ display: 'flex', gap: '12px' }}>
-                            <button 
+                            <button
                                 onClick={() => setShowLogoutModal(false)}
                                 style={{
                                     flex: 1, padding: '12px', borderRadius: '8px', border: 'none',
@@ -188,7 +199,7 @@ const StudentLayout = () => {
                             >
                                 Cancel
                             </button>
-                            <button 
+                            <button
                                 onClick={confirmLogout}
                                 style={{
                                     flex: 1, padding: '12px', borderRadius: '8px', border: 'none',

@@ -6,6 +6,8 @@
   background: #f5f7fa;
   color: #111827;
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  overflow-x: hidden;
+  /* ADDED: Prevent horizontal scroll on mobile */
 }
 
 .mainColumn {
@@ -19,6 +21,8 @@
 .contentArea {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  /* ADDED: Prevent horizontal scroll */
   padding: 20px;
   box-sizing: border-box;
   background: #f5f7fa;
@@ -28,14 +32,25 @@
 .pageInner {
   width: 100%;
   height: 100%;
-  max-width: none;  /* Forces full width */
-  margin: 0;        /* Aligns to left */
-  padding: 0;       /* Let individual pages handle padding */
+  max-width: none;
+  /* Forces full width */
+  margin: 0;
+  /* Aligns to left */
+  padding: 0;
+  /* Let individual pages handle padding */
   box-sizing: border-box;
 }
 
-@media (max-width: 768px) {
+/* UPDATED: Changed from 768px to 1024px for consistency */
+@media (max-width: 1024px) {
   .contentArea {
     padding: 16px;
+  }
+}
+
+/* ADDED: Small mobile breakpoint */
+@media (max-width: 480px) {
+  .contentArea {
+    padding: 12px;
   }
 }

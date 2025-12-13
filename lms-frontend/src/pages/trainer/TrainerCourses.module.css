@@ -20,10 +20,11 @@
     justify-content: space-between;
 }
 
-/* ===== LEFT PANEL - MODULES (38%) ===== */
+/* ===== LEFT PANEL - MODULES ===== */
 .leftPanel {
-    width: 38%;
-    flex-shrink: 0;
+    flex: 0 0 380px;
+    max-width: 450px;
+    min-width: 320px;
     height: 100%;
     background: #ffffff;
     border-radius: 16px;
@@ -232,6 +233,7 @@
         opacity: 0;
         max-height: 0;
     }
+
     to {
         opacity: 1;
         max-height: 1000px;
@@ -419,9 +421,9 @@
     line-height: 1.6;
 }
 
-/* ===== RIGHT PANEL - CONTENT VIEWER (62%) ===== */
+/* ===== RIGHT PANEL - CONTENT VIEWER ===== */
 .rightPanel {
-    flex: 1;
+    flex: 1 1 0%;
     min-width: 0;
     background: #ffffff;
     border-radius: 16px;
@@ -805,12 +807,15 @@ iframe {
 }
 
 /* Responsive - Tablet */
-@media (max-width: 1200px) {
+/* UPDATED: Changed from 1200px to 1024px for consistency with sidebar breakpoint */
+@media (max-width: 1024px) {
     .mainContainer {
         flex-direction: column;
         gap: 20px;
         height: auto;
         align-items: stretch;
+        overflow-x: hidden;
+        /* ADDED: Prevent horizontal scroll */
     }
 
     .leftPanel {
@@ -827,6 +832,9 @@ iframe {
 
     .contentArea {
         min-height: 300px;
+        max-width: 100%;
+        /* ADDED: Ensure content fits */
+        overflow-x: hidden;
     }
 }
 

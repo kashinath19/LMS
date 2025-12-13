@@ -3,17 +3,23 @@ import { Outlet, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../../context/AuthContext';
 import AdminSidebar from './AdminSidebar';
 import Header from '../Header';
-import styles from './AdminLayout.module.css'; 
+import styles from './AdminLayout.module.css';
 
 const AdminLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
-  
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [pageTitle, setPageTitle] = useState('');
   // State for dynamic header controls
   const [headerComponent, setHeaderComponent] = useState(null);
+
+  // ADDED: State for mobile sidebar drawer toggle
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // ADDED: Toggle function for hamburger menu
+  const toggleSidebar = () => setSidebarOpen(prev => !prev);
 
   const navItems = [
     { label: 'Dashboard', icon: <i className="fas fa-tachometer-alt" />, to: '/admin/dashboard' },
@@ -36,7 +42,7 @@ const AdminLayout = () => {
   };
 
   const handleLogout = () => setShowLogoutModal(true);
-  
+
   const confirmLogout = () => {
     setShowLogoutModal(false);
     logout();
@@ -45,18 +51,21 @@ const AdminLayout = () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa' }}>
+      {/* UPDATED: Added open/onClose props for mobile drawer behavior */}
       <AdminSidebar
         logo={logo}
         navItems={navItems}
         footerUser={footerUser}
         onLogout={handleLogout}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
-      
+
       <div className={styles.mainArea}>
         <div className={styles.fixedHeader}>
-          {/* Main Header Title */}
-          <Header title={pageTitle} />
-          
+          {/* UPDATED: Added onToggleSidebar prop for hamburger menu */}
+          <Header title={pageTitle} onToggleSidebar={toggleSidebar} />
+
           {/* Dynamic Portal for Buttons (Dashboard injects here) */}
           <div className={styles.headerControlsPortal}>
             {headerComponent}
@@ -85,13 +94,13 @@ const AdminLayout = () => {
             <h3 style={{ margin: '0 0 10px', color: '#1e293b' }}>Confirm Logout</h3>
             <p style={{ color: '#64748b', margin: '0 0 25px' }}>Are you sure you want to log out?</p>
             <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
+              <button
                 onClick={() => setShowLogoutModal(false)}
                 style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#f1f5f9', cursor: 'pointer' }}
               >
                 Cancel
               </button>
-              <button 
+              <button
                 onClick={confirmLogout}
                 style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#ef4444', color: 'white', cursor: 'pointer' }}
               >
