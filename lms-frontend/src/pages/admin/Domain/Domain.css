@@ -478,34 +478,57 @@
     opacity: 1;
 }
 
+/* Modern Icon Button Styles */
 .btn-icon {
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    border: none;
-    background: rgba(255, 255, 255, 0.9);
-    display: flex;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.95);
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.2s ease;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+    color: #4b5563;
+    font-family: inherit;
 }
 
 .btn-icon:hover {
-    transform: scale(1.1);
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
 }
 
-.btn-edit:hover {
-    background: #10b981;
-    color: white;
+.btn-icon:active {
+    transform: translateY(0);
 }
 
-.btn-delete:hover {
+/* Edit Button - Blue outline style */
+.btn-icon.btn-edit {
+    background: #ffffff;
+    border: 1px solid #2563eb;
+    color: #2563eb;
+}
+
+.btn-icon.btn-edit:hover {
+    background: #2563eb;
+    color: #ffffff;
+    border-color: #2563eb;
+}
+
+/* Delete Button - Red danger style */
+.btn-icon.btn-delete {
+    background: #ffffff;
+    border: 1px solid #ef4444;
+    color: #ef4444;
+}
+
+.btn-icon.btn-delete:hover {
     background: #ef4444;
-    color: white;
+    color: #ffffff;
+    border-color: #ef4444;
 }
 
 .domain-content {

@@ -11,10 +11,10 @@ import styles from './AdminDashboard.module.css';
 const AdminDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  
+
   // 1. Extract setHeaderComponent from context
   const { setPageTitle, setHeaderComponent } = useOutletContext();
-  
+
   const [trainerModalOpen, setTrainerModalOpen] = useState(false);
   const [studentModalOpen, setStudentModalOpen] = useState(false);
   const [adminModalOpen, setAdminModalOpen] = useState(false);
@@ -45,34 +45,34 @@ const AdminDashboard = () => {
     if (setHeaderComponent) {
       setHeaderComponent(
         <div className={styles.headerBtnGroup}>
-          <button 
-            className={styles.btnPrimary} 
+          <button
+            className={styles.btnPrimary}
             onClick={() => {
-                setErrors({});
-                setTrainerForm({ email: '', username: '', password: '', domain_id: '' });
-                setTrainerModalOpen(true);
+              setErrors({});
+              setTrainerForm({ email: '', username: '', password: '', domain_id: '' });
+              setTrainerModalOpen(true);
             }}
           >
             <i className="fas fa-chalkboard-teacher"></i> Create Trainer
           </button>
-          
-          <button 
-            className={styles.btnSuccess} 
+
+          <button
+            className={styles.btnSuccess}
             onClick={() => {
-                setErrors({});
-                setStudentForm({ email: '', username: '', password: '', domain_id: '' });
-                setStudentModalOpen(true);
+              setErrors({});
+              setStudentForm({ email: '', username: '', password: '', domain_id: '' });
+              setStudentModalOpen(true);
             }}
           >
             <i className="fas fa-user-graduate"></i> Create Student
           </button>
 
-          <button 
-            className={styles.btnWarning} 
+          <button
+            className={styles.btnWarning}
             onClick={() => {
-                setErrors({});
-                setAdminForm({ email: '', username: '', password: '' });
-                setAdminModalOpen(true);
+              setErrors({});
+              setAdminForm({ email: '', username: '', password: '' });
+              setAdminModalOpen(true);
             }}
           >
             <i className="fas fa-user-shield"></i> Create Admin
@@ -323,20 +323,20 @@ const AdminDashboard = () => {
               <button className={styles.closeModal} onClick={() => setTrainerModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form onSubmit={(e) => { e.preventDefault(); registerTrainer(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerTrainer(); }} autoComplete="off">
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Email Address *</label>
-                  <input type="email" className={styles.formInput} value={trainerForm.email} onChange={(e) => setTrainerForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
+                  <input type="email" name="new_trainer_email" autoComplete="new-password" className={styles.formInput} value={trainerForm.email} onChange={(e) => setTrainerForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Username *</label>
-                  <input type="text" className={styles.formInput} value={trainerForm.username} onChange={(e) => setTrainerForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
+                  <input type="text" name="new_trainer_username" autoComplete="off" className={styles.formInput} value={trainerForm.username} onChange={(e) => setTrainerForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Password *</label>
-                  <input type="password" className={styles.formInput} value={trainerForm.password} onChange={(e) => setTrainerForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
+                  <input type="password" name="new_trainer_password" autoComplete="new-password" className={styles.formInput} value={trainerForm.password} onChange={(e) => setTrainerForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
                 <div className={styles.formGroup}>
@@ -368,20 +368,20 @@ const AdminDashboard = () => {
               <button className={styles.closeModal} onClick={() => setStudentModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form onSubmit={(e) => { e.preventDefault(); registerStudent(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerStudent(); }} autoComplete="off">
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Email Address *</label>
-                  <input type="email" className={styles.formInput} value={studentForm.email} onChange={(e) => setStudentForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
+                  <input type="email" name="new_student_email" autoComplete="new-password" className={styles.formInput} value={studentForm.email} onChange={(e) => setStudentForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Username *</label>
-                  <input type="text" className={styles.formInput} value={studentForm.username} onChange={(e) => setStudentForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
+                  <input type="text" name="new_student_username" autoComplete="off" className={styles.formInput} value={studentForm.username} onChange={(e) => setStudentForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Password *</label>
-                  <input type="password" className={styles.formInput} value={studentForm.password} onChange={(e) => setStudentForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
+                  <input type="password" name="new_student_password" autoComplete="new-password" className={styles.formInput} value={studentForm.password} onChange={(e) => setStudentForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
                 <div className={styles.formGroup}>
@@ -413,20 +413,20 @@ const AdminDashboard = () => {
               <button className={styles.closeModal} onClick={() => setAdminModalOpen(false)}>&times;</button>
             </div>
             <div className={styles.modalBody}>
-              <form onSubmit={(e) => { e.preventDefault(); registerAdmin(); }}>
+              <form onSubmit={(e) => { e.preventDefault(); registerAdmin(); }} autoComplete="off">
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Email Address *</label>
-                  <input type="email" className={styles.formInput} value={adminForm.email} onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
+                  <input type="email" name="new_admin_email" autoComplete="new-password" className={styles.formInput} value={adminForm.email} onChange={(e) => setAdminForm(prev => ({ ...prev, email: e.target.value }))} disabled={loading} />
                   {errors.email && <div className={styles.formError}>{errors.email}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Username *</label>
-                  <input type="text" className={styles.formInput} value={adminForm.username} onChange={(e) => setAdminForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
+                  <input type="text" name="new_admin_username" autoComplete="off" className={styles.formInput} value={adminForm.username} onChange={(e) => setAdminForm(prev => ({ ...prev, username: e.target.value }))} disabled={loading} />
                   {errors.username && <div className={styles.formError}>{errors.username}</div>}
                 </div>
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>Password *</label>
-                  <input type="password" className={styles.formInput} value={adminForm.password} onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
+                  <input type="password" name="new_admin_password" autoComplete="new-password" className={styles.formInput} value={adminForm.password} onChange={(e) => setAdminForm(prev => ({ ...prev, password: e.target.value }))} disabled={loading} />
                   {errors.password && <div className={styles.formError}>{errors.password}</div>}
                 </div>
               </form>

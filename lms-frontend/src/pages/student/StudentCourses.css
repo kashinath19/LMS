@@ -19,7 +19,8 @@
 /* Main Container */
 .sc-container {
     display: flex;
-    padding: 24px 32px;
+   /* padding: 24px 32px;*/
+   ;
     gap: 24px;
     height: calc(100vh - 120px);
 }
@@ -28,6 +29,7 @@
 .sc-left-panel {
     width: 380px;
     min-width: 380px;
+    height: 100%;
     background: #ffffff;
     border-radius: 12px;
     border: 1px solid #e0e0e0;

@@ -1,13 +1,15 @@
 .header {
-  height: 70px;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
+  height: 64px;
+  background: transparent;
+  border-bottom: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 20px;
   box-sizing: border-box;
   flex-shrink: 0;
+  flex: 0 0 auto;
+  min-width: 0;
 }
 
 .left {
