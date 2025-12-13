@@ -9,6 +9,14 @@
     background: linear-gradient(135deg, #f8f9fc 0%, #f3f4f8 100%);
     box-sizing: border-box;
     overflow: hidden;
+    position: relative;
+}
+
+/* NEW: Allows scrolling specifically for Theater Mode */
+.coursesContainerScrollable {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    height: calc(100vh - 80px);
 }
 
 .mainContainer {
@@ -18,9 +26,18 @@
     width: 100%;
     align-items: stretch;
     justify-content: space-between;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* ===== LEFT PANEL - MODULES ===== */
+/* In Theater mode, let the container height be flexible */
+.mainContainerTheater {
+    gap: 24px;
+    height: auto;
+    min-height: 60vh;
+    margin-bottom: 24px;
+}
+
+/* ===== LEFT PANEL - MODULES (38%) ===== */
 .leftPanel {
     flex: 0 0 380px;
     max-width: 450px;
@@ -33,6 +50,7 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .modulesHeader {
@@ -229,15 +247,8 @@
 }
 
 @keyframes slideDown {
-    from {
-        opacity: 0;
-        max-height: 0;
-    }
-
-    to {
-        opacity: 1;
-        max-height: 1000px;
-    }
+    from { opacity: 0; max-height: 0; }
+    to { opacity: 1; max-height: 1000px; }
 }
 
 .topicsList {
@@ -421,9 +432,9 @@
     line-height: 1.6;
 }
 
-/* ===== RIGHT PANEL - CONTENT VIEWER ===== */
+/* ===== RIGHT PANEL - CONTENT VIEWER (62%) ===== */
 .rightPanel {
-    flex: 1 1 0%;
+    flex: 1;
     min-width: 0;
     background: #ffffff;
     border-radius: 16px;
@@ -432,6 +443,15 @@
     flex-direction: column;
     overflow: hidden;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.rightPanelTheater {
+    flex: 1;
+    height: 70vh; /* Fixed height for video/content in Theater Mode */
+    min-height: 400px;
+    width: 100%;
+    margin-bottom: 12px;
 }
 
 .contentViewer {
@@ -474,6 +494,31 @@
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
+}
+
+.theaterModeBtn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15);
+    flex-shrink: 0;
+}
+
+.theaterModeBtn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(79, 70, 229, 0.25);
+}
+
+.theaterModeBtn:active {
+    transform: translateY(0);
 }
 
 .viewerTopicTitle {
@@ -577,6 +622,27 @@
     border-radius: 0;
 }
 
+/* ========================================
+   GOOGLE DRIVE POP-OUT BUTTON MASK
+   ======================================== */
+.iframeWrapper {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+.googleDrivePopOutMask {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50px;
+    height: 50px;
+    background: transparent;
+    pointer-events: auto;
+    z-index: 10;
+    cursor: default;
+}
+
 /* Fallback & Unsupported Viewers */
 .fallbackContainer {
     width: 100%;
@@ -629,8 +695,7 @@
     margin-top: 8px;
 }
 
-.primaryActionBtn,
-.secondaryActionBtn {
+.primaryActionBtn {
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -642,9 +707,6 @@
     cursor: pointer;
     transition: all 0.2s;
     text-decoration: none;
-}
-
-.primaryActionBtn {
     background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);
     color: white;
     border: none;
@@ -656,19 +718,6 @@
     box-shadow: 0 4px 8px rgba(79, 70, 229, 0.25);
 }
 
-.secondaryActionBtn {
-    background: #ffffff;
-    color: #374151;
-    border: 1px solid #d1d5db;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.secondaryActionBtn:hover {
-    background: #f3f4f6;
-    border-color: #9ca3af;
-}
-
-/* Error Viewer */
 .errorViewer {
     width: 100%;
     height: 100%;
@@ -681,12 +730,6 @@
     gap: 12px;
 }
 
-.errorViewer p {
-    font-size: 14px;
-    margin: 0;
-}
-
-/* Ensure all iframes have proper sizing */
 iframe {
     width: 100%;
     height: 100%;
@@ -717,7 +760,6 @@ iframe {
     margin: 0;
 }
 
-/* No Selection State */
 .noSelection {
     display: flex;
     flex-direction: column;
@@ -745,7 +787,6 @@ iframe {
     line-height: 1.6;
 }
 
-/* Loading & Error States */
 .loadingState,
 .errorState {
     display: flex;
@@ -801,166 +842,258 @@ iframe {
 }
 
 @keyframes spin {
-    to {
-        transform: rotate(360deg);
-    }
+    to { transform: rotate(360deg); }
 }
 
-/* Responsive - Tablet */
-/* UPDATED: Changed from 1200px to 1024px for consistency with sidebar breakpoint */
-@media (max-width: 1024px) {
-    .mainContainer {
-        flex-direction: column;
-        gap: 20px;
-        height: auto;
-        align-items: stretch;
-        overflow-x: hidden;
-        /* ADDED: Prevent horizontal scroll */
-    }
-
-    .leftPanel {
-        width: 100%;
-        flex-shrink: 0;
-        height: 380px;
-    }
-
-    .rightPanel {
-        width: 100%;
-        flex-shrink: 0;
-        height: 500px;
-    }
-
-    .contentArea {
-        min-height: 300px;
-        max-width: 100%;
-        /* ADDED: Ensure content fits */
-        overflow-x: hidden;
-    }
+/* ============================================================
+   VIEW MODE - FULLSCREEN
+   ============================================================ */
+.fullscreenContainer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: #000;
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
 }
 
-/* Responsive - Mobile */
-@media (max-width: 768px) {
-    .coursesContainer {
-        padding: 16px;
-        height: auto;
-    }
-
-    .mainContainer {
-        flex-direction: column;
-        gap: 16px;
-        height: auto;
-    }
-
-    .leftPanel,
-    .rightPanel {
-        width: 100%;
-        height: 400px;
-    }
-
-    .modulesHeader,
-    .viewerHeader {
-        padding: 18px;
-    }
-
-    .modulesList {
-        padding: 12px;
-    }
-
-    .resourceDescription {
-        max-height: 150px;
-    }
-
-    .topicCardContent {
-        gap: 8px;
-    }
-
-    .topicTitle {
-        font-size: 12px;
-    }
-
-    .moduleTitle {
-        font-size: 13px;
-    }
-
-    .viewerHeaderTop {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-
-    .moduleBadge {
-        width: 100%;
-        text-align: center;
-    }
+.fullscreenContent {
+    flex: 1;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #000;
+    position: relative;
 }
 
-/* Responsive - Small Mobile */
-@media (max-width: 480px) {
-    .coursesContainer {
-        padding: 12px;
-        height: auto;
-    }
-
-    .mainContainer {
-        gap: 12px;
-    }
-
-    .leftPanel,
-    .rightPanel {
-        width: 100%;
-        height: 350px;
-        border-radius: 12px;
-    }
-
-    .modulesHeader h2,
-    .viewerHeader h2 {
-        font-size: 16px;
-    }
-
-    .modulesList {
-        padding: 8px;
-        gap: 8px;
-    }
-
-    .topicCard {
-        padding: 10px;
-    }
-
-    .moduleCard {
-        border-radius: 10px;
-    }
-
-    .resourceDescription {
-        max-height: 100px;
-        padding: 16px;
-    }
+.floatingExitBtn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10000;
+    backdrop-filter: blur(4px);
+    transition: all 0.2s ease;
 }
 
-/* Scrollbar styling */
-.modulesList::-webkit-scrollbar,
-.viewerContent::-webkit-scrollbar,
-.contentArea::-webkit-scrollbar,
-.resourceDescription::-webkit-scrollbar {
+.floatingExitBtn:hover {
+    background: rgba(220, 38, 38, 0.9);
+    border-color: rgba(255, 255, 255, 0.8);
+    transform: scale(1.1);
+}
+
+/* ============================================================
+   THEATER MODE - MODERN TABBED PLAYLIST (Like Coursera)
+   ============================================================ */
+
+/* General Wrapper */
+.theaterContainer {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+}
+
+/* --- Row 1: Module Navigation Strip (Tabs) --- */
+.theaterModulesTabs {
+    width: 100%;
+    overflow-x: auto;
+    display: flex;
+    gap: 8px;
+    padding: 12px 16px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+    scrollbar-width: thin;
+    white-space: nowrap;
+}
+
+/* The "Pill" Style Tab */
+.theaterModuleTab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 99px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    flex-shrink: 0;
+}
+
+.theaterModuleTab:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    color: #1f2937;
+    transform: translateY(-1px);
+}
+
+/* Active State for the Pill */
+.theaterModuleTabActive {
+    background: #4f46e5;
+    border-color: #4f46e5;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(79, 70, 229, 0.25);
+}
+
+.theaterModuleTabActive:hover {
+    background: #4338ca;
+    color: #ffffff;
+    border-color: #4338ca;
+}
+
+/* Progress Dot in Tab */
+.tabProgressDot {
     width: 6px;
-}
-
-.modulesList::-webkit-scrollbar-track,
-.viewerContent::-webkit-scrollbar-track,
-.contentArea::-webkit-scrollbar-track,
-.resourceDescription::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.modulesList::-webkit-scrollbar-thumb,
-.viewerContent::-webkit-scrollbar-thumb,
-.contentArea::-webkit-scrollbar-thumb,
-.resourceDescription::-webkit-scrollbar-thumb {
+    height: 6px;
+    border-radius: 50%;
     background: #d1d5db;
-    border-radius: 3px;
 }
 
-.modulesList::-webkit-scrollbar-thumb:hover,
-.viewerContent::-webkit-scrollbar-thumb:hover,
-.contentArea::-webkit-scrollbar-thumb:hover,
-.resourceDescription::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
+.theaterModuleTabActive .tabProgressDot {
+    background: #a5b4fc;
+}
+
+.tabProgressDotCompleted {
+    background: #10b981;
+}
+
+/* --- Row 2: Topics Area (Playlist) --- */
+.theaterTopicsArea {
+    width: 100%;
+    padding: 16px;
+    background: #ffffff;
+    min-height: 200px;
+}
+
+.theaterTopicsList {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Horizontal List Item Style (Like a playlist entry) */
+.theaterTopicItem {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 10px 16px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.theaterTopicItem:hover {
+    background: #f3f4f6;
+    border-color: #d1d5db;
+    transform: translateX(4px);
+}
+
+.theaterTopicItemActive {
+    background: #f0f4ff;
+    border-color: #4f46e5;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.05);
+}
+
+.theaterTopicIconWrapper {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #4f46e5;
+    flex-shrink: 0;
+}
+
+.theaterTopicItemActive .theaterTopicIconWrapper {
+    background: #4f46e5;
+    color: #ffffff;
+    border-color: #4f46e5;
+}
+
+.theaterTopicMeta {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+}
+
+.theaterTopicMeta h5 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.theaterTopicMeta span {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 2px;
+}
+
+.theaterTopicStatus {
+    flex-shrink: 0;
+}
+
+.statusCheck {
+    color: #10b981;
+    background: #ecfdf5;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+}
+
+.playIcon {
+    color: #d1d5db;
+    transition: color 0.2s;
+}
+
+.theaterTopicItem:hover .playIcon {
+    color: #4f46e5;
+}
+
+.noTopicsMessage {
+    color: #6b7280;
+    font-size: 14px;
+    padding: 24px;
+    text-align: center;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 1px dashed #d1d5db;
 }
