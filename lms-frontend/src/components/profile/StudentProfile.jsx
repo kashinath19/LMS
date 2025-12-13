@@ -177,7 +177,6 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
         gender: updatedData.gender || ''
       });
 
-      // ⭐ REDIRECT ON FIRST PROFILE CREATION: notify parent to handle redirect
       if (!profileExists) {
         displayToast('Profile created successfully');
         showMessage?.('success', 'Student profile created!');
@@ -397,6 +396,7 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
           {!isEditing && profileExists && (
             <>
               <div className={styles.headerRow}>
+                <h1>Profile Details</h1>
                 <button className={styles.btnEdit} onClick={handleEdit} type="button">
                   <i className="fa-solid fa-pen"></i> Edit Profile
                 </button>
@@ -450,7 +450,9 @@ const StudentProfile = ({ showMessage, onProfileCreated, profileExists, setProfi
 
           {(isEditing || isCreatingNew) && (
             <form onSubmit={handleSubmit} className={styles.editForm}>
-              <div className={styles.headerRow} />
+              <div className={styles.headerRow}>
+                <h1>{profileExists ? 'Edit Profile' : 'Create Profile'}</h1>
+              </div>
 
               <h3 className={styles.sectionTitle}>Personal Information</h3>
               <div className={styles.divider} />
